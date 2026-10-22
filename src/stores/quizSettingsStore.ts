@@ -6,7 +6,12 @@ import type { StageId } from '@/features/quiz/types'
 export const QUESTION_COUNTS = [10, 20, 50] as const
 export const TIMER_OPTIONS = [0, 5, 10, 20] as const
 
+export type QuizMode = 'auto' | 'manual'
+
 interface QuizSettingsState {
+  mode: QuizMode
+  /** Écriture du parcours en mode auto (chaque écriture a sa propre progression). */
+  autoScript: Script
   stage: StageId
   /** Groupes prédéfinis cochés (ids de KANA_GROUPS). */
   groupIds: string[]
@@ -18,6 +23,8 @@ interface QuizSettingsState {
   /** Écriture affichée dans le sélecteur de groupes. */
   pickerScript: Script
 
+  setMode: (mode: QuizMode) => void
+  setAutoScript: (script: Script) => void
   setStage: (stage: StageId) => void
   setGroupsSelected: (ids: string[], selected: boolean) => void
   toggleCustomGroup: (id: number) => void
@@ -30,6 +37,8 @@ interface QuizSettingsState {
 export const useQuizSettingsStore = create<QuizSettingsState>()(
   persist(
     (set) => ({
+      mode: 'auto',
+      autoScript: 'hiragana',
       stage: 1,
       groupIds: ['hiragana-a'],
       customGroupIds: [],
@@ -38,6 +47,8 @@ export const useQuizSettingsStore = create<QuizSettingsState>()(
       timerSeconds: 0,
       pickerScript: 'hiragana',
 
+      setMode: (mode) => set({ mode }),
+      setAutoScript: (autoScript) => set({ autoScript }),
       setStage: (stage) => set({ stage }),
       setGroupsSelected: (ids, selected) =>
         set((s) => ({

@@ -83,7 +83,7 @@ export function wordsForPool(pool: readonly Kana[]): Word[] {
   return WORDS.filter((w) => kanaIdsOf(w.kana).every((id) => ids.has(id)))
 }
 
-function wordQuestion(word: Word): InputQuestion {
+export function wordQuestion(word: Word): InputQuestion {
   return {
     kind: 'input',
     stage: 6,
@@ -95,7 +95,8 @@ function wordQuestion(word: Word): InputQuestion {
   }
 }
 
-function kanaQuestion(stage: Exclude<StageId, 6>, target: Kana, pool: readonly Kana[], rng: Rng): Question {
+/** Question sur un kana précis ; `pool` sert de vivier prioritaire de distracteurs. */
+export function kanaQuestion(stage: Exclude<StageId, 6>, target: Kana, pool: readonly Kana[], rng: Rng): Question {
   const sameScript = (list: readonly Kana[]) => list.filter((k) => k.script === target.script)
   const poolTier = shuffle(sameScript(pool), rng)
   const scriptTier = shuffle(kanaOfScript(target.script), rng)

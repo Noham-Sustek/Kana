@@ -1,6 +1,10 @@
 import { create } from 'zustand'
+import type { KanaGroup, Script } from '@/data/kana'
 import { recordAnswers } from '@/db/answers'
+import { loadAnswersForScript, loadUnlockedGroups, saveUnlockedGroups } from '@/db/autoState'
+import { createAutoContext, nextAutoQuestion, recordAutoAnswers, type AutoContext } from '@/features/quiz/auto'
 import {
+  appendQuestion,
   currentQuestion,
   nextQuestion,
   revealAnswer,
@@ -10,42 +14,101 @@ import {
   type SessionState,
   type Transition,
 } from '@/features/quiz/session'
-import type { Question, QuizOptions } from '@/features/quiz/types'
+import type { Question, QuizOptions, StageId } from '@/features/quiz/types'
+
+export interface AutoParams {
+  script: Script
+  stages: StageId[]
+  questionCount: number
+  options: QuizOptions
+}
 
 interface QuizSessionStore {
   session: SessionState | null
+  /** Présent en mode auto : état du planificateur pour la session en cours. */
+  auto: AutoContext | null
+  autoParams: AutoParams | null
+  /** Groupes débloqués pendant la session (mode auto). */
+  unlockedThisSession: KanaGroup[]
+
   start: (questions: Question[], options: QuizOptions) => void
+  startAuto: (params: AutoParams) => Promise<void>
   submit: (answer: string) => void
   reveal: () => void
   next: () => void
   quit: () => void
 }
 
-// Session en mémoire uniquement : seules les réponses sont persistées (Dexie).
+function persistError(err: unknown) {
+  console.error('Enregistrement impossible', err)
+}
+
+// Session en mémoire uniquement : seules les réponses (et le déblocage auto) sont persistées (Dexie).
 export const useQuizSessionStore = create<QuizSessionStore>()((set, get) => {
   const apply = (transition: (s: SessionState, now: number) => Transition) => {
-    const session = get().session
+    const { session, auto } = get()
     if (!session) return
     const now = Date.now()
     const question = currentQuestion(session)
     const { state, outcome } = transition(session, now)
     set({ session: state })
-    if (question && outcome) {
-      recordAnswers(toAnswerRecords(question, outcome, now)).catch((err: unknown) =>
-        console.error('Enregistrement de la réponse impossible', err),
-      )
+    if (!question || !outcome) return
+
+    const records = toAnswerRecords(question, outcome, now)
+    recordAnswers(records).catch(persistError)
+
+    if (auto) {
+      const { ctx, newlyUnlocked } = recordAutoAnswers(auto, records)
+      set((s) => ({ auto: ctx, unlockedThisSession: [...s.unlockedThisSession, ...newlyUnlocked] }))
+      if (newlyUnlocked.length > 0) saveUnlockedGroups(ctx.script, ctx.unlocked).catch(persistError)
     }
   }
 
   return {
     session: null,
-    start: (questions, options) => set({ session: startSession(questions, options, Date.now()) }),
+    auto: null,
+    autoParams: null,
+    unlockedThisSession: [],
+
+    start: (questions, options) =>
+      set({ session: startSession(questions, options, Date.now()), auto: null, autoParams: null, unlockedThisSession: [] }),
+
+    startAuto: async (params) => {
+      const [history, storedUnlocked] = await Promise.all([
+        loadAnswersForScript(params.script),
+        loadUnlockedGroups(params.script),
+      ])
+      const now = Date.now()
+      let ctx = createAutoContext(params.script, params.stages, history, storedUnlocked)
+      if (ctx.unlocked > storedUnlocked) saveUnlockedGroups(params.script, ctx.unlocked).catch(persistError)
+      const first = nextAutoQuestion(ctx, now, Math.random)
+      if (first) ctx = first.ctx
+      set({
+        session: startSession(first ? [first.question] : [], params.options, now, params.questionCount),
+        auto: ctx,
+        autoParams: params,
+        unlockedThisSession: [],
+      })
+    },
+
     submit: (answer) => apply((s, now) => submitAnswer(s, answer, now)),
     reveal: () => apply(revealAnswer),
+
     next: () => {
-      const session = get().session
-      if (session) set({ session: nextQuestion(session, Date.now()) })
+      let { session, auto } = get()
+      if (!session || session.status === 'pending') return
+      const now = Date.now()
+      // Mode auto : la question suivante est choisie maintenant, avec la progression à jour.
+      if (auto && session.index + 1 < session.plannedCount && session.index + 1 >= session.questions.length) {
+        const generated = nextAutoQuestion(auto, now, Math.random)
+        if (generated) {
+          session = appendQuestion(session, generated.question)
+          auto = generated.ctx
+        }
+      }
+      set({ session: nextQuestion(session, now), auto })
     },
-    quit: () => set({ session: null }),
+
+    quit: () => set({ session: null, auto: null, autoParams: null, unlockedThisSession: [] }),
   }
 })

@@ -30,6 +30,7 @@ function QuizRunner({ session }: { session: SessionState }) {
   const question = currentQuestion(session)!
   const { status, options } = session
   const settled = status !== 'pending'
+  const isAuto = useQuizSessionStore((s) => s.auto !== null)
 
   // Bonne réponse : passage automatique à la question suivante.
   useEffect(() => {
@@ -79,11 +80,11 @@ function QuizRunner({ session }: { session: SessionState }) {
         <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
           <div
             className="h-full rounded-full bg-accent-500 transition-[width]"
-            style={{ width: `${(session.index / session.questions.length) * 100}%` }}
+            style={{ width: `${(session.index / session.plannedCount) * 100}%` }}
           />
         </div>
         <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400">
-          {session.index + 1}/{session.questions.length}
+          {session.index + 1}/{session.plannedCount}
         </span>
       </header>
 
@@ -97,8 +98,10 @@ function QuizRunner({ session }: { session: SessionState }) {
         )}
       </div>
 
+      <UnlockBanner />
+
       <p className="mt-3 text-center text-xs font-medium text-slate-400 dark:text-slate-500">
-        Stage {question.stage} · {getStage(question.stage).description}
+        {isAuto && 'Auto · '}Stage {question.stage} · {getStage(question.stage).description}
       </p>
 
       <div className="flex flex-1 flex-col justify-center py-6">
@@ -119,7 +122,7 @@ function QuizRunner({ session }: { session: SessionState }) {
             // Neutre : l'accent rose se confondrait avec le rouge des erreurs.
             className="min-h-12 w-full rounded-xl bg-slate-900 font-semibold text-white active:scale-[0.98] dark:bg-slate-100 dark:text-slate-900"
           >
-            {session.index + 1 === session.questions.length ? 'Voir le résultat' : 'Suivant'}
+            {session.index + 1 >= session.plannedCount ? 'Voir le résultat' : 'Suivant'}
           </button>
         ) : (
           <button
@@ -133,6 +136,31 @@ function QuizRunner({ session }: { session: SessionState }) {
         )}
       </div>
     </div>
+  )
+}
+
+const UNLOCK_BANNER_MS = 3500
+
+/** Annonce les groupes débloqués pendant la session (mode auto). */
+function UnlockBanner() {
+  const unlocked = useQuizSessionStore((s) => s.unlockedThisSession)
+  const [visibleCount, setVisibleCount] = useState(0)
+  const [hidden, setHidden] = useState(true)
+
+  useEffect(() => {
+    if (unlocked.length <= visibleCount) return
+    setVisibleCount(unlocked.length)
+    setHidden(false)
+    const timer = setTimeout(() => setHidden(true), UNLOCK_BANNER_MS)
+    return () => clearTimeout(timer)
+  }, [unlocked.length, visibleCount])
+
+  const group = unlocked.at(-1)
+  if (hidden || !group) return null
+  return (
+    <p role="status" className="mt-3 rounded-xl bg-amber-100 px-3 py-2 text-center text-sm font-medium text-amber-900 dark:bg-amber-500/20 dark:text-amber-200">
+      Nouveau groupe débloqué : <span className="font-jp">{getKana(group.kanaIds[0]!)!.char}</span> {group.label}
+    </p>
   )
 }
 
@@ -276,7 +304,7 @@ function InputAnswer({ question, session, onSubmit, onNext }: InputAnswerProps) 
 }
 
 function QuizSummary({ session }: { session: SessionState }) {
-  const { start, quit } = useQuizSessionStore()
+  const { start, startAuto, quit, autoParams, unlockedThisSession } = useQuizSessionStore()
   const settings = useQuizSettingsStore()
   const pool = useQuizPool()
   const navigate = useNavigate()
@@ -291,6 +319,7 @@ function QuizSummary({ session }: { session: SessionState }) {
   const missedKanaIds = [...new Set([...missed.values()].flatMap((q) => q.kanaIds))]
 
   const restart = () => {
+    if (autoParams) return void startAuto(autoParams)
     start(generateQuestions(settings.stage, pool, settings.questionCount), {
       retry: settings.retry,
       timerSeconds: settings.timerSeconds,
@@ -300,13 +329,28 @@ function QuizSummary({ session }: { session: SessionState }) {
   return (
     <div className="flex min-h-full flex-col">
       <div className="py-8 text-center">
-        <p className="text-sm text-slate-500 dark:text-slate-400">Stage {session.questions[0]?.stage} terminé</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          {autoParams ? 'Session auto terminée' : `Stage ${session.questions[0]?.stage} terminé`}
+        </p>
         <p className="mt-2 text-6xl font-bold tabular-nums">
           {correct}
           <span className="text-3xl text-slate-400">/{total}</span>
         </p>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{percent} % du premier coup</p>
       </div>
+
+      {unlockedThisSession.length > 0 && (
+        <section className="mb-4 rounded-2xl bg-amber-100 p-4 text-amber-900 dark:bg-amber-500/20 dark:text-amber-200">
+          <h2 className="text-sm font-semibold">Nouveaux groupes débloqués</h2>
+          <p className="mt-1 text-lg">
+            {unlockedThisSession.map((g) => (
+              <span key={g.id} className="mr-3">
+                <span className="font-jp">{getKana(g.kanaIds[0]!)!.char}</span> {g.label}
+              </span>
+            ))}
+          </p>
+        </section>
+      )}
 
       {missed.size > 0 && (
         <section className="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-900">

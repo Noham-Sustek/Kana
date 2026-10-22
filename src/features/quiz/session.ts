@@ -16,6 +16,8 @@ export interface Outcome {
 
 export interface SessionState {
   questions: Question[]
+  /** Nombre de questions prévu (en mode auto, les questions sont ajoutées au fur et à mesure). */
+  plannedCount: number
   options: QuizOptions
   index: number
   status: AttemptStatus
@@ -32,9 +34,15 @@ export interface Transition {
   outcome?: Outcome
 }
 
-export function startSession(questions: Question[], options: QuizOptions, now: number): SessionState {
+export function startSession(
+  questions: Question[],
+  options: QuizOptions,
+  now: number,
+  plannedCount = questions.length,
+): SessionState {
   return {
     questions,
+    plannedCount,
     options,
     index: 0,
     status: 'pending',
@@ -100,6 +108,11 @@ export function nextQuestion(state: SessionState, now: number): SessionState {
     questionStartedAt: now,
     finished: index >= state.questions.length,
   }
+}
+
+/** Ajoute une question en fin de session (mode auto). */
+export function appendQuestion(state: SessionState, question: Question): SessionState {
+  return { ...state, questions: [...state.questions, question], outcomes: [...state.outcomes, undefined] }
 }
 
 export function score(state: SessionState): { correct: number; total: number } {
