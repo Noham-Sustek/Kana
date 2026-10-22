@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router'
 import { Icon } from '@/components/Icon'
+import { KanaNavButton } from '@/components/KanaNavButton'
 import { GROUP_KIND_LABELS, counterpartOf, getGroup, getKana, kanaOfScript, type Kana } from '@/data/kana'
 
 const SWIPE_THRESHOLD_PX = 60
@@ -106,34 +107,9 @@ export function KanaDetailPage() {
       </div>
 
       <nav className="grid grid-cols-2 gap-3" aria-label="Kana précédent et suivant">
-        <NavButton target={prev} direction="prev" onClick={() => goTo(prev)} />
-        <NavButton target={next} direction="next" onClick={() => goTo(next)} />
+        <KanaNavButton target={prev} direction="prev" onClick={() => goTo(prev)} />
+        <KanaNavButton target={next} direction="next" onClick={() => goTo(next)} />
       </nav>
     </div>
-  )
-}
-
-interface NavButtonProps {
-  target: Kana | undefined
-  direction: 'prev' | 'next'
-  onClick: () => void
-}
-
-function NavButton({ target, direction, onClick }: NavButtonProps) {
-  const isPrev = direction === 'prev'
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={!target}
-      aria-label={isPrev ? 'Kana précédent' : 'Kana suivant'}
-      className={`flex min-h-14 items-center gap-2 rounded-xl bg-white px-4 shadow-sm transition-transform active:scale-95 disabled:opacity-30 dark:bg-slate-900 ${
-        isPrev ? 'justify-start' : 'flex-row-reverse justify-start'
-      }`}
-    >
-      <Icon name={isPrev ? 'chevronLeft' : 'chevronRight'} className="size-5" />
-      {target && <span className="font-jp text-xl">{target.char}</span>}
-      {target && <span className="text-xs text-slate-500 dark:text-slate-400">{target.romaji[0]}</span>}
-    </button>
   )
 }

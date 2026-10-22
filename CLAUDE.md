@@ -42,8 +42,11 @@ src/
   stores/      stores Zustand (un fichier par domaine : settingsStore.ts…)
   db/          base Dexie (db.ts) — schéma versionné
   lib/         hooks et utilitaires génériques
-  data/        données statiques : kana.ts (kana + groupes), words.ts (~250 mots), confusables.ts
-  features/    logique métier par domaine (quiz/, audio/ ; à venir : srs, writing)
+  data/        données statiques : kana.ts (kana + groupes), words.ts (~250 mots), confusables.ts,
+               strokes.json (généré, tracés KanjiVG) + strokes.ts (accès typé)
+  features/    logique métier par domaine (quiz/, audio/, writing/ ; à venir : srs)
+scripts/       build-strokes.mjs : télécharge les SVG KanjiVG des kana (cache scripts/.cache, ignoré par git)
+               et régénère src/data/strokes.json — `npm run strokes` (`-- --refresh` pour retélécharger)
 public/        assets statiques (icône, audio…)
 ```
 
@@ -70,6 +73,12 @@ Alias d'import : `@/` → `src/`. Toujours l'utiliser plutôt que des chemins re
   - Table Dexie `answers` : une ligne par kana évalué (stage 6 : une ligne par kana distinct du mot, avec `wordId`).
   - Audio : tout passe par `useKanaAudio()` (provisoirement synthèse vocale de l'appareil ; à remplacer par les fichiers de l'étape 5 sans toucher aux appelants).
   - Rouge (`red-600`) = erreur, vert (`emerald-600`) = correct, identiques dans les deux thèmes ; ne pas utiliser l'accent pour un bouton affiché à côté d'une erreur.
+- **Écriture** (`features/writing/`) :
+  - Tracés KanjiVG (CC BY-SA 3.0, attribution dans `/settings/about` — à conserver) : repère carré de 109 unités, traits dans l'ordre, points à pas ~2. Ne jamais éditer `strokes.json` à la main.
+  - `strokeMatch.ts` compare des points rééchantillonnés (32) : forme (écart moyen après recentrage), position (écart des centres), sens (endroit vs envers, ignoré pour les traits < 14 unités), ordre (le trait correspond à un trait suivant). Modes `trace` (niveau 2, strict) et `free` (niveau 3, tolère décalage et échelle ×1,4). `session.ts` = machine à états pure, indice après 2 erreurs sur un trait.
+  - `WritingPad` : le canvas ne porte que l'encre en cours / le trait refusé ; modèle, traits validés et indices sont dans un SVG dessous. Pointer events + `touch-none` (pas de scroll pendant le tracé), un seul doigt actif, `getCoalescedEvents`.
+  - Seuls les kana d'un caractère sont exercés (pas les yōon/combinaisons).
+  - La page d'exercice est chargée en différé (`lazy`) pour sortir les tracés du bundle principal.
 - Tests Vitest à côté du code (`foo.test.ts`), pour toute logique pure.
 - Vérifier que `npm run build` et `npm test` passent avant chaque commit.
 
@@ -88,3 +97,4 @@ Alias d'import : `@/` → `src/`. Toujours l'utiliser plutôt que des chemins re
 - Étape 0 : projet initialisé, navigation par onglets, thème clair/sombre/système, PWA de base.
 - Étape 1 terminée : `src/data/kana.ts` (104 hiragana, 104 katakana + 24 katakana étendus), tests de cohérence, onglet Tableau (grille gojūon, bascule hiragana/katakana, vue détaillée `/table/:kanaId` avec précédent/suivant et swipe).
 - Étape 2 terminée : quiz en 6 stages (onglet Apprendre, `/learn/quiz`), mode manuel par groupes cochés + listes personnalisées (Dexie `customGroups`, `/learn/custom/:id`), options réessai / afficher la réponse / chrono, réponses enregistrées dans Dexie `answers`. Stage 5 dépend d'une voix japonaise sur l'appareil en attendant l'étape 5.
+- Étape 4 (écriture guidée) en place : onglet Écriture (grille gojūon/dakuten/handakuten), `/writing/:kanaId` avec 3 niveaux (1 animation de l'ordre des traits, 2 calque, 3 de mémoire), validation trait par trait, écran À propos. Pas encore de persistance des résultats d'écriture.

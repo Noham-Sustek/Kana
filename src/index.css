@@ -23,6 +23,31 @@ body {
   overscroll-behavior-y: none;
 }
 
+/* Tracé progressif d'une <polyline pathLength="1" stroke-dasharray="1 1"> ; l'opacité
+   masque le bout arrondi qui apparaîtrait au point de départ avant le début. */
+@keyframes stroke-draw {
+  0% {
+    stroke-dashoffset: 1;
+    opacity: 0;
+  }
+  0.1% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @keyframes timer-shrink {
   from {
     transform: scaleX(1);

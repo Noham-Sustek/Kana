@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "typecheck": "tsc -b",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "strokes": "node scripts/build-strokes.mjs"
   },
   "dependencies": {
     "dexie": "^4.4.6",

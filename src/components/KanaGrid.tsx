@@ -17,14 +17,16 @@ interface KanaGridProps {
   script: Script
   /** Contenu d'une case (lien, bouton à cocher…). */
   renderCell: (kana: Kana) => ReactNode
+  /** Sections à afficher (toutes par défaut). */
+  kinds?: readonly GroupKind[]
 }
 
 /** Tous les kana d'une écriture, en grilles gojūon par section. */
-export function KanaGrid({ script, renderCell }: KanaGridProps) {
+export function KanaGrid({ script, renderCell, kinds = KIND_ORDER }: KanaGridProps) {
   const groups = groupsOfScript(script)
   return (
     <>
-      {KIND_ORDER.map((kind) => {
+      {KIND_ORDER.filter((kind) => kinds.includes(kind)).map((kind) => {
         const sectionGroups = groups.filter((g) => g.kind === kind)
         if (sectionGroups.length === 0) return null
         return <KanaSection key={kind} kind={kind} groups={sectionGroups} renderCell={renderCell} />

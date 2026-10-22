@@ -1,3 +1,4 @@
+import { Link } from 'react-router'
 import { Icon, type IconName } from '@/components/Icon'
 import { PageHeader } from '@/components/PageHeader'
 import { useSettingsStore, type Theme } from '@/stores/settingsStore'
@@ -41,6 +42,15 @@ export function SettingsPage() {
           })}
         </div>
       </section>
+
+      <Link
+        to="/settings/about"
+        className="mt-4 flex min-h-14 items-center gap-3 rounded-2xl bg-white px-4 shadow-sm active:scale-[0.98] dark:bg-slate-900"
+      >
+        <Icon name="info" className="size-5 text-slate-500 dark:text-slate-400" />
+        <span className="flex-1 font-medium">À propos et crédits</span>
+        <Icon name="chevronRight" className="size-5 text-slate-400 dark:text-slate-500" />
+      </Link>
     </>
   )
 }

@@ -1,3 +1,4 @@
+import { Suspense, lazy } from 'react'
 import { HashRouter, Navigate, Route, Routes } from 'react-router'
 import { AppLayout } from '@/components/AppLayout'
 import { useApplyTheme } from '@/lib/useApplyTheme'
@@ -9,6 +10,12 @@ import { KanaDetailPage } from '@/pages/KanaDetailPage'
 import { WritingPage } from '@/pages/WritingPage'
 import { StatsPage } from '@/pages/StatsPage'
 import { SettingsPage } from '@/pages/SettingsPage'
+import { AboutPage } from '@/pages/AboutPage'
+
+// Chunk séparé (tracés KanjiVG, ~150 Ko) : précaché par le service worker comme le reste.
+const WritingExercisePage = lazy(() =>
+  import('@/pages/WritingExercisePage').then((m) => ({ default: m.WritingExercisePage })),
+)
 
 export function App() {
   useApplyTheme()
@@ -26,8 +33,17 @@ export function App() {
           <Route path="table" element={<TablePage />} />
           <Route path="table/:kanaId" element={<KanaDetailPage />} />
           <Route path="writing" element={<WritingPage />} />
+          <Route
+            path="writing/:kanaId"
+            element={
+              <Suspense>
+                <WritingExercisePage />
+              </Suspense>
+            }
+          />
           <Route path="stats" element={<StatsPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="settings/about" element={<AboutPage />} />
           <Route path="*" element={<Navigate to="/learn" replace />} />
         </Route>
       </Routes>
