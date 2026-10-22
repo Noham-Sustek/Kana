@@ -10,7 +10,8 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
-    "strokes": "node scripts/build-strokes.mjs"
+    "strokes": "node scripts/build-strokes.mjs",
+    "icons": "node scripts/build-icons.mjs"
   },
   "dependencies": {
     "dexie": "^4.4.6",
