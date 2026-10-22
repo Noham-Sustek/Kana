@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { Icon } from '@/components/Icon'
+import { JapaneseVoiceHelp } from '@/components/JapaneseVoiceHelp'
 import { PageHeader } from '@/components/PageHeader'
 import { ScriptToggle } from '@/components/ScriptToggle'
 import { SegmentedControl } from '@/components/SegmentedControl'
@@ -37,7 +38,9 @@ export function LearnPage() {
     : pool.length === 0
       ? 'Sélectionnez au moins un groupe.'
       : settings.stage === 5 && !audio.available
-        ? 'Aucune voix japonaise disponible sur cet appareil.'
+        ? audio.status === 'checking'
+          ? 'Recherche d’une voix japonaise…'
+          : 'Aucune voix japonaise sur cet appareil (voir ci-dessus).'
         : settings.stage === 6 && wordCount === 0
           ? 'Aucun mot ne s’écrit avec ces kana : ajoutez des groupes.'
           : null
@@ -185,6 +188,13 @@ function AutoPanel() {
               ))}
             </ul>
           </div>
+
+          {(audio.status === 'missing' || audio.status === 'unsupported') && (
+            <Link to="/settings" className="block text-xs text-slate-500 dark:text-slate-400">
+              Stage 5 « Écouter » ignoré : aucune voix japonaise.{' '}
+              <span className="font-medium text-accent-600 underline dark:text-accent-500">Installer une voix</span>
+            </Link>
+          )}
         </div>
       )}
     </Card>
@@ -205,7 +215,7 @@ function ManualPanel() {
             const selected = settings.stage === stage.id
             const note =
               stage.id === 5 && !audio.available
-                ? 'Audio indisponible'
+                ? 'Voix japonaise requise'
                 : stage.id === 6
                   ? `${wordCount} mot${wordCount > 1 ? 's' : ''} disponible${wordCount > 1 ? 's' : ''}`
                   : null
@@ -231,6 +241,7 @@ function ManualPanel() {
             )
           })}
         </div>
+        {settings.stage === 5 && audio.status === 'missing' && <JapaneseVoiceHelp />}
       </Card>
 
       <Card title="Kana à travailler" aside={`${pool.length} kana`}>

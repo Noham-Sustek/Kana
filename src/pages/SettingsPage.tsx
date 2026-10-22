@@ -1,6 +1,10 @@
+import type { ReactNode } from 'react'
 import { Link } from 'react-router'
+import { BackupSettings } from '@/components/BackupSettings'
 import { Icon, type IconName } from '@/components/Icon'
 import { PageHeader } from '@/components/PageHeader'
+import { ProfileSettings } from '@/components/ProfileSettings'
+import { VoiceSettings } from '@/components/VoiceSettings'
 import { useSettingsStore, type Theme } from '@/stores/settingsStore'
 
 const THEME_OPTIONS: { value: Theme; label: string; icon: IconName }[] = [
@@ -17,8 +21,7 @@ export function SettingsPage() {
     <>
       <PageHeader title="Réglages" />
 
-      <section className="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-900">
-        <h2 className="mb-3 text-sm font-semibold text-slate-500 dark:text-slate-400">Thème</h2>
+      <Section title="Thème">
         <div role="radiogroup" aria-label="Thème" className="grid grid-cols-3 gap-2">
           {THEME_OPTIONS.map((opt) => {
             const selected = theme === opt.value
@@ -41,16 +44,37 @@ export function SettingsPage() {
             )
           })}
         </div>
-      </section>
+      </Section>
+
+      <Section title="Profils">
+        <ProfileSettings />
+      </Section>
+
+      <Section title="Audio">
+        <VoiceSettings />
+      </Section>
+
+      <Section title="Sauvegarde">
+        <BackupSettings />
+      </Section>
 
       <Link
         to="/settings/about"
-        className="mt-4 flex min-h-14 items-center gap-3 rounded-2xl bg-white px-4 shadow-sm active:scale-[0.98] dark:bg-slate-900"
+        className="flex min-h-14 items-center gap-3 rounded-2xl bg-white px-4 shadow-sm active:scale-[0.98] dark:bg-slate-900"
       >
         <Icon name="info" className="size-5 text-slate-500 dark:text-slate-400" />
         <span className="flex-1 font-medium">À propos et crédits</span>
         <Icon name="chevronRight" className="size-5 text-slate-400 dark:text-slate-500" />
       </Link>
     </>
+  )
+}
+
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="mb-4 rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-900">
+      <h2 className="mb-3 text-sm font-semibold text-slate-500 dark:text-slate-400">{title}</h2>
+      {children}
+    </section>
   )
 }

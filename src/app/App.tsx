@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react'
 import { HashRouter, Navigate, Route, Routes } from 'react-router'
 import { AppLayout } from '@/components/AppLayout'
 import { useApplyTheme } from '@/lib/useApplyTheme'
+import { useEnsureActiveProfile } from '@/lib/useProfiles'
 import { LearnPage } from '@/pages/LearnPage'
 import { QuizPage } from '@/pages/QuizPage'
 import { CustomGroupPage } from '@/pages/CustomGroupPage'
@@ -19,6 +20,7 @@ const WritingExercisePage = lazy(() =>
 
 export function App() {
   useApplyTheme()
+  useEnsureActiveProfile()
 
   return (
     // HashRouter : aucune config serveur, fonctionne hors ligne et sur n'importe quel hébergeur statique.

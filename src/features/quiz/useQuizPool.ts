@@ -2,12 +2,19 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo } from 'react'
 import { KANA, type Kana } from '@/data/kana'
 import { db, type CustomGroup } from '@/db/db'
+import { useProfileStore } from '@/stores/profileStore'
 import { useQuizSettingsStore } from '@/stores/quizSettingsStore'
 
 const NO_GROUPS: CustomGroup[] = []
 
+/** Listes personnalisées du profil actif, par nom. */
 export function useCustomGroups(): CustomGroup[] {
-  return useLiveQuery(() => db.customGroups.orderBy('name').toArray(), [], NO_GROUPS)
+  const profileId = useProfileStore((s) => s.profileId)
+  return useLiveQuery(
+    () => db.customGroups.where('profileId').equals(profileId).sortBy('name'),
+    [profileId],
+    NO_GROUPS,
+  )
 }
 
 /** Kana à travailler : groupes cochés + listes personnalisées cochées, sans doublon. */

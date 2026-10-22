@@ -7,6 +7,7 @@ import { ScriptToggle } from '@/components/ScriptToggle'
 import { KANA, getKana, type Script } from '@/data/kana'
 import { db, type CustomGroup } from '@/db/db'
 import { deleteCustomGroup, saveCustomGroup } from '@/db/customGroups'
+import { activeProfileId } from '@/stores/profileStore'
 import { useQuizSettingsStore } from '@/stores/quizSettingsStore'
 
 /** Création (`/learn/custom/new[?kana=h-a,h-i]`) ou modification (`/learn/custom/:id`) d'une liste. */
@@ -46,7 +47,7 @@ function CustomGroupForm({ existing }: { existing: CustomGroup | null }) {
     if (!canSave) return
     // Ordre canonique pour un affichage stable.
     const ordered = KANA.filter((k) => kanaIds.includes(k.id)).map((k) => k.id)
-    const savedId = await saveCustomGroup({ id: existing?.id, name: name.trim(), kanaIds: ordered })
+    const savedId = await saveCustomGroup(activeProfileId(), { id: existing?.id, name: name.trim(), kanaIds: ordered })
     // Une nouvelle liste est cochée d'office pour le prochain quiz.
     if (!existing && !selectedCustomIds.includes(savedId)) toggleCustomGroup(savedId)
     navigate('/learn', { replace: true })

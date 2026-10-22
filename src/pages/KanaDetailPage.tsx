@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router'
 import { Icon } from '@/components/Icon'
 import { KanaNavButton } from '@/components/KanaNavButton'
+import { useKanaAudio } from '@/features/audio/useKanaAudio'
 import { GROUP_KIND_LABELS, counterpartOf, getGroup, getKana, kanaOfScript, type Kana } from '@/data/kana'
 
 const SWIPE_THRESHOLD_PX = 60
@@ -11,6 +12,7 @@ export function KanaDetailPage() {
   const navigate = useNavigate()
   const kana = getKana(kanaId)
   const touchStartX = useRef<number | null>(null)
+  const audio = useKanaAudio()
 
   const siblings = kana ? kanaOfScript(kana.script) : []
   const index = kana ? siblings.findIndex((k) => k.id === kana.id) : -1
@@ -75,7 +77,19 @@ export function KanaDetailPage() {
 
       <div className="flex flex-1 flex-col items-center justify-center py-8 text-center">
         <span className="font-jp text-[9rem] leading-none">{kana.char}</span>
-        <span className="mt-6 text-4xl font-semibold tracking-wide">{primary}</span>
+        <span className="mt-6 flex items-center gap-2 text-4xl font-semibold tracking-wide">
+          {primary}
+          {audio.available && (
+            <button
+              type="button"
+              onClick={() => audio.play(kana.char)}
+              aria-label="Écouter"
+              className="flex size-11 items-center justify-center rounded-full text-accent-600 active:scale-95 dark:text-accent-500"
+            >
+              <Icon name="volume" className="size-6" />
+            </button>
+          )}
+        </span>
         {variants.length > 0 && (
           <span className="mt-2 text-sm text-slate-500 dark:text-slate-400">
             Aussi accepté : {variants.join(', ')}

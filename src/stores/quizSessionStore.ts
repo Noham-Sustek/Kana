@@ -15,6 +15,7 @@ import {
   type Transition,
 } from '@/features/quiz/session'
 import type { Question, QuizOptions, StageId } from '@/features/quiz/types'
+import { activeProfileId } from '@/stores/profileStore'
 
 export interface AutoParams {
   script: Script
@@ -25,6 +26,8 @@ export interface AutoParams {
 
 interface QuizSessionStore {
   session: SessionState | null
+  /** Profil auquel les réponses de la session sont rattachées. */
+  profileId: number
   /** Présent en mode auto : état du planificateur pour la session en cours. */
   auto: AutoContext | null
   autoParams: AutoParams | null
@@ -46,7 +49,7 @@ function persistError(err: unknown) {
 // Session en mémoire uniquement : seules les réponses (et le déblocage auto) sont persistées (Dexie).
 export const useQuizSessionStore = create<QuizSessionStore>()((set, get) => {
   const apply = (transition: (s: SessionState, now: number) => Transition) => {
-    const { session, auto } = get()
+    const { session, auto, profileId } = get()
     if (!session) return
     const now = Date.now()
     const question = currentQuestion(session)
@@ -55,36 +58,45 @@ export const useQuizSessionStore = create<QuizSessionStore>()((set, get) => {
     if (!question || !outcome) return
 
     const records = toAnswerRecords(question, outcome, now)
-    recordAnswers(records).catch(persistError)
+    recordAnswers(profileId, records).catch(persistError)
 
     if (auto) {
       const { ctx, newlyUnlocked } = recordAutoAnswers(auto, records)
       set((s) => ({ auto: ctx, unlockedThisSession: [...s.unlockedThisSession, ...newlyUnlocked] }))
-      if (newlyUnlocked.length > 0) saveUnlockedGroups(ctx.script, ctx.unlocked).catch(persistError)
+      if (newlyUnlocked.length > 0) saveUnlockedGroups(profileId, ctx.script, ctx.unlocked).catch(persistError)
     }
   }
 
   return {
     session: null,
+    profileId: activeProfileId(),
     auto: null,
     autoParams: null,
     unlockedThisSession: [],
 
     start: (questions, options) =>
-      set({ session: startSession(questions, options, Date.now()), auto: null, autoParams: null, unlockedThisSession: [] }),
+      set({
+        session: startSession(questions, options, Date.now()),
+        profileId: activeProfileId(),
+        auto: null,
+        autoParams: null,
+        unlockedThisSession: [],
+      }),
 
     startAuto: async (params) => {
+      const profileId = activeProfileId()
       const [history, storedUnlocked] = await Promise.all([
-        loadAnswersForScript(params.script),
-        loadUnlockedGroups(params.script),
+        loadAnswersForScript(profileId, params.script),
+        loadUnlockedGroups(profileId, params.script),
       ])
       const now = Date.now()
       let ctx = createAutoContext(params.script, params.stages, history, storedUnlocked)
-      if (ctx.unlocked > storedUnlocked) saveUnlockedGroups(params.script, ctx.unlocked).catch(persistError)
+      if (ctx.unlocked > storedUnlocked) saveUnlockedGroups(profileId, params.script, ctx.unlocked).catch(persistError)
       const first = nextAutoQuestion(ctx, now, Math.random)
       if (first) ctx = first.ctx
       set({
         session: startSession(first ? [first.question] : [], params.options, now, params.questionCount),
+        profileId,
         auto: ctx,
         autoParams: params,
         unlockedThisSession: [],

@@ -1,11 +1,11 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo } from 'react'
 import type { KanaGroup, Script } from '@/data/kana'
-import { db } from '@/db/db'
-import { loadAnswersForScript } from '@/db/autoState'
+import { loadAnswersForScript, loadUnlockedGroups } from '@/db/autoState'
 import { UNLOCK_RATIO, acquiredRatio, activeKanaIds, cardKey, isMastered } from '@/engine/scheduler'
 import { createAutoContext } from '@/features/quiz/auto'
 import type { StageId } from '@/features/quiz/types'
+import { useProfileStore } from '@/stores/profileStore'
 
 export interface AutoOverview {
   activeGroups: KanaGroup[]
@@ -19,12 +19,13 @@ export interface AutoOverview {
 
 /** Résumé de la progression du mode auto pour une écriture (se met à jour en direct). */
 export function useAutoOverview(script: Script, stages: StageId[]): AutoOverview | undefined {
+  const profileId = useProfileStore((s) => s.profileId)
   const data = useLiveQuery(
     async () => ({
-      history: await loadAnswersForScript(script),
-      unlocked: (await db.autoState.get(script))?.unlockedGroups ?? 1,
+      history: await loadAnswersForScript(profileId, script),
+      unlocked: await loadUnlockedGroups(profileId, script),
     }),
-    [script],
+    [profileId, script],
   )
 
   const stagesKey = stages.join(',')
