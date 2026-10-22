@@ -27,6 +27,7 @@ npm run dev        # serveur de dev
 npm run build      # tsc -b && vite build — doit toujours passer avant un commit
 npm run preview    # sert dist/ (pour tester le service worker / l'installation PWA)
 npm run typecheck  # tsc -b seul
+npm test           # tests Vitest (vitest run) ; npm run test:watch en continu
 ```
 
 Tester sur le S24 : `npm run dev -- --host` puis ouvrir l'IP locale depuis le téléphone (le SW n'est actif qu'en HTTPS ou localhost — pour tester l'installation, passer par `preview` + tunnel ou le déploiement).
@@ -41,7 +42,7 @@ src/
   stores/      stores Zustand (un fichier par domaine : settingsStore.ts…)
   db/          base Dexie (db.ts) — schéma versionné
   lib/         hooks et utilitaires génériques
-  data/        (à venir) données statiques : kana, tracés, groupes
+  data/        données statiques : kana.ts (kana + groupes), tests *.test.ts à côté
   features/    (à venir) logique métier par domaine : quiz, srs, writing, audio
 public/        assets statiques (icône, audio…)
 ```
@@ -61,7 +62,9 @@ Alias d'import : `@/` → `src/`. Toujours l'utiliser plutôt que des chemins re
 - **Logique métier** isolée dans `features/` en fonctions pures testables, séparée des composants. Les stores orchestrent, les composants affichent.
 - **Mobile** : cibles tactiles ≥ 44 px, respecter `env(safe-area-inset-*)`, pas d'interaction au survol uniquement.
 - **Dépendances** : en ajouter le moins possible ; aucune qui charge des ressources distantes.
-- Vérifier que `npm run build` passe avant chaque commit.
+- **Données kana** (`src/data/kana.ts`) : ids stables `h-<clé>` / `k-<clé>` (persistés en base, ne jamais les renommer). `romaji[0]` = forme Hepburn affichée, les suivants = variantes acceptées. Les groupes katakana sont dérivés des hiragana (seuls les étendus sont écrits en katakana). Homophones Hepburn assumés : じ/ぢ (ji), ず/づ (zu), ヲ/ウォ (wo) — un quiz romaji → kana doit en tenir compte.
+- Tests Vitest à côté du code (`foo.test.ts`), pour toute logique pure.
+- Vérifier que `npm run build` et `npm test` passent avant chaque commit.
 
 ## Roadmap
 
@@ -75,4 +78,5 @@ Alias d'import : `@/` → `src/`. Toujours l'utiliser plutôt que des chemins re
 
 ## État actuel
 
-Étape 0 terminée : projet initialisé, navigation par onglets en bas (Apprendre, Tableau, Écriture, Stats, Réglages), thème clair/sombre/système dans Réglages, manifeste PWA + service worker de base. Les autres pages sont des placeholders, aucune logique métier.
+- Étape 0 : projet initialisé, navigation par onglets, thème clair/sombre/système, PWA de base.
+- Étape 1 terminée : `src/data/kana.ts` (104 hiragana, 104 katakana + 24 katakana étendus), tests de cohérence, onglet Tableau (grille gojūon, bascule hiragana/katakana, vue détaillée `/table/:kanaId` avec précédent/suivant et swipe).
