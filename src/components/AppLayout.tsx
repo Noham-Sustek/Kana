@@ -4,13 +4,15 @@ import { BottomTabBar } from '@/components/BottomTabBar'
 
 export function AppLayout() {
   const { mainRef, onScroll } = useScrollRestoration()
+  // Plein écran pendant un quiz : plus de place pour le clavier, pas de sortie accidentelle.
+  const immersive = useLocation().pathname.startsWith('/learn/quiz')
 
   return (
     <div className="mx-auto flex h-full max-w-lg flex-col">
       <main ref={mainRef} onScroll={onScroll} className="flex-1 overflow-y-auto px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-4">
         <Outlet />
       </main>
-      <BottomTabBar />
+      {!immersive && <BottomTabBar />}
     </div>
   )
 }

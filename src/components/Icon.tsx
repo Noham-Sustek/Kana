@@ -11,6 +11,12 @@ const PATHS = {
   monitor: 'M2 3h20v14H2zM8 21h8M12 17v4',
   chevronLeft: 'M15 18l-6-6 6-6',
   chevronRight: 'M9 18l6-6-6-6',
+  check: 'M20 6L9 17l-5-5',
+  close: 'M18 6L6 18M6 6l12 12',
+  plus: 'M12 5v14M5 12h14',
+  volume: 'M11 5L6 9H2v6h4l5 4zM15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14',
+  eye: 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
+  trash: 'M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6',
 } as const
 
 export type IconName = keyof typeof PATHS

@@ -42,8 +42,8 @@ src/
   stores/      stores Zustand (un fichier par domaine : settingsStore.ts…)
   db/          base Dexie (db.ts) — schéma versionné
   lib/         hooks et utilitaires génériques
-  data/        données statiques : kana.ts (kana + groupes), tests *.test.ts à côté
-  features/    (à venir) logique métier par domaine : quiz, srs, writing, audio
+  data/        données statiques : kana.ts (kana + groupes), words.ts (~250 mots), confusables.ts
+  features/    logique métier par domaine (quiz/, audio/ ; à venir : srs, writing)
 public/        assets statiques (icône, audio…)
 ```
 
@@ -63,6 +63,13 @@ Alias d'import : `@/` → `src/`. Toujours l'utiliser plutôt que des chemins re
 - **Mobile** : cibles tactiles ≥ 44 px, respecter `env(safe-area-inset-*)`, pas d'interaction au survol uniquement.
 - **Dépendances** : en ajouter le moins possible ; aucune qui charge des ressources distantes.
 - **Données kana** (`src/data/kana.ts`) : ids stables `h-<clé>` / `k-<clé>` (persistés en base, ne jamais les renommer). `romaji[0]` = forme Hepburn affichée, les suivants = variantes acceptées. Les groupes katakana sont dérivés des hiragana (seuls les étendus sont écrits en katakana). Homophones Hepburn assumés : じ/ぢ (ji), ず/づ (zu), ヲ/ウォ (wo) — un quiz romaji → kana doit en tenir compte.
+- **Quiz** (`features/quiz/`) :
+  - `questions.ts` génère les questions (pures, `Rng` injectable pour des tests déterministes) ; un distracteur ne doit jamais être une bonne réponse possible (pas de romaji partagé, cf. homophones).
+  - `reading.ts` vérifie une saisie romaji (kana seul ou mot) : toutes les variantes, っ = consonne doublée (っち → tchi/cchi), ー = voyelle répétée ou `-`. Les mots se lisent kana par kana (とうきょう → toukyou).
+  - `session.ts` = machine à états pure (pending → correct/failed). Le résultat est fixé au **premier essai** : une réussite après réessai reste un échec ; « Afficher la réponse » et chrono écoulé = échec `revealed`.
+  - Table Dexie `answers` : une ligne par kana évalué (stage 6 : une ligne par kana distinct du mot, avec `wordId`).
+  - Audio : tout passe par `useKanaAudio()` (provisoirement synthèse vocale de l'appareil ; à remplacer par les fichiers de l'étape 5 sans toucher aux appelants).
+  - Rouge (`red-600`) = erreur, vert (`emerald-600`) = correct, identiques dans les deux thèmes ; ne pas utiliser l'accent pour un bouton affiché à côté d'une erreur.
 - Tests Vitest à côté du code (`foo.test.ts`), pour toute logique pure.
 - Vérifier que `npm run build` et `npm test` passent avant chaque commit.
 
@@ -80,3 +87,4 @@ Alias d'import : `@/` → `src/`. Toujours l'utiliser plutôt que des chemins re
 
 - Étape 0 : projet initialisé, navigation par onglets, thème clair/sombre/système, PWA de base.
 - Étape 1 terminée : `src/data/kana.ts` (104 hiragana, 104 katakana + 24 katakana étendus), tests de cohérence, onglet Tableau (grille gojūon, bascule hiragana/katakana, vue détaillée `/table/:kanaId` avec précédent/suivant et swipe).
+- Étape 2 terminée : quiz en 6 stages (onglet Apprendre, `/learn/quiz`), mode manuel par groupes cochés + listes personnalisées (Dexie `customGroups`, `/learn/custom/:id`), options réessai / afficher la réponse / chrono, réponses enregistrées dans Dexie `answers`. Stage 5 dépend d'une voix japonaise sur l'appareil en attendant l'étape 5.
