@@ -19,19 +19,30 @@ const INK_LIGHT = '#0f172a' // slate-900
 const INK_DARK = '#f1f5f9' // slate-100
 const ERROR_COLOR = '#dc2626' // red-600
 const FLASH_MS = 500
+const TOOL_BUTTON =
+  'flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-white text-sm font-medium shadow-sm active:scale-95 dark:bg-slate-900'
 /** Écart minimal entre deux points enregistrés (unités KanjiVG) : évite d'accumuler du bruit. */
 const MIN_POINT_GAP = 0.4
+
+export interface WritingResult {
+  mistakes: number
+  /** Traits tels que dessinés (validés, plus le dernier refusé s'il y en a un). */
+  drawn: Point[][]
+  /** Vrai si l'utilisateur a demandé le modèle avant d'avoir fini. */
+  revealed: boolean
+}
 
 interface WritingPadProps {
   strokes: Point[][]
   mode: MatchMode
-  onComplete: (mistakes: number) => void
+  onComplete: (result: WritingResult) => void
 }
 
 /**
  * Tracé au doigt, validé trait par trait. Le canvas ne porte que l'encre en cours
  * (ou le dernier trait refusé, en rouge) ; modèle, traits validés et indices sont
- * dans un SVG en dessous.
+ * dans un SVG en dessous. En mode `trace`, un trait validé est remplacé par celui
+ * du modèle ; en mode `free`, il reste tel que dessiné (comparaison à la fin).
  */
 export function WritingPad({ strokes, mode, onComplete }: WritingPadProps) {
   const prepared = useMemo(() => strokes.map(prepareStroke), [strokes])
@@ -39,6 +50,7 @@ export function WritingPad({ strokes, mode, onComplete }: WritingPadProps) {
   const [hintFor, setHintFor] = useState<number | null>(null)
   const [flash, setFlash] = useState<number | null>(null)
   const [errorStroke, setErrorStroke] = useState<Point[] | null>(null)
+  const [drawn, setDrawn] = useState<Point[][]>([])
   const [size, setSize] = useState(0)
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -125,8 +137,10 @@ export function WritingPad({ strokes, mode, onComplete }: WritingPadProps) {
     if (verdict.ok) {
       const ctx = context(e.currentTarget)
       if (ctx) clear(ctx)
+      const nextDrawn = [...drawn, points]
+      setDrawn(nextDrawn)
       setFlash(session.done)
-      if (isComplete(nextState)) onComplete(totalMistakes(nextState))
+      if (isComplete(nextState)) onComplete({ mistakes: totalMistakes(nextState), drawn: nextDrawn, revealed: false })
     } else {
       setErrorStroke(points)
       navigator.vibrate?.(40)
@@ -145,6 +159,7 @@ export function WritingPad({ strokes, mode, onComplete }: WritingPadProps) {
     setSession(createWritingState(strokes.length))
     setHintFor(null)
     setErrorStroke(null)
+    setDrawn([])
     setFlash(null)
     current.current = null
     const canvas = canvasRef.current
@@ -152,7 +167,16 @@ export function WritingPad({ strokes, mode, onComplete }: WritingPadProps) {
     if (ctx) clear(ctx)
   }
 
+  const compare = () =>
+    onComplete({
+      mistakes: totalMistakes(session),
+      drawn: errorStroke ? [...drawn, errorStroke] : drawn,
+      revealed: true,
+    })
+
   const feedback = feedbackOf(session)
+  // Traits validés : ceux du modèle (calque) ou ceux réellement dessinés (libre).
+  const doneStrokes = mode === 'trace' ? strokes.slice(0, session.done) : drawn
 
   return (
     <div>
@@ -164,7 +188,7 @@ export function WritingPad({ strokes, mode, onComplete }: WritingPadProps) {
         >
           <KanaGuideLines />
           <g fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth={INK_WIDTH}>
-            {(mode === 'trace' || complete) &&
+            {mode === 'trace' &&
               strokes.map((points, i) => (
                 <polyline
                   key={`model-${i}`}
@@ -172,7 +196,7 @@ export function WritingPad({ strokes, mode, onComplete }: WritingPadProps) {
                   className="stroke-slate-200 dark:stroke-slate-700"
                 />
               ))}
-            {strokes.slice(0, session.done).map((points, i) => (
+            {doneStrokes.map((points, i) => (
               <polyline
                 key={`done-${i}`}
                 points={toSvgPoints(points)}
@@ -218,24 +242,26 @@ export function WritingPad({ strokes, mode, onComplete }: WritingPadProps) {
       </div>
 
       {!complete && (
-        <div className="mt-1 grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={reset}
-            className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-white text-sm font-medium shadow-sm active:scale-95 dark:bg-slate-900"
-          >
+        <div className={`mt-1 grid gap-2 ${mode === 'free' ? 'grid-cols-3' : 'grid-cols-2'}`}>
+          <button type="button" onClick={reset} className={TOOL_BUTTON}>
             <Icon name="replay" className="size-5" />
-            Recommencer
+            {mode === 'free' ? 'Effacer' : 'Recommencer'}
           </button>
           <button
             type="button"
             onClick={() => setHintFor(session.done)}
             disabled={showHint}
-            className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-white text-sm font-medium shadow-sm active:scale-95 disabled:opacity-40 dark:bg-slate-900"
+            className={`${TOOL_BUTTON} disabled:opacity-40`}
           >
             <Icon name="lightbulb" className="size-5" />
             Indice
           </button>
+          {mode === 'free' && (
+            <button type="button" onClick={compare} className={TOOL_BUTTON}>
+              <Icon name="eye" className="size-5" />
+              Comparer
+            </button>
+          )}
         </div>
       )}
     </div>

@@ -1,8 +1,14 @@
 import { create } from 'zustand'
 import type { KanaGroup, Script } from '@/data/kana'
-import { recordAnswers } from '@/db/answers'
+import { loadProfileAnswers, recordAnswers } from '@/db/answers'
 import { loadAnswersForScript, loadUnlockedGroups, saveUnlockedGroups } from '@/db/autoState'
-import { createAutoContext, nextAutoQuestion, recordAutoAnswers, type AutoContext } from '@/features/quiz/auto'
+import {
+  createAutoContext,
+  createSelectionContext,
+  nextAutoQuestion,
+  recordAutoAnswers,
+  type AutoContext,
+} from '@/features/quiz/auto'
 import {
   appendQuestion,
   currentQuestion,
@@ -19,6 +25,8 @@ import { activeProfileId } from '@/stores/profileStore'
 
 export interface AutoParams {
   script: Script
+  /** Kana choisis par l'utilisateur ; absent = parcours guidé de `script`. */
+  kanaIds?: string[]
   stages: StageId[]
   questionCount: number
   options: QuizOptions
@@ -85,13 +93,18 @@ export const useQuizSessionStore = create<QuizSessionStore>()((set, get) => {
 
     startAuto: async (params) => {
       const profileId = activeProfileId()
-      const [history, storedUnlocked] = await Promise.all([
-        loadAnswersForScript(profileId, params.script),
-        loadUnlockedGroups(profileId, params.script),
-      ])
       const now = Date.now()
-      let ctx = createAutoContext(params.script, params.stages, history, storedUnlocked)
-      if (ctx.unlocked > storedUnlocked) saveUnlockedGroups(profileId, params.script, ctx.unlocked).catch(persistError)
+      let ctx: AutoContext
+      if (params.kanaIds) {
+        ctx = createSelectionContext(params.kanaIds, params.stages, await loadProfileAnswers(profileId))
+      } else {
+        const [history, storedUnlocked] = await Promise.all([
+          loadAnswersForScript(profileId, params.script),
+          loadUnlockedGroups(profileId, params.script),
+        ])
+        ctx = createAutoContext(params.script, params.stages, history, storedUnlocked)
+        if (ctx.unlocked > storedUnlocked) saveUnlockedGroups(profileId, params.script, ctx.unlocked).catch(persistError)
+      }
       const first = nextAutoQuestion(ctx, now, Math.random)
       if (first) ctx = first.ctx
       set({

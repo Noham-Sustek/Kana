@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import type { AnswerEvent } from '@/engine/scheduler'
-import { activeKana, autoStages, createAutoContext, nextAutoQuestion, recordAutoAnswers } from '@/features/quiz/auto'
+import {
+  activeKana,
+  autoStages,
+  createAutoContext,
+  createSelectionContext,
+  nextAutoQuestion,
+  recordAutoAnswers,
+} from '@/features/quiz/auto'
 import { checkAnswer, correctAnswerLabel } from '@/features/quiz/questions'
 import { seededRng } from '@/features/quiz/random'
 import { toAnswerRecords } from '@/features/quiz/session'
@@ -53,5 +60,24 @@ describe('mode auto', () => {
     const ctx = createAutoContext('katakana', autoStages(true), [], 1)
     expect(activeKana(ctx).every((k) => k.script === 'katakana')).toBe(true)
     expect(ctx.stages).toContain(5)
+  })
+
+  it('une sélection ne pose que les kana choisis, sans débloquer de groupe', () => {
+    const rng = seededRng(3)
+    const chosen = ['h-nu', 'h-me', 'k-so', 'k-n']
+    let ctx = createSelectionContext(chosen, autoStages(false), [])
+    expect(activeKana(ctx).map((k) => k.id)).toEqual(chosen)
+    let now = T0
+    for (let i = 0; i < 200; i++) {
+      const next = nextAutoQuestion(ctx, now, rng)!
+      ctx = next.ctx
+      const q = next.question
+      if (q.stage !== 6) expect(chosen).toContain(q.kanaIds[0])
+      const recorded = recordAutoAnswers(ctx, toAnswerRecords(q, { correct: true, responseMs: 1000, revealed: false }, now))
+      expect(recorded.newlyUnlocked).toEqual([])
+      ctx = recorded.ctx
+      now += 4000
+    }
+    expect(ctx.progress.size).toBeGreaterThan(chosen.length)
   })
 })

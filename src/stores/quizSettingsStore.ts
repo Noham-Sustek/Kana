@@ -7,11 +7,14 @@ export const QUESTION_COUNTS = [10, 20, 50] as const
 export const TIMER_OPTIONS = [0, 5, 10, 20] as const
 
 export type QuizMode = 'auto' | 'manual'
+/** Mode auto : parcours guidé (groupes débloqués au fil de la maîtrise) ou kana choisis. */
+export type AutoSource = 'path' | 'selection'
 
 interface QuizSettingsState {
   mode: QuizMode
   /** Écriture du parcours en mode auto (chaque écriture a sa propre progression). */
   autoScript: Script
+  autoSource: AutoSource
   stage: StageId
   /** Groupes prédéfinis cochés (ids de KANA_GROUPS). */
   groupIds: string[]
@@ -25,6 +28,7 @@ interface QuizSettingsState {
 
   setMode: (mode: QuizMode) => void
   setAutoScript: (script: Script) => void
+  setAutoSource: (source: AutoSource) => void
   setStage: (stage: StageId) => void
   setGroupsSelected: (ids: string[], selected: boolean) => void
   toggleCustomGroup: (id: number) => void
@@ -39,6 +43,7 @@ export const useQuizSettingsStore = create<QuizSettingsState>()(
     (set) => ({
       mode: 'auto',
       autoScript: 'hiragana',
+      autoSource: 'path',
       stage: 1,
       groupIds: ['hiragana-a'],
       customGroupIds: [],
@@ -49,6 +54,7 @@ export const useQuizSettingsStore = create<QuizSettingsState>()(
 
       setMode: (mode) => set({ mode }),
       setAutoScript: (autoScript) => set({ autoScript }),
+      setAutoSource: (autoSource) => set({ autoSource }),
       setStage: (stage) => set({ stage }),
       setGroupsSelected: (ids, selected) =>
         set((s) => ({

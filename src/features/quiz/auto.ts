@@ -27,8 +27,10 @@ const RECENT_SIZE = 3
 
 export interface AutoContext {
   script: Script
-  /** Groupes de l'écriture, dans l'ordre d'introduction. */
+  /** Groupes de l'écriture, dans l'ordre d'introduction (vide pour une sélection). */
   path: KanaGroup[]
+  /** Kana choisis par l'utilisateur : remplace le parcours (pas de déblocage). */
+  selection: string[] | null
   stages: StageId[]
   progress: Map<string, CardState>
   unlocked: number
@@ -43,11 +45,35 @@ export function createAutoContext(
 ): AutoContext {
   const path = groupsOfScript(script)
   const progress = buildProgress(history)
-  return { script, path, stages, progress, unlocked: unlockedGroupCount(path, progress, stages, storedUnlocked), recent: [] }
+  return {
+    script,
+    path,
+    selection: null,
+    stages,
+    progress,
+    unlocked: unlockedGroupCount(path, progress, stages, storedUnlocked),
+    recent: [],
+  }
+}
+
+/**
+ * Révision des kana choisis par l'utilisateur : même planificateur (répétition
+ * espacée, stages successifs), sans parcours ni déblocage. `script` n'est utilisé
+ * que pour le parcours ; `history` = toutes les réponses du profil.
+ */
+export function createSelectionContext(
+  kanaIds: readonly string[],
+  stages: StageId[],
+  history: readonly AnswerEvent[],
+): AutoContext {
+  const selection = kanaIds.filter((id) => getKana(id) !== undefined)
+  const script = getKana(selection[0] ?? '')?.script ?? 'hiragana'
+  return { script, path: [], selection, stages, progress: buildProgress(history), unlocked: 0, recent: [] }
 }
 
 export function activeKana(ctx: AutoContext): Kana[] {
-  return activeKanaIds(ctx.path, ctx.unlocked).map((id) => getKana(id)!)
+  const ids = ctx.selection ?? activeKanaIds(ctx.path, ctx.unlocked)
+  return ids.map((id) => getKana(id)!)
 }
 
 /** Prochaine question choisie par le planificateur, ou `null` s'il n'y a rien à poser. */

@@ -1,9 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo } from 'react'
 import type { KanaGroup, Script } from '@/data/kana'
+import { loadProfileAnswers } from '@/db/answers'
 import { loadAnswersForScript, loadUnlockedGroups } from '@/db/autoState'
-import { UNLOCK_RATIO, acquiredRatio, activeKanaIds, cardKey, isMastered } from '@/engine/scheduler'
-import { createAutoContext } from '@/features/quiz/auto'
+import { UNLOCK_RATIO, acquiredRatio, cardKey, isMastered } from '@/engine/scheduler'
+import { activeKana, createAutoContext, createSelectionContext } from '@/features/quiz/auto'
 import type { StageId } from '@/features/quiz/types'
 import { useProfileStore } from '@/stores/profileStore'
 
@@ -17,22 +18,36 @@ export interface AutoOverview {
   perStage: { stage: StageId; mastered: number; total: number }[]
 }
 
-/** Résumé de la progression du mode auto pour une écriture (se met à jour en direct). */
-export function useAutoOverview(script: Script, stages: StageId[]): AutoOverview | undefined {
+/**
+ * Résumé de la progression du mode auto (se met à jour en direct) : parcours
+ * guidé de `script`, ou kana choisis si `selection` est fourni.
+ */
+export function useAutoOverview(
+  script: Script,
+  stages: StageId[],
+  selection: string[] | null = null,
+): AutoOverview | undefined {
   const profileId = useProfileStore((s) => s.profileId)
+  const isSelection = selection !== null
   const data = useLiveQuery(
-    async () => ({
-      history: await loadAnswersForScript(profileId, script),
-      unlocked: await loadUnlockedGroups(profileId, script),
-    }),
-    [profileId, script],
+    async () =>
+      isSelection
+        ? { history: await loadProfileAnswers(profileId), unlocked: 0 }
+        : {
+            history: await loadAnswersForScript(profileId, script),
+            unlocked: await loadUnlockedGroups(profileId, script),
+          },
+    [profileId, script, isSelection],
   )
 
   const stagesKey = stages.join(',')
+  const selectionKey = selection?.join(',')
   return useMemo(() => {
     if (!data) return undefined
-    const ctx = createAutoContext(script, stages, data.history, data.unlocked)
-    const active = activeKanaIds(ctx.path, ctx.unlocked)
+    const ctx = selection
+      ? createSelectionContext(selection, stages, data.history)
+      : createAutoContext(script, stages, data.history, data.unlocked)
+    const active = activeKana(ctx).map((k) => k.id)
     return {
       activeGroups: ctx.path.slice(0, ctx.unlocked),
       nextGroup: ctx.path[ctx.unlocked],
@@ -44,6 +59,6 @@ export function useAutoOverview(script: Script, stages: StageId[]): AutoOverview
         total: active.length,
       })),
     }
-    // stagesKey plutôt que `stages`, tableau recréé à chaque rendu par l'appelant.
-  }, [data, script, stagesKey])
+    // Clés texte plutôt que les tableaux, recréés à chaque rendu par l'appelant.
+  }, [data, script, stagesKey, selectionKey])
 }

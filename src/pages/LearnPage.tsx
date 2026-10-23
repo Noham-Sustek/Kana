@@ -11,9 +11,16 @@ import { useKanaAudio } from '@/features/audio/useKanaAudio'
 import { generateQuestions, wordsForPool } from '@/features/quiz/questions'
 import { autoStages } from '@/features/quiz/auto'
 import { STAGES, getStage } from '@/features/quiz/stages'
+import type { StageId } from '@/features/quiz/types'
 import { useAutoOverview } from '@/features/quiz/useAutoOverview'
 import { useCustomGroups, useQuizPool } from '@/features/quiz/useQuizPool'
-import { QUESTION_COUNTS, TIMER_OPTIONS, useQuizSettingsStore, type QuizMode } from '@/stores/quizSettingsStore'
+import {
+  QUESTION_COUNTS,
+  TIMER_OPTIONS,
+  useQuizSettingsStore,
+  type AutoSource,
+  type QuizMode,
+} from '@/stores/quizSettingsStore'
 import { useQuizSessionStore } from '@/stores/quizSessionStore'
 
 const KIND_ORDER: GroupKind[] = ['gojuon', 'dakuten', 'handakuten', 'yoon', 'extended']
@@ -21,6 +28,11 @@ const KIND_ORDER: GroupKind[] = ['gojuon', 'dakuten', 'handakuten', 'yoon', 'ext
 const MODE_OPTIONS: { value: QuizMode; label: string }[] = [
   { value: 'auto', label: 'Auto' },
   { value: 'manual', label: 'Manuel' },
+]
+
+const SOURCE_OPTIONS: { value: AutoSource; label: string }[] = [
+  { value: 'path', label: 'Parcours guidé' },
+  { value: 'selection', label: 'Mon choix' },
 ]
 
 export function LearnPage() {
@@ -32,9 +44,12 @@ export function LearnPage() {
   const audio = useKanaAudio()
   const wordCount = wordsForPool(pool).length
   const isAuto = settings.mode === 'auto'
+  const isSelection = isAuto && settings.autoSource === 'selection'
 
   const unavailableReason = isAuto
-    ? null
+    ? isSelection && pool.length === 0
+      ? 'Sélectionnez au moins un groupe.'
+      : null
     : pool.length === 0
       ? 'Sélectionnez au moins un groupe.'
       : settings.stage === 5 && !audio.available
@@ -50,6 +65,7 @@ export function LearnPage() {
     if (isAuto) {
       await startAuto({
         script: settings.autoScript,
+        kanaIds: isSelection ? pool.map((k) => k.id) : undefined,
         stages: autoStages(audio.available),
         questionCount: settings.questionCount,
         options,
@@ -124,6 +140,20 @@ export function LearnPage() {
 }
 
 function AutoPanel() {
+  const source = useQuizSettingsStore((s) => s.autoSource)
+  const setSource = useQuizSettingsStore((s) => s.setAutoSource)
+
+  return (
+    <>
+      <div className="mb-4">
+        <SegmentedControl label="Kana révisés" options={SOURCE_OPTIONS} value={source} onChange={setSource} />
+      </div>
+      {source === 'path' ? <PathPanel /> : <SelectionPanel />}
+    </>
+  )
+}
+
+function PathPanel() {
   const script = useQuizSettingsStore((s) => s.autoScript)
   const setScript = useQuizSettingsStore((s) => s.setAutoScript)
   const audio = useKanaAudio()
@@ -131,6 +161,11 @@ function AutoPanel() {
 
   return (
     <Card title="Progression">
+      <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">
+        On commence par la ligne あ. Quand 80 % des kana en cours sont reconnus vite et sans erreur, la ligne suivante
+        s’ajoute. Chaque kana bien connu passe ensuite aux exercices suivants (stages), et revient régulièrement en
+        révision.
+      </p>
       <ScriptToggle value={script} onChange={setScript} />
       {overview && (
         <div className="mt-4 space-y-4">
@@ -173,21 +208,7 @@ function AutoPanel() {
             <p className="text-sm text-slate-500 dark:text-slate-400">Tous les groupes sont débloqués.</p>
           )}
 
-          <div>
-            <span className="mb-1.5 block text-xs font-semibold text-slate-500 dark:text-slate-400">
-              Kana maîtrisés par stage
-            </span>
-            <ul className="grid grid-cols-3 gap-1.5">
-              {overview.perStage.map(({ stage, mastered, total }) => (
-                <li key={stage} className="rounded-lg bg-slate-100 px-2 py-1.5 dark:bg-slate-800">
-                  <span className="block text-xs text-slate-500 dark:text-slate-400">{getStage(stage).title}</span>
-                  <span className="text-sm font-semibold tabular-nums">
-                    {mastered}/{total}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <StageMastery perStage={overview.perStage} />
 
           {(audio.status === 'missing' || audio.status === 'unsupported') && (
             <Link to="/settings" className="block text-xs text-slate-500 dark:text-slate-400">
@@ -198,6 +219,54 @@ function AutoPanel() {
         </div>
       )}
     </Card>
+  )
+}
+
+function SelectionPanel() {
+  const settings = useQuizSettingsStore()
+  const pool = useQuizPool()
+  const audio = useKanaAudio()
+  const overview = useAutoOverview(settings.autoScript, autoStages(audio.available), pool.map((k) => k.id))
+
+  return (
+    <>
+      <Card title="Kana à réviser" aside={`${pool.length} kana`}>
+        <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">
+          Cochez ce que vous voulez réviser : les questions portent uniquement sur ces kana, en commençant par ceux que
+          vous connaissez le moins.
+        </p>
+        <ScriptToggle value={settings.pickerScript} onChange={settings.setPickerScript} />
+        <GroupPicker groups={groupsOfScript(settings.pickerScript)} />
+      </Card>
+
+      <CustomGroupsCard />
+
+      {overview && pool.length > 0 && (
+        <Card title="Maîtrise de la sélection">
+          <StageMastery perStage={overview.perStage} />
+        </Card>
+      )}
+    </>
+  )
+}
+
+function StageMastery({ perStage }: { perStage: { stage: StageId; mastered: number; total: number }[] }) {
+  return (
+    <div>
+      <span className="mb-1.5 block text-xs font-semibold text-slate-500 dark:text-slate-400">
+        Kana maîtrisés par stage
+      </span>
+      <ul className="grid grid-cols-3 gap-1.5">
+        {perStage.map(({ stage, mastered, total }) => (
+          <li key={stage} className="rounded-lg bg-slate-100 px-2 py-1.5 dark:bg-slate-800">
+            <span className="block text-xs text-slate-500 dark:text-slate-400">{getStage(stage).title}</span>
+            <span className="text-sm font-semibold tabular-nums">
+              {mastered}/{total}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }
 

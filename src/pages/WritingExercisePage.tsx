@@ -4,7 +4,8 @@ import { Icon } from '@/components/Icon'
 import { KanaNavButton } from '@/components/KanaNavButton'
 import { SegmentedControl } from '@/components/SegmentedControl'
 import { StrokeOrderAnimation } from '@/components/StrokeOrderAnimation'
-import { WritingPad } from '@/components/WritingPad'
+import { WritingComparison } from '@/components/WritingComparison'
+import { WritingPad, type WritingResult } from '@/components/WritingPad'
 import { getKana, kanaOfScript, type Kana } from '@/data/kana'
 import { isWritable, strokesOf } from '@/data/strokes'
 import { useKanaAudio } from '@/features/audio/useKanaAudio'
@@ -150,27 +151,27 @@ interface PracticeStepProps {
 }
 
 function PracticeStep({ strokes, level, onNextLevel, onNextKana }: PracticeStepProps) {
-  const [mistakes, setMistakes] = useState<number | null>(null)
+  const [result, setResult] = useState<WritingResult | null>(null)
   const [attempt, setAttempt] = useState(0)
 
   return (
     <>
-      <WritingPad
-        key={attempt}
-        strokes={strokes}
-        mode={level === 2 ? 'trace' : 'free'}
-        onComplete={setMistakes}
-      />
-      {mistakes !== null && (
+      {/* Écriture libre : à la fin, le tracé et le modèle remplacent la zone de dessin, côte à côte. */}
+      {level === 3 && result ? (
+        <div style={{ animation: 'fade-in 0.2s' }}>
+          <WritingComparison drawn={result.drawn} model={strokes} />
+        </div>
+      ) : (
+        <WritingPad key={attempt} strokes={strokes} mode={level === 2 ? 'trace' : 'free'} onComplete={setResult} />
+      )}
+      {result && (
         <section className="mt-4 rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-900" style={{ animation: 'fade-in 0.2s' }}>
-          <p className="font-semibold">
-            {mistakes === 0 ? 'Parfait, sans erreur !' : `Terminé avec ${mistakes} erreur${mistakes > 1 ? 's' : ''}.`}
-          </p>
+          <p className="font-semibold">{resultText(result, strokes.length)}</p>
           <div className="mt-3 grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => {
-                setMistakes(null)
+                setResult(null)
                 setAttempt((n) => n + 1)
               }}
               className={SECONDARY_BUTTON}
@@ -194,4 +195,12 @@ function PracticeStep({ strokes, level, onNextLevel, onNextKana }: PracticeStepP
       )}
     </>
   )
+}
+
+function resultText({ mistakes, drawn, revealed }: WritingResult, strokeCount: number): string {
+  if (revealed) {
+    const done = Math.min(drawn.length, strokeCount)
+    return `Modèle affiché : comparez avec votre tracé (${done} trait${done > 1 ? 's' : ''} sur ${strokeCount}).`
+  }
+  return mistakes === 0 ? 'Parfait, sans erreur !' : `Terminé avec ${mistakes} erreur${mistakes > 1 ? 's' : ''}.`
 }
