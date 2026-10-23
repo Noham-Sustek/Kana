@@ -54,8 +54,8 @@ describe('toRomaji', () => {
 })
 
 describe('liste de mots', () => {
-  it('contient environ 200 mots, sans doublon', () => {
-    expect(WORDS.length).toBeGreaterThanOrEqual(200)
+  it('contient environ 1000 mots, sans doublon', () => {
+    expect(WORDS.length).toBeGreaterThanOrEqual(1000)
     const ids = WORDS.map((w) => w.id)
     expect(new Set(ids).size).toBe(ids.length)
   })

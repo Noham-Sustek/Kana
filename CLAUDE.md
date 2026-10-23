@@ -44,7 +44,7 @@ src/
   db/          base Dexie (db.ts) — schéma versionné ; un fichier d'accès par domaine (answers, profiles, backup…)
   engine/      scheduler.ts : planificateur du mode auto (répétition espacée, pur)
   lib/         hooks et utilitaires génériques
-  data/        données statiques : kana.ts (kana + groupes), words.ts (~250 mots), confusables.ts,
+  data/        données statiques : kana.ts (kana + groupes), words.ts (~1060 mots), confusables.ts,
                strokes.json (généré, tracés KanjiVG) + strokes.ts (accès typé)
   features/    logique métier par domaine (quiz/, audio/, writing/, stats/, backup/)
 scripts/       build-icons.mjs : icônes PWA (192/512, maskable, apple-touch, icon.svg) depuis le tracé de あ,
