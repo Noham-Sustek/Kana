@@ -60,7 +60,8 @@ describe('qualité d’une réponse', () => {
   it('les stages à saisie tolèrent plus de temps', () => {
     const at = (stage: StageId) => answerQuality({ stage, correct: true, responseMs: 5000, revealed: false })
     expect(at(4)).toBeGreaterThan(at(1))
-    expect(at(6)).toBe(1)
+    expect(at(7)).toBe(1)
+    expect(at(5)).toBe(1)
   })
 })
 

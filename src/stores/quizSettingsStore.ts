@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Script } from '@/data/kana'
+import type { SentenceFilter } from '@/features/quiz/questions'
+import { renumberStageV1 } from '@/features/quiz/stages'
 import type { StageId } from '@/features/quiz/types'
 
 export const QUESTION_COUNTS = [10, 20, 50] as const
@@ -16,6 +18,8 @@ interface QuizSettingsState {
   autoScript: Script
   autoSource: AutoSource
   stage: StageId
+  /** Écriture des phrases (stage 9, mode manuel). */
+  sentenceFilter: SentenceFilter
   /** Groupes prédéfinis cochés (ids de KANA_GROUPS). */
   groupIds: string[]
   /** Listes personnalisées cochées (ids Dexie). */
@@ -30,6 +34,7 @@ interface QuizSettingsState {
   setAutoScript: (script: Script) => void
   setAutoSource: (source: AutoSource) => void
   setStage: (stage: StageId) => void
+  setSentenceFilter: (filter: SentenceFilter) => void
   setGroupsSelected: (ids: string[], selected: boolean) => void
   toggleCustomGroup: (id: number) => void
   setQuestionCount: (n: number) => void
@@ -45,6 +50,7 @@ export const useQuizSettingsStore = create<QuizSettingsState>()(
       autoScript: 'hiragana',
       autoSource: 'path',
       stage: 1,
+      sentenceFilter: 'all',
       groupIds: ['hiragana-a'],
       customGroupIds: [],
       questionCount: 20,
@@ -56,6 +62,7 @@ export const useQuizSettingsStore = create<QuizSettingsState>()(
       setAutoScript: (autoScript) => set({ autoScript }),
       setAutoSource: (autoSource) => set({ autoSource }),
       setStage: (stage) => set({ stage }),
+      setSentenceFilter: (sentenceFilter) => set({ sentenceFilter }),
       setGroupsSelected: (ids, selected) =>
         set((s) => ({
           groupIds: selected ? [...new Set([...s.groupIds, ...ids])] : s.groupIds.filter((id) => !ids.includes(id)),
@@ -71,6 +78,14 @@ export const useQuizSettingsStore = create<QuizSettingsState>()(
       setTimerSeconds: (timerSeconds) => set({ timerSeconds }),
       setPickerScript: (pickerScript) => set({ pickerScript }),
     }),
-    { name: 'kana-quiz-settings', version: 1 },
+    {
+      name: 'kana-quiz-settings',
+      version: 2,
+      migrate: (persisted, version) => {
+        const state = persisted as { stage?: number }
+        if (version < 2 && state.stage) state.stage = renumberStageV1(state.stage)
+        return state as QuizSettingsState
+      },
+    },
   ),
 )

@@ -8,6 +8,7 @@ import {
   score,
   startSession,
   submitAnswer,
+  submitDrawing,
   toAnswerRecords,
 } from '@/features/quiz/session'
 import type { ChoiceQuestion } from '@/features/quiz/types'
@@ -77,13 +78,27 @@ describe('session', () => {
     expect(score(s)).toEqual({ correct: 3, total: 3 })
   })
 
-  it('stage 6 : une ligne par kana distinct du mot', () => {
-    const questions = generateQuestions(6, [getKana('h-ne')!, getKana('h-ko')!], 10)
+  it('stage 7 : une ligne par kana distinct du mot', () => {
+    const questions = generateQuestions(7, [getKana('h-ne')!, getKana('h-ko')!], 10)
     const q = questions.find((question) => question.kind === 'input' && question.wordId === 'ねこ')
     const records = toAnswerRecords(q!, { correct: true, responseMs: 1200, revealed: false }, 42)
     expect(records).toEqual([
-      { kanaId: 'h-ne', stage: 6, correct: true, responseMs: 1200, answeredAt: 42, revealed: false, wordId: 'ねこ' },
-      { kanaId: 'h-ko', stage: 6, correct: true, responseMs: 1200, answeredAt: 42, revealed: false, wordId: 'ねこ' },
+      { kanaId: 'h-ne', stage: 7, correct: true, responseMs: 1200, answeredAt: 42, revealed: false, wordId: 'ねこ' },
+      { kanaId: 'h-ko', stage: 7, correct: true, responseMs: 1200, answeredAt: 42, revealed: false, wordId: 'ねこ' },
     ])
+  })
+
+  it('dessin : résultat fixé par submitDrawing, sans réessai', () => {
+    const questions = generateQuestions(5, [getKana('h-a')!, getKana('h-i')!], 2)
+    let state = startSession(questions, { retry: true, timerSeconds: 0 }, 0)
+    expect(submitAnswer(state, 'a', 10).state).toBe(state)
+    const failed = submitDrawing(state, false, 3000)
+    expect(failed.state.status).toBe('failed')
+    expect(failed.outcome).toEqual({ correct: false, responseMs: 3000, revealed: false })
+    state = nextQuestion(failed.state, 4000)
+    const ok = submitDrawing(state, true, 9000)
+    expect(ok.state.status).toBe('correct')
+    expect(ok.outcome?.responseMs).toBe(5000)
+    expect(score(ok.state)).toEqual({ correct: 1, total: 2 })
   })
 })

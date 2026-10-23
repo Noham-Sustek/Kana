@@ -44,7 +44,7 @@ src/
   db/          base Dexie (db.ts) — schéma versionné ; un fichier d'accès par domaine (answers, profiles, backup…)
   engine/      scheduler.ts : planificateur du mode auto (répétition espacée, pur)
   lib/         hooks et utilitaires génériques
-  data/        données statiques : kana.ts (kana + groupes), words.ts (~1060 mots), confusables.ts,
+  data/        données statiques : kana.ts (kana + groupes), words.ts (~1060 mots), sentences.ts (phrases), confusables.ts,
                strokes.json (généré, tracés KanjiVG) + strokes.ts (accès typé)
   features/    logique métier par domaine (quiz/, audio/, writing/, stats/, backup/)
 scripts/       build-icons.mjs : icônes PWA (192/512, maskable, apple-touch, icon.svg) depuis le tracé de あ,
@@ -73,12 +73,14 @@ Alias d'import : `@/` → `src/`. Toujours l'utiliser plutôt que des chemins re
 - **Mobile** : cibles tactiles ≥ 44 px, respecter `env(safe-area-inset-*)`, pas d'interaction au survol uniquement.
 - **Dépendances** : en ajouter le moins possible ; aucune qui charge des ressources distantes.
 - **Données kana** (`src/data/kana.ts`) : ids stables `h-<clé>` / `k-<clé>` (persistés en base, ne jamais les renommer). `romaji[0]` = forme Hepburn affichée, les suivants = variantes acceptées. Les groupes katakana sont dérivés des hiragana (seuls les étendus sont écrits en katakana). Homophones Hepburn assumés : じ/ぢ (ji), ず/づ (zu), ヲ/ウォ (wo) — un quiz romaji → kana doit en tenir compte.
-- **Quiz** (`features/quiz/`) :
+- **Quiz** (`features/quiz/`) — 9 stages : 1 kana→romaji (4 choix), 2 romaji→kana, 3 kana→romaji (8 proches), 4 saisie, 5 dessiner le kana, 6 écouter, 7 lire un mot, 8 dessiner un mot, 9 lire une phrase. Les numéros sont persistés (`answers.stage`) : en insérer un = migration Dexie + `BACKUP_VERSION` + migration du store de réglages (cf. `renumberStageV1`, v6).
   - `questions.ts` génère les questions (pures, `Rng` injectable pour des tests déterministes) ; un distracteur ne doit jamais être une bonne réponse possible (pas de romaji partagé, cf. homophones).
   - `reading.ts` vérifie une saisie romaji (kana seul ou mot) : toutes les variantes, っ = consonne doublée (っち → tchi/cchi), ー = voyelle répétée ou `-`. Les mots se lisent kana par kana (とうきょう → toukyou).
   - `session.ts` = machine à états pure (pending → correct/failed). Le résultat est fixé au **premier essai** : une réussite après réessai reste un échec ; « Afficher la réponse » et chrono écoulé = échec `revealed`.
   - Mode auto, deux sources (`autoSource`) : `path` = parcours guidé par écriture (groupes débloqués quand 80 % des kana actifs sont maîtrisés au stage 1) ; `selection` = kana cochés par l'utilisateur (mêmes `groupIds`/`customGroupIds` que le mode manuel), même planificateur sans déblocage (`createSelectionContext`).
-  - Table Dexie `answers` : une ligne par kana évalué (stage 6 : une ligne par kana distinct du mot, avec `wordId`).
+  - Table Dexie `answers` : une ligne par kana évalué (mots et phrases : une ligne par kana distinct, `wordId` pour les mots).
+  - Phrases (`data/sentences.ts`) : mots et particules séparés par des espaces ; は / へ / を isolés se lisent wa / e / o (`reading.ts`, lecture du kana aussi acceptée). Les phrases tout hiragana existent aussi converties en katakana (`toKatakana`) ; celles avec des mots empruntés forment la série « mixte ». Filtre d'écriture `sentenceFilter` (mode manuel).
+  - Dessin (stages 5 et 8, `kind: 'draw'`) : `QuizDrawing` (chargé en différé), un `WritingPad` libre par caractère ; petits kana dessinés en grand, ー synthétisé (`drawingStrokesOf`). Juste = aucune erreur de trait ni indice sur tous les caractères (`session.submitDrawing`), puis comparaison tracé / modèle. Le romaji d'un mot à dessiner note ー par un macron (kōhī).
   - Audio : tout passe par `useKanaAudio()` — Web Speech API avec une voix `ja` de l'appareil (pas de fichiers audio). Détection partagée (`checking` → `ready` / `missing` / `unsupported`, les voix Android arrivent en asynchrone). Sans voix, le stage 5 est retiré du mode auto et `JapaneseVoiceHelp` explique l'installation (Samsung/Google TTS).
   - Rouge (`red-600`) = erreur, vert (`emerald-600`) = correct, identiques dans les deux thèmes ; ne pas utiliser l'accent pour un bouton affiché à côté d'une erreur.
 - **Écriture** (`features/writing/`) :

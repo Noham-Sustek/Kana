@@ -64,8 +64,19 @@ describe('parseBackup', () => {
 
   it('signale l’élément invalide', () => {
     const data = sample()
-    data.answers[1]!.stage = 9
+    data.answers[1]!.stage = 10
     expect(() => parseBackup(data)).toThrow(/réponses, élément 2/)
+  })
+
+  it('renumérote les stages d’une sauvegarde v1 (avant les stages de dessin)', () => {
+    const v1 = { ...sample(), version: 1 }
+    v1.answers[0]!.stage = 5
+    v1.answers[1]!.stage = 6
+    const parsed = parseBackup(v1)
+    expect(parsed.version).toBe(BACKUP_VERSION)
+    expect(parsed.answers.map((a) => a.stage)).toEqual([6, 7])
+    // Une sauvegarde v2 est prise telle quelle.
+    expect(parseBackup(sample()).answers.map((a) => a.stage)).toEqual([1, 6])
   })
 
   it('refuse des données rattachées à un profil absent', () => {

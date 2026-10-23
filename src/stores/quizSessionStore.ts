@@ -16,6 +16,7 @@ import {
   revealAnswer,
   startSession,
   submitAnswer,
+  submitDrawing,
   toAnswerRecords,
   type SessionState,
   type Transition,
@@ -45,6 +46,7 @@ interface QuizSessionStore {
   start: (questions: Question[], options: QuizOptions) => void
   startAuto: (params: AutoParams) => Promise<void>
   submit: (answer: string) => void
+  submitDrawing: (correct: boolean) => void
   reveal: () => void
   next: () => void
   quit: () => void
@@ -117,6 +119,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()((set, get) => {
     },
 
     submit: (answer) => apply((s, now) => submitAnswer(s, answer, now)),
+    submitDrawing: (correct) => apply((s, now) => submitDrawing(s, correct, now)),
     reveal: () => apply(revealAnswer),
 
     next: () => {

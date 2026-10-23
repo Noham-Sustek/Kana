@@ -1,6 +1,7 @@
 import { Dexie, type EntityTable, type Table } from 'dexie'
 import type { Script } from '@/data/kana'
 import type { StageId } from '@/features/quiz/types'
+import { renumberStageV1 } from '@/features/quiz/stages'
 
 /** Une réponse à une question de quiz (premier essai uniquement). */
 export interface AnswerRecord {
@@ -82,6 +83,18 @@ db.version(4)
 db.version(5).stores({
   autoState: null,
 })
+// v6 : stage 5 « Dessiner » inséré et stage 8 « Écrire » ajouté : l'ancien 5
+// (Écouter) devient 6, l'ancien 6 (Lire) devient 7.
+db.version(6)
+  .stores({})
+  .upgrade((tx) =>
+    tx
+      .table('answers')
+      .toCollection()
+      .modify((a: { stage: number }) => {
+        a.stage = renumberStageV1(a.stage)
+      }),
+  )
 
 db.on('populate', (tx) => {
   tx.table('profiles').add({ id: DEFAULT_PROFILE_ID, name: DEFAULT_PROFILE_NAME, createdAt: Date.now() })

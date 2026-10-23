@@ -24,3 +24,28 @@ export function strokesOf(char: string): Point[][] | undefined {
 export function isWritable(kana: Kana): boolean {
   return [...kana.char].length === 1 && raw[kana.char] !== undefined
 }
+
+// Dessin dans le quiz : chaque caractère a sa propre case, un petit kana s'y
+// dessine donc en taille normale (ゃ → や, っ → つ).
+const SMALL_TO_FULL: Record<string, string> = {
+  ぁ: 'あ', ぃ: 'い', ぅ: 'う', ぇ: 'え', ぉ: 'お', っ: 'つ', ゃ: 'や', ゅ: 'ゆ', ょ: 'よ', ゎ: 'わ',
+  ァ: 'ア', ィ: 'イ', ゥ: 'ウ', ェ: 'エ', ォ: 'オ', ッ: 'ツ', ャ: 'ヤ', ュ: 'ユ', ョ: 'ヨ', ヮ: 'ワ',
+}
+
+/** ー (absent de KanjiVG) : un trait horizontal de gauche à droite, au pas de ~2 unités. */
+const LONG_MARK_STROKES: Point[][] = [Array.from({ length: 39 }, (_, i): Point => [17 + i * 2, 54.5])]
+
+export function isSmallKana(char: string): boolean {
+  return char in SMALL_TO_FULL
+}
+
+/** Traits à dessiner pour un caractère dans le quiz, ou `undefined` s'il n'est pas dessinable. */
+export function drawingStrokesOf(char: string): Point[][] | undefined {
+  if (char === 'ー') return LONG_MARK_STROKES
+  return strokesOf(SMALL_TO_FULL[char] ?? char)
+}
+
+/** Vrai si chaque caractère du texte peut être dessiné. */
+export function isDrawable(text: string): boolean {
+  return [...text].every((c) => drawingStrokesOf(c) !== undefined)
+}

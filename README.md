@@ -10,8 +10,10 @@ fonctionne **100 % hors ligne**, **sans compte, sans pub, sans tracking** : tout
 
 - **Tableau** des 104 hiragana, 104 katakana et 24 katakana étendus (gojūon, dakuten, handakuten, yōon),
   vue détaillée avec prononciation, heatmap de réussite en option.
-- **Quiz en 6 stages** : reconnaître (kana → romaji), retrouver (romaji → kana), discerner (8 choix
-  proches), taper au clavier, écouter (son → kana), lire des mots (~1060 : ~715 en hiragana, ~350 en katakana).
+- **Quiz en 9 stages** : reconnaître (kana → romaji), retrouver (romaji → kana), discerner (8 choix
+  proches), taper au clavier, dessiner le kana au doigt, écouter (son → kana), lire des mots
+  (~1060 : ~715 en hiragana, ~350 en katakana), dessiner un mot donné en romaji, lire des phrases
+  (hiragana, katakana ou mixtes).
   - **Mode auto** : répétition espacée par kana et par stage, nouveaux groupes débloqués au fil de la maîtrise.
   - **Mode manuel** : groupes au choix, listes personnalisées, chrono, réessai.
 - **Écriture guidée** au doigt : animation de l'ordre des traits, calque, puis de mémoire, validation trait

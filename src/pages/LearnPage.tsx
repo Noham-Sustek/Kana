@@ -8,7 +8,7 @@ import { SegmentedControl } from '@/components/SegmentedControl'
 import { Switch } from '@/components/Switch'
 import { GROUP_KIND_LABELS, getKana, groupsOfScript, type GroupKind, type KanaGroup } from '@/data/kana'
 import { useKanaAudio } from '@/features/audio/useKanaAudio'
-import { generateQuestions, wordsForPool } from '@/features/quiz/questions'
+import { generateQuestions, sentencesForPool, wordsForPool, type SentenceFilter } from '@/features/quiz/questions'
 import { autoStages } from '@/features/quiz/auto'
 import { STAGES, getStage } from '@/features/quiz/stages'
 import type { StageId } from '@/features/quiz/types'
@@ -30,6 +30,13 @@ const MODE_OPTIONS: { value: QuizMode; label: string }[] = [
   { value: 'manual', label: 'Manuel' },
 ]
 
+const SENTENCE_FILTER_OPTIONS: { value: SentenceFilter; label: string }[] = [
+  { value: 'all', label: 'Toutes' },
+  { value: 'hiragana', label: 'Hira' },
+  { value: 'katakana', label: 'Kata' },
+  { value: 'mixed', label: 'Mixte' },
+]
+
 const SOURCE_OPTIONS: { value: AutoSource; label: string }[] = [
   { value: 'path', label: 'Parcours guidé' },
   { value: 'selection', label: 'Mon choix' },
@@ -43,6 +50,7 @@ export function LearnPage() {
   const pool = useQuizPool()
   const audio = useKanaAudio()
   const wordCount = wordsForPool(pool).length
+  const sentenceCount = sentencesForPool(pool, settings.sentenceFilter).length
   const isAuto = settings.mode === 'auto'
   const isSelection = isAuto && settings.autoSource === 'selection'
 
@@ -52,13 +60,15 @@ export function LearnPage() {
       : null
     : pool.length === 0
       ? 'Sélectionnez au moins un groupe.'
-      : settings.stage === 5 && !audio.available
+      : settings.stage === 6 && !audio.available
         ? audio.status === 'checking'
           ? 'Recherche d’une voix japonaise…'
           : 'Aucune voix japonaise sur cet appareil (voir ci-dessus).'
-        : settings.stage === 6 && wordCount === 0
+        : (settings.stage === 7 || settings.stage === 8) && wordCount === 0
           ? 'Aucun mot ne s’écrit avec ces kana : ajoutez des groupes.'
-          : null
+          : settings.stage === 9 && sentenceCount === 0
+            ? 'Aucune phrase ne s’écrit avec ces kana : ajoutez des groupes ou changez d’écriture.'
+            : null
 
   const start = async () => {
     const options = { retry: settings.retry, timerSeconds: settings.timerSeconds }
@@ -71,7 +81,10 @@ export function LearnPage() {
         options,
       })
     } else {
-      startSession(generateQuestions(settings.stage, pool, settings.questionCount), options)
+      startSession(
+        generateQuestions(settings.stage, pool, settings.questionCount, Math.random, settings.sentenceFilter),
+        options,
+      )
     }
     navigate('/learn/quiz')
   }
@@ -275,6 +288,8 @@ function ManualPanel() {
   const pool = useQuizPool()
   const audio = useKanaAudio()
   const wordCount = wordsForPool(pool).length
+  const sentenceCount = sentencesForPool(pool, settings.sentenceFilter).length
+  const plural = (n: number, word: string) => `${n} ${word}${n > 1 ? 's' : ''} disponible${n > 1 ? 's' : ''}`
 
   return (
     <>
@@ -283,11 +298,13 @@ function ManualPanel() {
           {STAGES.map((stage) => {
             const selected = settings.stage === stage.id
             const note =
-              stage.id === 5 && !audio.available
+              stage.id === 6 && !audio.available
                 ? 'Voix japonaise requise'
-                : stage.id === 6
-                  ? `${wordCount} mot${wordCount > 1 ? 's' : ''} disponible${wordCount > 1 ? 's' : ''}`
-                  : null
+                : stage.id === 7 || stage.id === 8
+                  ? plural(wordCount, 'mot')
+                  : stage.id === 9
+                    ? plural(sentenceCount, 'phrase')
+                    : null
             return (
               <button
                 key={stage.id}
@@ -310,7 +327,19 @@ function ManualPanel() {
             )
           })}
         </div>
-        {settings.stage === 5 && audio.status === 'missing' && <JapaneseVoiceHelp />}
+        {settings.stage === 6 && audio.status === 'missing' && <JapaneseVoiceHelp />}
+        {settings.stage === 9 && (
+          <div className="mt-4">
+            <Field label="Écriture des phrases">
+              <SegmentedControl
+                label="Écriture des phrases"
+                options={SENTENCE_FILTER_OPTIONS}
+                value={settings.sentenceFilter}
+                onChange={settings.setSentenceFilter}
+              />
+            </Field>
+          </div>
+        )}
       </Card>
 
       <Card title="Kana à travailler" aside={`${pool.length} kana`}>

@@ -1,9 +1,10 @@
 import { CONFUSABLE_SETS } from '@/data/confusables'
 import { getGroup, kanaOfScript, type Kana } from '@/data/kana'
+import { SENTENCES, type Sentence, type SentenceScript } from '@/data/sentences'
 import { WORDS, type Word } from '@/data/words'
 import { drawCycling, shuffle, type Rng } from '@/features/quiz/random'
 import { kanaIdsOf, matchesReading, toRomaji } from '@/features/quiz/reading'
-import type { ChoiceQuestion, InputQuestion, Question, StageId } from '@/features/quiz/types'
+import type { ChoiceQuestion, DrawQuestion, InputQuestion, Question, StageId } from '@/features/quiz/types'
 
 // ---------------------------------------------------------------------------
 // Similarité visuelle
@@ -83,20 +84,79 @@ export function wordsForPool(pool: readonly Kana[]): Word[] {
   return WORDS.filter((w) => kanaIdsOf(w.kana).every((id) => ids.has(id)))
 }
 
+/** Filtre d'écriture des phrases (stage 9) ; `all` = toutes. */
+export type SentenceFilter = SentenceScript | 'all'
+
+/** Phrases dont tous les kana appartiennent à la sélection. */
+export function sentencesForPool(pool: readonly Kana[], filter: SentenceFilter = 'all'): Sentence[] {
+  const ids = new Set(pool.map((k) => k.id))
+  return SENTENCES.filter(
+    (s) => (filter === 'all' || s.script === filter) && kanaIdsOf(s.text).every((id) => ids.has(id)),
+  )
+}
+
 export function wordQuestion(word: Word): InputQuestion {
   return {
     kind: 'input',
-    stage: 6,
+    stage: 7,
     prompt: { type: 'word', text: word.kana, meaning: word.meaning },
-    kanaIds: kanaIdsOf(word.kana),
+    kanaIds: [...kanaIdsOf(word.kana)],
     reading: word.kana,
     expected: toRomaji(word.kana),
     wordId: word.id,
   }
 }
 
+/** Stage 8 : le mot est donné en romaji (ー noté ā, ī…) et en français, à dessiner. */
+export function wordDrawQuestion(word: Word): DrawQuestion {
+  const kanaIds = [...kanaIdsOf(word.kana)]
+  return {
+    kind: 'draw',
+    stage: 8,
+    prompt: {
+      type: 'draw',
+      text: toRomaji(word.kana, { macron: true }),
+      script: kanaIds[0]?.startsWith('k-') ? 'katakana' : 'hiragana',
+      meaning: word.meaning,
+    },
+    kanaIds,
+    target: word.kana,
+    chars: [...word.kana],
+    wordId: word.id,
+  }
+}
+
+export function sentenceQuestion(sentence: Sentence): InputQuestion {
+  return {
+    kind: 'input',
+    stage: 9,
+    prompt: { type: 'sentence', text: sentence.text, meaning: sentence.meaning },
+    kanaIds: [...kanaIdsOf(sentence.text)],
+    reading: sentence.text,
+    expected: toRomaji(sentence.text),
+  }
+}
+
+/** Stage 5 : kana à dessiner d'après son romaji (précisé si un autre kana se lit pareil). */
+function kanaDrawQuestion(target: Kana): DrawQuestion {
+  const homophone = kanaOfScript(target.script).some((k) => k.id !== target.id && ambiguous(k, target))
+  return {
+    kind: 'draw',
+    stage: 5,
+    prompt: {
+      type: 'draw',
+      text: target.romaji[0]!,
+      script: target.script,
+      ...(homophone ? { note: `groupe ${getGroup(target.groupId)!.label}` } : {}),
+    },
+    kanaIds: [target.id],
+    target: target.char,
+    chars: [...target.char],
+  }
+}
+
 /** Question sur un kana précis ; `pool` sert de vivier prioritaire de distracteurs. */
-export function kanaQuestion(stage: Exclude<StageId, 6>, target: Kana, pool: readonly Kana[], rng: Rng): Question {
+export function kanaQuestion(stage: Exclude<StageId, 7 | 8 | 9>, target: Kana, pool: readonly Kana[], rng: Rng): Question {
   const sameScript = (list: readonly Kana[]) => list.filter((k) => k.script === target.script)
   const poolTier = shuffle(sameScript(pool), rng)
   const scriptTier = shuffle(kanaOfScript(target.script), rng)
@@ -122,7 +182,9 @@ export function kanaQuestion(stage: Exclude<StageId, 6>, target: Kana, pool: rea
         expected: target.romaji[0]!,
       }
     case 5:
-      return choiceQuestion(5, target, pickDistractors(target, [poolTier, scriptTier], 3), 'kana', { type: 'audio', text: target.char }, rng)
+      return kanaDrawQuestion(target)
+    case 6:
+      return choiceQuestion(6, target, pickDistractors(target, [poolTier, scriptTier], 3), 'kana', { type: 'audio', text: target.char }, rng)
   }
 }
 
@@ -132,17 +194,34 @@ export function generateQuestions(
   pool: readonly Kana[],
   count: number,
   rng: Rng = Math.random,
+  sentenceFilter: SentenceFilter = 'all',
 ): Question[] {
-  if (stage === 6) return drawCycling(wordsForPool(pool), count, rng).map(wordQuestion)
+  if (stage === 7) return drawCycling(wordsForPool(pool), count, rng).map(wordQuestion)
+  if (stage === 8) return drawCycling(wordsForPool(pool), count, rng).map(wordDrawQuestion)
+  if (stage === 9) return drawCycling(sentencesForPool(pool, sentenceFilter), count, rng).map(sentenceQuestion)
   return drawCycling(pool, count, rng).map((target) => kanaQuestion(stage, target, pool, rng))
 }
 
+/** Réponse texte ; un dessin est évalué trait par trait ailleurs (session.submitDrawing). */
 export function checkAnswer(question: Question, answer: string): boolean {
-  return question.kind === 'choice' ? answer === question.answerId : matchesReading(question.reading, answer)
+  switch (question.kind) {
+    case 'choice':
+      return answer === question.answerId
+    case 'input':
+      return matchesReading(question.reading, answer)
+    case 'draw':
+      return false
+  }
 }
 
 /** Bonne réponse en clair, pour la correction. */
 export function correctAnswerLabel(question: Question): string {
-  if (question.kind === 'input') return question.expected
-  return question.choices.find((c) => c.id === question.answerId)!.label
+  switch (question.kind) {
+    case 'input':
+      return question.expected
+    case 'draw':
+      return question.target
+    case 'choice':
+      return question.choices.find((c) => c.id === question.answerId)!.label
+  }
 }

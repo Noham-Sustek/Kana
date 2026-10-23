@@ -16,7 +16,7 @@ function choiceQuestions(stage: StageId, pool: readonly Kana[], count = 200) {
 }
 
 describe('génération', () => {
-  it.each([1, 2, 3, 4, 5] as StageId[])('stage %i : nombre de questions et kana issus de la sélection', (stage) => {
+  it.each([1, 2, 3, 4, 5, 6] as StageId[])('stage %i : nombre de questions et kana issus de la sélection', (stage) => {
     const questions = generateQuestions(stage, SMALL_POOL, 12, seededRng(1))
     expect(questions).toHaveLength(12)
     const poolIds = SMALL_POOL.map((kana) => kana.id)
@@ -50,7 +50,7 @@ describe('questions à choix', () => {
     [2, 4, FULL_HIRAGANA],
     [3, 8, FULL_HIRAGANA],
     [3, 8, FULL_KATAKANA],
-    [5, 4, SMALL_POOL],
+    [6, 4, SMALL_POOL],
   ]
 
   it.each(cases)('stage %i : %i choix distincts et non ambigus', (stage, n, pool) => {
@@ -121,20 +121,61 @@ describe('questions à saisie', () => {
     expect(correctAnswerLabel(q!)).toBe('shi')
   })
 
-  it('stage 6 ne pose que des mots lisibles avec la sélection', () => {
+  it('stage 7 ne pose que des mots lisibles avec la sélection', () => {
     const pool = groupsOfScript('hiragana')
       .filter((g) => g.kind === 'gojuon')
       .flatMap((g) => groupKana(g.id))
     const words = wordsForPool(pool)
     expect(words.length).toBeGreaterThan(50)
     const poolIds = new Set(pool.map((kana) => kana.id))
-    for (const q of generateQuestions(6, pool, 100, seededRng(5))) {
+    for (const q of generateQuestions(7, pool, 100, seededRng(5))) {
       expect(q.kind).toBe('input')
       for (const id of q.kanaIds) expect(poolIds.has(id)).toBe(true)
     }
   })
 
-  it('stage 6 sans mot disponible → aucune question', () => {
-    expect(generateQuestions(6, [k('h-n')], 10)).toEqual([])
+  it('stages 7 à 9 sans mot ni phrase disponible → aucune question', () => {
+    for (const stage of [7, 8, 9] as StageId[]) expect(generateQuestions(stage, [k('h-n')], 10)).toEqual([])
+  })
+
+  it('stage 9 : phrases lisibles avec la sélection, dans l’écriture demandée', () => {
+    for (const filter of ['hiragana', 'katakana', 'mixed'] as const) {
+      const questions = generateQuestions(9, KANA, 30, seededRng(2), filter)
+      expect(questions).toHaveLength(30)
+      for (const q of questions) {
+        expect(q.kind).toBe('input')
+        if (q.kind !== 'input') continue
+        expect(checkAnswer(q, q.expected)).toBe(true)
+        const scripts = new Set(q.kanaIds.map((id) => id[0]))
+        expect(scripts.size).toBe(filter === 'mixed' ? 2 : 1)
+      }
+    }
+    // Hiragana seuls : pas de phrase katakana ni mixte.
+    for (const q of generateQuestions(9, FULL_HIRAGANA, 30, seededRng(4))) {
+      expect(q.kanaIds.every((id) => id.startsWith('h-'))).toBe(true)
+    }
+  })
+})
+
+describe('questions à dessiner', () => {
+  it('stage 5 : un kana à dessiner, précisé quand un autre se lit pareil', () => {
+    const [q] = generateQuestions(5, [k('h-kya')], 1)
+    expect(q).toMatchObject({ kind: 'draw', stage: 5, target: 'きゃ', chars: ['き', 'ゃ'], kanaIds: ['h-kya'] })
+    expect(q!.prompt).toMatchObject({ type: 'draw', text: 'kya', script: 'hiragana' })
+    const [ji] = generateQuestions(5, [k('h-dji')], 1)
+    expect(ji!.prompt).toMatchObject({ text: 'ji', note: expect.stringContaining('d') })
+    expect(checkAnswer(ji!, 'ji')).toBe(false)
+    expect(correctAnswerLabel(ji!)).toBe('ぢ')
+  })
+
+  it('stage 8 : un mot de la sélection, en romaji et en français', () => {
+    const pool = kanaOfScript('katakana')
+    for (const q of generateQuestions(8, pool, 30, seededRng(9))) {
+      expect(q.kind).toBe('draw')
+      if (q.kind !== 'draw') continue
+      expect(q.chars.join('')).toBe(q.target)
+      expect(q.wordId).toBe(q.target)
+      expect(q.prompt).toMatchObject({ type: 'draw', script: 'katakana', meaning: expect.any(String) })
+    }
   })
 })

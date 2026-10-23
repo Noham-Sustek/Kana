@@ -9,7 +9,14 @@ import {
   type CardRef,
   type CardState,
 } from '@/engine/scheduler'
-import { kanaQuestion, wordQuestion, wordsForPool } from '@/features/quiz/questions'
+import {
+  kanaQuestion,
+  sentenceQuestion,
+  sentencesForPool,
+  wordDrawQuestion,
+  wordQuestion,
+  wordsForPool,
+} from '@/features/quiz/questions'
 import type { Rng } from '@/features/quiz/random'
 import { kanaIdsOf } from '@/features/quiz/reading'
 import type { Question, StageId } from '@/features/quiz/types'
@@ -17,9 +24,9 @@ import type { Question, StageId } from '@/features/quiz/types'
 // Mode auto : relie le planificateur (engine/scheduler) à la génération de
 // questions. Pur : l'état est passé et renvoyé, la persistance est ailleurs.
 
-/** Stages du parcours auto, dans l'ordre de progression. Le stage 5 exige l'audio. */
+/** Stages du parcours auto, dans l'ordre de progression. Le stage 6 exige l'audio. */
 export function autoStages(audioAvailable: boolean): StageId[] {
-  return audioAvailable ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 6]
+  return audioAvailable ? [1, 2, 3, 4, 5, 6, 7, 8, 9] : [1, 2, 3, 4, 5, 7, 8, 9]
 }
 
 /** Nombre de kana posés récemment à ne pas reposer tout de suite. */
@@ -80,8 +87,10 @@ export function activeKana(ctx: AutoContext): Kana[] {
 export function nextAutoQuestion(ctx: AutoContext, now: number, rng: Rng): { question: Question; ctx: AutoContext } | null {
   const pool = activeKana(ctx)
   const words = wordsForPool(pool)
-  // Stage 6 seulement pour les kana présents dans au moins un mot lisible.
-  const readable = new Set(words.flatMap((w) => kanaIdsOf(w.kana)))
+  const sentences = sentencesForPool(pool)
+  // Stages 7 à 9 seulement pour les kana présents dans au moins un mot / une phrase lisible.
+  const inWords = new Set(words.flatMap((w) => kanaIdsOf(w.kana)))
+  const inSentences = new Set(sentences.flatMap((s) => kanaIdsOf(s.text)))
 
   const card = nextCard({
     progress: ctx.progress,
@@ -89,15 +98,19 @@ export function nextAutoQuestion(ctx: AutoContext, now: number, rng: Rng): { que
     stages: ctx.stages,
     now,
     recent: ctx.recent,
-    isApplicable: ({ kanaId, stage }) => stage !== 6 || readable.has(kanaId),
+    isApplicable: ({ kanaId, stage }) =>
+      stage === 9 ? inSentences.has(kanaId) : stage >= 7 ? inWords.has(kanaId) : true,
     rng,
   })
   if (!card) return null
 
+  const pick = <T>(items: T[]) => items[Math.floor(rng() * items.length)]!
   let question: Question
-  if (card.stage === 6) {
-    const candidates = words.filter((w) => kanaIdsOf(w.kana).includes(card.kanaId))
-    question = wordQuestion(candidates[Math.floor(rng() * candidates.length)]!)
+  if (card.stage === 7 || card.stage === 8) {
+    const word = pick(words.filter((w) => kanaIdsOf(w.kana).includes(card.kanaId)))
+    question = card.stage === 7 ? wordQuestion(word) : wordDrawQuestion(word)
+  } else if (card.stage === 9) {
+    question = sentenceQuestion(pick(sentences.filter((s) => kanaIdsOf(s.text).includes(card.kanaId))))
   } else {
     question = kanaQuestion(card.stage, getKana(card.kanaId)!, pool, rng)
   }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { Suspense, lazy, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router'
 import { Icon } from '@/components/Icon'
 import { getKana } from '@/data/kana'
@@ -13,6 +13,9 @@ import { useQuizSessionStore } from '@/stores/quizSessionStore'
 
 const AUTO_ADVANCE_MS = 700
 
+// Chunk séparé (tracés KanjiVG) : hors du bundle principal, précaché comme le reste.
+const QuizDrawing = lazy(() => import('@/components/QuizDrawing').then((m) => ({ default: m.QuizDrawing })))
+
 // Couleurs de correction volontairement identiques en clair et en sombre.
 const WRONG_CLASS = 'border-red-600 bg-red-600 text-white'
 const RIGHT_CLASS = 'border-emerald-600 bg-emerald-600 text-white'
@@ -25,19 +28,21 @@ export function QuizPage() {
 }
 
 function QuizRunner({ session }: { session: SessionState }) {
-  const { submit, reveal, next, quit } = useQuizSessionStore()
+  const { submit, submitDrawing, reveal, next, quit } = useQuizSessionStore()
   const navigate = useNavigate()
   const question = currentQuestion(session)!
   const { status, options } = session
   const settled = status !== 'pending'
   const isAuto = useQuizSessionStore((s) => s.auto !== null)
 
-  // Bonne réponse : passage automatique à la question suivante.
+  // Bonne réponse : passage automatique à la question suivante (sauf dessin :
+  // on laisse le temps de comparer avec le modèle).
+  const isDrawing = question.kind === 'draw'
   useEffect(() => {
-    if (status !== 'correct') return
+    if (status !== 'correct' || isDrawing) return
     const timer = setTimeout(next, AUTO_ADVANCE_MS)
     return () => clearTimeout(timer)
-  }, [status, next, session.index])
+  }, [status, next, session.index, isDrawing])
 
   // Chrono : à expiration, la réponse est révélée (compte comme une erreur).
   useEffect(() => {
@@ -104,14 +109,26 @@ function QuizRunner({ session }: { session: SessionState }) {
         {isAuto && 'Auto · '}Stage {question.stage} · {getStage(question.stage).description}
       </p>
 
-      <div className="flex flex-1 flex-col justify-center py-6">
+      <div className={`flex flex-col justify-center ${isDrawing ? 'py-4' : 'flex-1 py-6'}`}>
         <PromptView key={session.index} question={question} />
       </div>
 
-      {question.kind === 'choice' ? (
-        <ChoiceAnswers question={question} session={session} onPick={submit} />
-      ) : (
+      {question.kind === 'choice' && <ChoiceAnswers question={question} session={session} onPick={submit} />}
+      {question.kind === 'input' && (
         <InputAnswer key={session.index} question={question} session={session} onSubmit={submit} onNext={next} />
+      )}
+      {question.kind === 'draw' && (
+        <>
+          <Suspense>
+            <QuizDrawing key={session.index} question={question} settled={settled} onDone={submitDrawing} />
+          </Suspense>
+          {settled && (
+            <p className={`mt-3 text-center text-sm font-medium ${status === 'correct' ? 'text-emerald-600' : 'text-red-600'}`}>
+              {status === 'correct' ? 'Parfait, sans erreur !' : 'À revoir : comparez avec le modèle.'}{' '}
+              <span className="font-jp text-base text-slate-900 dark:text-slate-100">{question.target}</span>
+            </p>
+          )}
+        </>
       )}
 
       <div className="mt-4 min-h-12">
@@ -176,6 +193,32 @@ function PromptView({ question }: { question: Question }) {
         <div className="text-center">
           <p className="font-jp text-6xl leading-tight break-keep">{prompt.text}</p>
           <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">{prompt.meaning}</p>
+        </div>
+      )
+    case 'sentence':
+      return (
+        <div className="text-center">
+          {/* Un bloc par mot : le japonais se couperait sinon au milieu d'un mot. */}
+          <p className="flex flex-wrap justify-center gap-x-[0.4em] font-jp text-3xl leading-relaxed">
+            {prompt.text.split(' ').map((word, i) => (
+              <span key={i}>{word}</span>
+            ))}
+          </p>
+          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">{prompt.meaning}</p>
+        </div>
+      )
+    case 'draw':
+      return (
+        <div className="text-center">
+          <p className="text-4xl font-semibold tracking-wide">{prompt.text}</p>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            En {prompt.script}
+            {prompt.note && ` · ${prompt.note}`}
+            {prompt.meaning && ` · ${prompt.meaning}`}
+          </p>
+          {/[āīūēō]/.test(prompt.text) && (
+            <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">ā, ī, ū, ē, ō : voyelle longue (ー)</p>
+          )}
         </div>
       )
     case 'audio':
@@ -287,7 +330,9 @@ function InputAnswer({ question, session, onSubmit, onNext }: InputAnswerProps) 
         enterKeyHint={status === 'pending' ? 'done' : 'next'}
         placeholder={status === 'pending' ? 'romaji' : ''}
         aria-label="Votre réponse en romaji"
-        className={`min-h-14 w-full rounded-xl border-2 px-4 text-center text-2xl outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-accent-500/40 ${stateClass}`}
+        className={`min-h-14 w-full rounded-xl border-2 px-4 text-center outline-none ${
+          question.stage === 9 ? 'text-lg' : 'text-2xl'
+        } placeholder:text-slate-400 focus:ring-2 focus:ring-accent-500/40 ${stateClass}`}
       />
       <p className="mt-2 min-h-5 text-center text-sm">
         {status === 'failed' && (
@@ -314,13 +359,13 @@ function QuizSummary({ session }: { session: SessionState }) {
   // Questions ratées, sans doublon.
   const missed = new Map<string, Question>()
   session.questions.forEach((q, i) => {
-    if (!session.outcomes[i]?.correct) missed.set(q.kind === 'input' ? q.reading : q.kanaIds[0]!, q)
+    if (!session.outcomes[i]?.correct) missed.set(missedKey(q), q)
   })
   const missedKanaIds = [...new Set([...missed.values()].flatMap((q) => q.kanaIds))]
 
   const restart = () => {
     if (autoParams) return void startAuto(autoParams)
-    start(generateQuestions(settings.stage, pool, settings.questionCount), {
+    start(generateQuestions(settings.stage, pool, settings.questionCount, Math.random, settings.sentenceFilter), {
       retry: settings.retry,
       timerSeconds: settings.timerSeconds,
     })
@@ -358,12 +403,8 @@ function QuizSummary({ session }: { session: SessionState }) {
           <ul className="flex flex-wrap gap-2">
             {[...missed.entries()].map(([key, q]) => (
               <li key={key} className="flex items-baseline gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1.5 dark:bg-slate-800">
-                <span className="font-jp text-lg">
-                  {q.kind === 'input' ? q.reading : getKana(q.kanaIds[0]!)!.char}
-                </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400">
-                  {q.kind === 'input' ? q.expected : getKana(q.kanaIds[0]!)!.romaji[0]}
-                </span>
+                <span className="font-jp text-lg">{missedKey(q)}</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">{missedReading(q)}</span>
               </li>
             ))}
           </ul>
@@ -398,4 +439,17 @@ function QuizSummary({ session }: { session: SessionState }) {
       </div>
     </div>
   )
+}
+
+/** Texte en kana d'une question, pour la liste « À revoir ». */
+function missedKey(q: Question): string {
+  if (q.kind === 'input') return q.reading
+  if (q.kind === 'draw') return q.target
+  return getKana(q.kanaIds[0]!)!.char
+}
+
+function missedReading(q: Question): string {
+  if (q.kind === 'input') return q.expected
+  if (q.kind === 'draw' && q.prompt.type === 'draw') return q.prompt.text
+  return getKana(q.kanaIds[0]!)!.romaji[0]!
 }

@@ -66,7 +66,9 @@ function settle(state: SessionState, outcome: Outcome): Transition {
 
 export function submitAnswer(state: SessionState, answer: string, now: number): Transition {
   const question = currentQuestion(state)
-  if (!question || state.status !== 'pending' || state.wrongAnswers.includes(answer)) return { state }
+  if (!question || question.kind === 'draw' || state.status !== 'pending' || state.wrongAnswers.includes(answer)) {
+    return { state }
+  }
 
   const correct = checkAnswer(question, answer)
   const { state: settled, outcome } = settle(state, {
@@ -84,6 +86,18 @@ export function submitAnswer(state: SessionState, answer: string, now: number): 
     },
     outcome,
   }
+}
+
+/** Dessin terminé (stages 5 et 8) : juste seulement sans erreur de trait ni indice. */
+export function submitDrawing(state: SessionState, correct: boolean, now: number): Transition {
+  const question = currentQuestion(state)
+  if (question?.kind !== 'draw' || state.status !== 'pending') return { state }
+  const { state: settled, outcome } = settle(state, {
+    correct,
+    responseMs: now - state.questionStartedAt,
+    revealed: false,
+  })
+  return { state: { ...settled, status: correct ? 'correct' : 'failed' }, outcome }
 }
 
 /** « Afficher la réponse » ou chrono écoulé. */
@@ -131,6 +145,6 @@ export function toAnswerRecords(question: Question, outcome: Outcome, answeredAt
     responseMs: outcome.responseMs,
     answeredAt,
     revealed: outcome.revealed,
-    ...(question.kind === 'input' && question.wordId ? { wordId: question.wordId } : {}),
+    ...(question.kind !== 'choice' && question.wordId ? { wordId: question.wordId } : {}),
   }))
 }

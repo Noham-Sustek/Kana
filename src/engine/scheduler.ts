@@ -22,8 +22,11 @@ export const SPEED_THRESHOLDS: Record<StageId, [fast: number, slow: number]> = {
   2: [2500, 7000],
   3: [3500, 9000],
   4: [3500, 9000],
-  5: [3000, 8000],
-  6: [6000, 15000],
+  5: [10000, 30000],
+  6: [3000, 8000],
+  7: [6000, 15000],
+  8: [25000, 75000],
+  9: [12000, 35000],
 }
 
 /** Qualité d'une réponse juste mais très lente : insuffisante pour être maîtrisé. */

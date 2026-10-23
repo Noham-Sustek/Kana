@@ -1,4 +1,6 @@
-export type StageId = 1 | 2 | 3 | 4 | 5 | 6
+import type { Script } from '@/data/kana'
+
+export type StageId = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
 export type Prompt =
   | { type: 'kana'; text: string }
@@ -6,6 +8,10 @@ export type Prompt =
   /** Son à jouer ; `text` = kana à prononcer. */
   | { type: 'audio'; text: string }
   | { type: 'word'; text: string; meaning: string }
+  /** Phrase à lire (mots séparés par des espaces). */
+  | { type: 'sentence'; text: string; meaning: string }
+  /** À dessiner : `text` = romaji ; `note` lève une ambiguïté (じ/ぢ…). */
+  | { type: 'draw'; text: string; script: Script; meaning?: string; note?: string }
 
 export interface Choice {
   /** Id du kana correspondant. */
@@ -16,7 +22,7 @@ export interface Choice {
 interface QuestionBase {
   stage: StageId
   prompt: Prompt
-  /** Kana évalués par la question (plusieurs pour un mot). */
+  /** Kana évalués par la question (plusieurs pour un mot ou une phrase). */
   kanaIds: string[]
 }
 
@@ -37,7 +43,17 @@ export interface InputQuestion extends QuestionBase {
   wordId?: string
 }
 
-export type Question = ChoiceQuestion | InputQuestion
+/** Dessin au doigt, caractère par caractère (stages 5 et 8). */
+export interface DrawQuestion extends QuestionBase {
+  kind: 'draw'
+  /** Texte en kana attendu. */
+  target: string
+  /** Caractères à dessiner, dans l'ordre (きゃ → き, ゃ). */
+  chars: string[]
+  wordId?: string
+}
+
+export type Question = ChoiceQuestion | InputQuestion | DrawQuestion
 
 export interface QuizOptions {
   /** Après une erreur, laisser retenter au lieu de passer à la correction. */

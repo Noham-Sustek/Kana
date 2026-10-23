@@ -30,12 +30,16 @@ export interface WritingResult {
   drawn: Point[][]
   /** Vrai si l'utilisateur a demandé le modèle avant d'avoir fini. */
   revealed: boolean
+  /** Vrai si un indice a été affiché (demandé, ou automatique après des erreurs). */
+  hinted: boolean
 }
 
 interface WritingPadProps {
   strokes: Point[][]
   mode: MatchMode
   onComplete: (result: WritingResult) => void
+  /** Bouton « Comparer » (mode libre) ; masqué quand l'appelant gère l'abandon. */
+  showCompare?: boolean
 }
 
 /**
@@ -44,7 +48,7 @@ interface WritingPadProps {
  * dans un SVG en dessous. En mode `trace`, un trait validé est remplacé par celui
  * du modèle ; en mode `free`, il reste tel que dessiné (comparaison à la fin).
  */
-export function WritingPad({ strokes, mode, onComplete }: WritingPadProps) {
+export function WritingPad({ strokes, mode, onComplete, showCompare = true }: WritingPadProps) {
   const prepared = useMemo(() => strokes.map(prepareStroke), [strokes])
   const [session, setSession] = useState(() => createWritingState(strokes.length))
   const [hintFor, setHintFor] = useState<number | null>(null)
@@ -61,6 +65,8 @@ export function WritingPad({ strokes, mode, onComplete }: WritingPadProps) {
   const ink = dark ? INK_DARK : INK_LIGHT
   const complete = isComplete(session)
   const showHint = !complete && (hintFor === session.done || shouldShowHint(session))
+  const hinted = useRef(false)
+  if (showHint) hinted.current = true
   const next = strokes[session.done]
 
   useEffect(() => {
@@ -140,7 +146,9 @@ export function WritingPad({ strokes, mode, onComplete }: WritingPadProps) {
       const nextDrawn = [...drawn, points]
       setDrawn(nextDrawn)
       setFlash(session.done)
-      if (isComplete(nextState)) onComplete({ mistakes: totalMistakes(nextState), drawn: nextDrawn, revealed: false })
+      if (isComplete(nextState)) {
+        onComplete({ mistakes: totalMistakes(nextState), drawn: nextDrawn, revealed: false, hinted: hinted.current })
+      }
     } else {
       setErrorStroke(points)
       navigator.vibrate?.(40)
@@ -161,6 +169,7 @@ export function WritingPad({ strokes, mode, onComplete }: WritingPadProps) {
     setErrorStroke(null)
     setDrawn([])
     setFlash(null)
+    hinted.current = false
     current.current = null
     const canvas = canvasRef.current
     const ctx = canvas && context(canvas)
@@ -172,6 +181,7 @@ export function WritingPad({ strokes, mode, onComplete }: WritingPadProps) {
       mistakes: totalMistakes(session),
       drawn: errorStroke ? [...drawn, errorStroke] : drawn,
       revealed: true,
+      hinted: hinted.current,
     })
 
   const feedback = feedbackOf(session)
@@ -242,7 +252,7 @@ export function WritingPad({ strokes, mode, onComplete }: WritingPadProps) {
       </div>
 
       {!complete && (
-        <div className={`mt-1 grid gap-2 ${mode === 'free' ? 'grid-cols-3' : 'grid-cols-2'}`}>
+        <div className={`mt-1 grid gap-2 ${mode === 'free' && showCompare ? 'grid-cols-3' : 'grid-cols-2'}`}>
           <button type="button" onClick={reset} className={TOOL_BUTTON}>
             <Icon name="replay" className="size-5" />
             {mode === 'free' ? 'Effacer' : 'Recommencer'}
@@ -256,7 +266,7 @@ export function WritingPad({ strokes, mode, onComplete }: WritingPadProps) {
             <Icon name="lightbulb" className="size-5" />
             Indice
           </button>
-          {mode === 'free' && (
+          {mode === 'free' && showCompare && (
             <button type="button" onClick={compare} className={TOOL_BUTTON}>
               <Icon name="eye" className="size-5" />
               Comparer
