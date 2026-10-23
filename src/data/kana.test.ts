@@ -5,6 +5,7 @@ import {
   counterpartOf,
   getGroup,
   getKana,
+  groupGlyph,
   kanaOfScript,
   toKatakana,
   type GroupKind,
@@ -144,5 +145,13 @@ describe('groupes : cohérence', () => {
     }
     expect(count('hiragana', 'extended')).toBe(0)
     expect(count('katakana', 'extended')).toBeGreaterThan(0)
+  })
+})
+
+describe('groupGlyph', () => {
+  it('montre ん / ン avec わ / ワ, un seul kana pour les autres groupes', () => {
+    expect(groupGlyph(getGroup('hiragana-wa')!)).toBe('わ・ん')
+    expect(groupGlyph(getGroup('katakana-wa')!)).toBe('ワ・ン')
+    expect(groupGlyph(getGroup('hiragana-ka')!)).toBe('か')
   })
 })

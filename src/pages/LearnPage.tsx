@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/PageHeader'
 import { ScriptToggle } from '@/components/ScriptToggle'
 import { SegmentedControl } from '@/components/SegmentedControl'
 import { Switch } from '@/components/Switch'
-import { GROUP_KIND_LABELS, getKana, groupsOfScript, type GroupKind, type KanaGroup } from '@/data/kana'
+import { GROUP_KIND_LABELS, getKana, groupGlyph, groupsOfScript, type GroupKind, type KanaGroup } from '@/data/kana'
 import { useKanaAudio } from '@/features/audio/useKanaAudio'
 import { generateQuestions, sentencesForPool, wordsForPool, type SentenceFilter } from '@/features/quiz/questions'
 import { autoStages } from '@/features/quiz/auto'
@@ -192,7 +192,7 @@ function PathPanel() {
                   key={g.id}
                   className="flex min-h-9 items-center gap-1 rounded-lg bg-slate-100 px-2 text-sm dark:bg-slate-800"
                 >
-                  <span className="font-jp">{getKana(g.kanaIds[0]!)!.char}</span>
+                  <span className="font-jp">{groupGlyph(g)}</span>
                   <span className="text-xs text-slate-500 dark:text-slate-400">{g.label}</span>
                 </span>
               ))}
@@ -203,7 +203,7 @@ function PathPanel() {
             <div>
               <div className="mb-1.5 flex items-baseline justify-between text-xs">
                 <span className="font-semibold text-slate-500 dark:text-slate-400">
-                  Prochain groupe : <span className="font-jp">{getKana(overview.nextGroup.kanaIds[0]!)!.char}</span>{' '}
+                  Prochain groupe : <span className="font-jp">{groupGlyph(overview.nextGroup)}</span>{' '}
                   {overview.nextGroup.label}
                 </span>
                 <span className="tabular-nums text-slate-400">
@@ -411,7 +411,7 @@ function GroupPicker({ groups }: { groups: KanaGroup[] }) {
                         : 'border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300'
                     }`}
                   >
-                    <span className="font-jp text-base">{getKana(group.kanaIds[0]!)!.char}</span>
+                    <span className="font-jp text-base">{groupGlyph(group)}</span>
                     <span className="text-xs">{group.label}</span>
                   </button>
                 )

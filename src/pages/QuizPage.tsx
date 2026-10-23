@@ -1,7 +1,7 @@
 import { Suspense, lazy, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router'
 import { Icon } from '@/components/Icon'
-import { getKana } from '@/data/kana'
+import { getKana, groupGlyph } from '@/data/kana'
 import { useKanaAudio } from '@/features/audio/useKanaAudio'
 import { generateQuestions } from '@/features/quiz/questions'
 import { currentQuestion, score, type SessionState } from '@/features/quiz/session'
@@ -176,7 +176,7 @@ function UnlockBanner() {
   if (hidden || !group) return null
   return (
     <p role="status" className="mt-3 rounded-xl bg-amber-100 px-3 py-2 text-center text-sm font-medium text-amber-900 dark:bg-amber-500/20 dark:text-amber-200">
-      Nouveau groupe débloqué : <span className="font-jp">{getKana(group.kanaIds[0]!)!.char}</span> {group.label}
+      Nouveau groupe débloqué : <span className="font-jp">{groupGlyph(group)}</span> {group.label}
     </p>
   )
 }
@@ -390,7 +390,7 @@ function QuizSummary({ session }: { session: SessionState }) {
           <p className="mt-1 text-lg">
             {unlockedThisSession.map((g) => (
               <span key={g.id} className="mr-3">
-                <span className="font-jp">{getKana(g.kanaIds[0]!)!.char}</span> {g.label}
+                <span className="font-jp">{groupGlyph(g)}</span> {g.label}
               </span>
             ))}
           </p>

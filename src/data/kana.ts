@@ -201,3 +201,12 @@ export function counterpartOf(kana: Kana): Kana | undefined {
   const other: Script = kana.script === 'hiragana' ? 'katakana' : 'hiragana'
   return kanaById.get(`${SCRIPT_PREFIX[other]}-${kana.id.slice(2)}`)
 }
+
+/** Aperçu d'un groupe pour les pastilles : premier kana de chaque rangée (わ・ん). */
+export function groupGlyph(group: KanaGroup): string {
+  return group.rows
+    .map((row) => row.find((id) => id !== null))
+    .filter((id): id is string => id !== undefined && id !== null)
+    .map((id) => getKana(id)!.char)
+    .join('・')
+}
