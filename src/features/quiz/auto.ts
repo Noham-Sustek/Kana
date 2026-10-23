@@ -24,10 +24,8 @@ import type { Question, StageId } from '@/features/quiz/types'
 // Mode auto : relie le planificateur (engine/scheduler) à la génération de
 // questions. Pur : l'état est passé et renvoyé, la persistance est ailleurs.
 
-/** Stages du parcours auto, dans l'ordre de progression. Le stage 6 exige l'audio. */
-export function autoStages(audioAvailable: boolean): StageId[] {
-  return audioAvailable ? [1, 2, 3, 4, 5, 6, 7, 8, 9] : [1, 2, 3, 4, 5, 7, 8, 9]
-}
+/** Stages du parcours auto, dans l'ordre de progression. */
+export const AUTO_STAGES: StageId[] = [1, 2, 3, 4, 5, 6, 7, 8]
 
 /** Nombre de kana posés récemment à ne pas reposer tout de suite. */
 const RECENT_SIZE = 3
@@ -88,7 +86,7 @@ export function nextAutoQuestion(ctx: AutoContext, now: number, rng: Rng): { que
   const pool = activeKana(ctx)
   const words = wordsForPool(pool)
   const sentences = sentencesForPool(pool)
-  // Stages 7 à 9 seulement pour les kana présents dans au moins un mot / une phrase lisible.
+  // Stages 6 à 8 seulement pour les kana présents dans au moins un mot / une phrase lisible.
   const inWords = new Set(words.flatMap((w) => kanaIdsOf(w.kana)))
   const inSentences = new Set(sentences.flatMap((s) => kanaIdsOf(s.text)))
 
@@ -99,17 +97,17 @@ export function nextAutoQuestion(ctx: AutoContext, now: number, rng: Rng): { que
     now,
     recent: ctx.recent,
     isApplicable: ({ kanaId, stage }) =>
-      stage === 9 ? inSentences.has(kanaId) : stage >= 7 ? inWords.has(kanaId) : true,
+      stage === 8 ? inSentences.has(kanaId) : stage >= 6 ? inWords.has(kanaId) : true,
     rng,
   })
   if (!card) return null
 
   const pick = <T>(items: T[]) => items[Math.floor(rng() * items.length)]!
   let question: Question
-  if (card.stage === 7 || card.stage === 8) {
+  if (card.stage === 6 || card.stage === 7) {
     const word = pick(words.filter((w) => kanaIdsOf(w.kana).includes(card.kanaId)))
-    question = card.stage === 7 ? wordQuestion(word) : wordDrawQuestion(word)
-  } else if (card.stage === 9) {
+    question = card.stage === 6 ? wordQuestion(word) : wordDrawQuestion(word)
+  } else if (card.stage === 8) {
     question = sentenceQuestion(pick(sentences.filter((s) => kanaIdsOf(s.text).includes(card.kanaId))))
   } else {
     question = kanaQuestion(card.stage, getKana(card.kanaId)!, pool, rng)

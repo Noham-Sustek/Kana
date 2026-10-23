@@ -78,13 +78,13 @@ describe('session', () => {
     expect(score(s)).toEqual({ correct: 3, total: 3 })
   })
 
-  it('stage 7 : une ligne par kana distinct du mot', () => {
-    const questions = generateQuestions(7, [getKana('h-ne')!, getKana('h-ko')!], 10)
+  it('stage 6 : une ligne par kana distinct du mot', () => {
+    const questions = generateQuestions(6, [getKana('h-ne')!, getKana('h-ko')!], 10)
     const q = questions.find((question) => question.kind === 'input' && question.wordId === 'ねこ')
     const records = toAnswerRecords(q!, { correct: true, responseMs: 1200, revealed: false }, 42)
     expect(records).toEqual([
-      { kanaId: 'h-ne', stage: 7, correct: true, responseMs: 1200, answeredAt: 42, revealed: false, wordId: 'ねこ' },
-      { kanaId: 'h-ko', stage: 7, correct: true, responseMs: 1200, answeredAt: 42, revealed: false, wordId: 'ねこ' },
+      { kanaId: 'h-ne', stage: 6, correct: true, responseMs: 1200, answeredAt: 42, revealed: false, wordId: 'ねこ' },
+      { kanaId: 'h-ko', stage: 6, correct: true, responseMs: 1200, answeredAt: 42, revealed: false, wordId: 'ねこ' },
     ])
   })
 

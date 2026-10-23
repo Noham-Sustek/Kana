@@ -2,7 +2,6 @@ import { Suspense, lazy, useEffect, useRef, useState, type FormEvent } from 'rea
 import { Link, Navigate, useNavigate } from 'react-router'
 import { Icon } from '@/components/Icon'
 import { getKana, groupGlyph } from '@/data/kana'
-import { useKanaAudio } from '@/features/audio/useKanaAudio'
 import { generateQuestions } from '@/features/quiz/questions'
 import { currentQuestion, score, type SessionState } from '@/features/quiz/session'
 import { getStage } from '@/features/quiz/stages'
@@ -225,31 +224,7 @@ function PromptView({ question, settled }: { question: Question; settled: boolea
           )}
         </div>
       )
-    case 'audio':
-      return <AudioPrompt text={prompt.text} />
   }
-}
-
-function AudioPrompt({ text }: { text: string }) {
-  const { available, play } = useKanaAudio()
-
-  useEffect(() => {
-    play(text)
-  }, [text, play])
-
-  if (!available) {
-    return <p className="text-center text-sm text-slate-500">Audio indisponible sur cet appareil.</p>
-  }
-  return (
-    <button
-      type="button"
-      onClick={() => play(text)}
-      aria-label="Rejouer le son"
-      className="mx-auto flex size-28 items-center justify-center rounded-full bg-accent-500 text-white shadow-lg active:scale-95"
-    >
-      <Icon name="volume" className="size-12" />
-    </button>
-  )
 }
 
 interface ChoiceAnswersProps {
@@ -335,7 +310,7 @@ function InputAnswer({ question, session, onSubmit, onNext }: InputAnswerProps) 
         placeholder={status === 'pending' ? 'romaji' : ''}
         aria-label="Votre réponse en romaji"
         className={`min-h-14 w-full rounded-xl border-2 px-4 text-center outline-none ${
-          question.stage === 9 ? 'text-lg' : 'text-2xl'
+          question.stage === 8 ? 'text-lg' : 'text-2xl'
         } placeholder:text-slate-400 focus:ring-2 focus:ring-accent-500/40 ${stateClass}`}
       />
       <p className="mt-2 min-h-5 text-center text-sm">

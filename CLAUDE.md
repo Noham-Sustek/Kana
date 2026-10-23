@@ -4,7 +4,7 @@ Application personnelle pour apprendre les kana japonais (hiragana + katakana).
 Cible principale : **Android, Samsung S24** (Chrome, installée en PWA).
 
 Principes non négociables :
-- **100 % hors ligne** : aucune requête réseau à l'exécution (pas de CDN, pas de Google Fonts, pas d'API). Tout asset (données, audio, polices, tracés) est embarqué dans le build et précaché par le service worker.
+- **100 % hors ligne** : aucune requête réseau à l'exécution (pas de CDN, pas de Google Fonts, pas d'API). Tout asset (données, polices, tracés) est embarqué dans le build et précaché par le service worker.
 - **Sans compte, sans pub, sans tracking.** Les données restent sur l'appareil.
 - **Mobile-first** : conçu pour un écran ~360–412 px de large, utilisé au pouce.
 
@@ -46,7 +46,7 @@ src/
   lib/         hooks et utilitaires génériques
   data/        données statiques : kana.ts (kana + groupes), words.ts (~1060 mots), sentences.ts (phrases), confusables.ts,
                strokes.json (généré, tracés KanjiVG) + strokes.ts (accès typé)
-  features/    logique métier par domaine (quiz/, audio/, writing/, stats/, backup/)
+  features/    logique métier par domaine (quiz/, writing/, stats/, backup/)
 scripts/       build-icons.mjs : icônes PWA (192/512, maskable, apple-touch, icon.svg) depuis le tracé de あ,
                rasterisation + encodage PNG maison, sans dépendance — `npm run icons`
                build-strokes.mjs : télécharge les SVG KanjiVG des kana (cache scripts/.cache, ignoré par git)
@@ -73,15 +73,14 @@ Alias d'import : `@/` → `src/`. Toujours l'utiliser plutôt que des chemins re
 - **Mobile** : cibles tactiles ≥ 44 px, respecter `env(safe-area-inset-*)`, pas d'interaction au survol uniquement.
 - **Dépendances** : en ajouter le moins possible ; aucune qui charge des ressources distantes.
 - **Données kana** (`src/data/kana.ts`) : ids stables `h-<clé>` / `k-<clé>` (persistés en base, ne jamais les renommer). `romaji[0]` = forme Hepburn affichée, les suivants = variantes acceptées. Les groupes katakana sont dérivés des hiragana (seuls les étendus sont écrits en katakana). Homophones Hepburn assumés : じ/ぢ (ji), ず/づ (zu), ヲ/ウォ (wo) — un quiz romaji → kana doit en tenir compte.
-- **Quiz** (`features/quiz/`) — 9 stages : 1 kana→romaji (4 choix), 2 romaji→kana, 3 kana→romaji (8 proches), 4 saisie, 5 dessiner le kana, 6 écouter, 7 lire un mot, 8 dessiner un mot, 9 lire une phrase. Les numéros sont persistés (`answers.stage`) : en insérer un = migration Dexie + `BACKUP_VERSION` + migration du store de réglages (cf. `renumberStageV1`, v6).
+- **Quiz** (`features/quiz/`) — 8 stages : 1 kana→romaji (4 choix), 2 romaji→kana, 3 kana→romaji (8 proches), 4 saisie, 5 dessiner le kana, 6 lire un mot, 7 dessiner un mot, 8 lire une phrase. Pas d'audio (retiré). Les numéros sont persistés (`answers.stage`) : en insérer ou en retirer un = migration Dexie + `BACKUP_VERSION` + migration du store de réglages (historique et `migrateStage` dans `stages.ts`).
   - `questions.ts` génère les questions (pures, `Rng` injectable pour des tests déterministes) ; un distracteur ne doit jamais être une bonne réponse possible (pas de romaji partagé, cf. homophones).
   - `reading.ts` vérifie une saisie romaji (kana seul ou mot) : toutes les variantes, っ = consonne doublée (っち → tchi/cchi), ー = voyelle répétée ou `-`. Les mots se lisent kana par kana (とうきょう → toukyou).
   - `session.ts` = machine à états pure (pending → correct/failed). Le résultat est fixé au **premier essai** : une réussite après réessai reste un échec ; « Afficher la réponse » et chrono écoulé = échec `revealed`.
   - Mode auto, deux sources (`autoSource`) : `path` = parcours guidé par écriture (groupes débloqués quand 80 % des kana actifs sont maîtrisés au stage 1) ; `selection` = kana cochés par l'utilisateur (mêmes `groupIds`/`customGroupIds` que le mode manuel), même planificateur sans déblocage (`createSelectionContext`).
   - Table Dexie `answers` : une ligne par kana évalué (mots et phrases : une ligne par kana distinct, `wordId` pour les mots).
   - Phrases (`data/sentences.ts`) : mots et particules séparés par des espaces ; は / へ / を isolés se lisent wa / e / o (`reading.ts`, lecture du kana aussi acceptée). Les phrases tout hiragana existent aussi converties en katakana (`toKatakana`) ; celles avec des mots empruntés forment la série « mixte ». Filtre d'écriture `sentenceFilter` (mode manuel).
-  - Dessin (stages 5 et 8, `kind: 'draw'`) : `QuizDrawing` (chargé en différé), un `WritingPad` libre par caractère ; petits kana dessinés en grand, ー synthétisé (`drawingStrokesOf`). Juste = aucune erreur de trait ni indice sur tous les caractères (`session.submitDrawing`), puis comparaison tracé / modèle. Le romaji d'un mot à dessiner note ー par un macron (kōhī).
-  - Audio : tout passe par `useKanaAudio()` — Web Speech API avec une voix `ja` de l'appareil (pas de fichiers audio). Détection partagée (`checking` → `ready` / `missing` / `unsupported`, les voix Android arrivent en asynchrone). Sans voix, le stage 5 est retiré du mode auto et `JapaneseVoiceHelp` explique l'installation (Samsung/Google TTS).
+  - Dessin (stages 5 et 7, `kind: 'draw'`) : `QuizDrawing` (chargé en différé), un `WritingPad` libre par caractère ; petits kana dessinés en grand, ー synthétisé (`drawingStrokesOf`). Juste = aucune erreur de trait ni indice sur tous les caractères (`session.submitDrawing`), puis comparaison tracé / modèle. Le romaji d'un mot à dessiner note ー par un macron (kōhī).
   - Rouge (`red-600`) = erreur, vert (`emerald-600`) = correct, identiques dans les deux thèmes ; ne pas utiliser l'accent pour un bouton affiché à côté d'une erreur.
 - **Écriture** (`features/writing/`) :
   - Tracés KanjiVG (CC BY-SA 3.0, attribution dans `/settings/about` — à conserver) : repère carré de 109 unités, traits dans l'ordre, points à pas ~2. Ne jamais éditer `strokes.json` à la main.
@@ -100,17 +99,17 @@ Alias d'import : `@/` → `src/`. Toujours l'utiliser plutôt que des chemins re
 2. **Quiz (stages)** — apprentissage par étapes (ligne par ligne, puis mélange). Types de questions : kana → romaji, romaji → kana, QCM et saisie. Onglet *Apprendre*.
 3. **Mode auto / répétition espacée** — algorithme SRS (type SM-2 ou FSRS simplifié) par kana, file de révision quotidienne, persistance Dexie.
 4. **Écriture guidée** — tracé au doigt sur canvas, ordre et direction des traits (données de tracés embarquées, ex. KanjiVG sous licence CC BY-SA), validation tolérante. Onglet *Écriture*.
-5. **Audio** — prononciation de chaque kana via la synthèse vocale de l'appareil (voix japonaise hors ligne, pas de TTS en ligne).
+5. ~~**Audio**~~ — abandonné : synthèse vocale retirée (stage « Écouter » supprimé, migration v7).
 6. **Stats & profils** — taux de réussite, kana difficiles, séries, historique ; plusieurs profils locaux. Onglet *Stats*.
 7. **PWA/offline & déploiement** — icônes PNG (192/512, maskable), écran de démarrage, vérification hors ligne complète, export/import des données (JSON), déploiement statique (GitHub Pages ou équivalent).
 
 ## État actuel
 
 - Étape 0 : projet initialisé, navigation par onglets, thème clair/sombre/système, PWA de base.
-- Étape 1 terminée : `src/data/kana.ts` (104 hiragana, 104 katakana + 24 katakana étendus), tests de cohérence, onglet Tableau (grille gojūon, bascule hiragana/katakana, vue détaillée `/table/:kanaId` avec précédent/suivant, swipe et prononciation).
+- Étape 1 terminée : `src/data/kana.ts` (104 hiragana, 104 katakana + 24 katakana étendus), tests de cohérence, onglet Tableau (grille gojūon, bascule hiragana/katakana, vue détaillée `/table/:kanaId` avec précédent/suivant et swipe).
 - Étape 2 terminée : quiz en 6 stages (onglet Apprendre, `/learn/quiz`), mode manuel par groupes cochés + listes personnalisées (Dexie `customGroups`, `/learn/custom/:id`), options réessai / afficher la réponse / chrono, réponses enregistrées dans Dexie `answers`.
 - Étape 3 terminée : mode auto (`engine/scheduler.ts`, `features/quiz/auto.ts`), maîtrise par (kana, stage), déblocage progressif des groupes (Dexie `autoStates`).
 - Étape 4 (écriture guidée) en place : onglet Écriture, `/writing/:kanaId` avec 3 niveaux, validation trait par trait, écran À propos. Pas encore de persistance des résultats d'écriture.
-- Étape 5 terminée : audio par synthèse vocale, détection de la voix japonaise et aide à l'installation (Réglages → Audio).
+- Étape 5 abandonnée : l'audio (synthèse vocale, stage Écouter) a été retiré.
 - Étape 6 terminée : profils (Réglages → Profils, pastilles sur Stats), onglet Stats (série, réussite, temps moyen, activité 14 j, kana les plus ratés, heatmap), heatmap optionnelle sur le Tableau (`?heat=1`).
 - Étape 7 terminée : icônes PNG + maskable, manifeste complet, précache cache-first vérifié hors ligne, export/import JSON (Réglages → Sauvegarde), déploiement GitHub Pages par GitHub Actions.

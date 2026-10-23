@@ -8,7 +8,6 @@ import { WritingComparison } from '@/components/WritingComparison'
 import { WritingPad, type WritingResult } from '@/components/WritingPad'
 import { getKana, kanaOfScript, type Kana } from '@/data/kana'
 import { isWritable, strokesOf } from '@/data/strokes'
-import { useKanaAudio } from '@/features/audio/useKanaAudio'
 import type { Point } from '@/features/writing/geometry'
 import { useWritingSettingsStore, type WritingLevel } from '@/stores/writingSettingsStore'
 
@@ -28,7 +27,6 @@ export function WritingExercisePage() {
   const navigate = useNavigate()
   const level = useWritingSettingsStore((s) => s.level)
   const setLevel = useWritingSettingsStore((s) => s.setLevel)
-  const audio = useKanaAudio()
   const kana = getKana(kanaId)
 
   if (!kana || !isWritable(kana)) return <Navigate to="/writing" replace />
@@ -78,16 +76,6 @@ export function WritingExercisePage() {
         <span className="text-sm text-slate-500 dark:text-slate-400">
           {strokes.length} trait{strokes.length > 1 ? 's' : ''}
         </span>
-        {audio.available && (
-          <button
-            type="button"
-            onClick={() => audio.play(kana.char)}
-            aria-label="Écouter"
-            className="ml-auto flex size-11 items-center justify-center rounded-full text-slate-600 active:scale-95 dark:text-slate-300"
-          >
-            <Icon name="volume" className="size-5" />
-          </button>
-        )}
       </div>
       {level === 3 && (
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Écrivez ce kana de mémoire.</p>

@@ -4,7 +4,6 @@ import { BackupSettings } from '@/components/BackupSettings'
 import { Icon, type IconName } from '@/components/Icon'
 import { PageHeader } from '@/components/PageHeader'
 import { ProfileSettings } from '@/components/ProfileSettings'
-import { VoiceSettings } from '@/components/VoiceSettings'
 import { useSettingsStore, type Theme } from '@/stores/settingsStore'
 
 const THEME_OPTIONS: { value: Theme; label: string; icon: IconName }[] = [
@@ -48,10 +47,6 @@ export function SettingsPage() {
 
       <Section title="Profils">
         <ProfileSettings />
-      </Section>
-
-      <Section title="Audio">
-        <VoiceSettings />
       </Section>
 
       <Section title="Sauvegarde">

@@ -84,7 +84,7 @@ export function wordsForPool(pool: readonly Kana[]): Word[] {
   return WORDS.filter((w) => kanaIdsOf(w.kana).every((id) => ids.has(id)))
 }
 
-/** Filtre d'écriture des phrases (stage 9) ; `all` = toutes. */
+/** Filtre d'écriture des phrases (stage 8) ; `all` = toutes. */
 export type SentenceFilter = SentenceScript | 'all'
 
 /** Phrases dont tous les kana appartiennent à la sélection. */
@@ -98,7 +98,7 @@ export function sentencesForPool(pool: readonly Kana[], filter: SentenceFilter =
 export function wordQuestion(word: Word): InputQuestion {
   return {
     kind: 'input',
-    stage: 7,
+    stage: 6,
     prompt: { type: 'word', text: word.kana, meaning: word.meaning },
     kanaIds: [...kanaIdsOf(word.kana)],
     reading: word.kana,
@@ -107,12 +107,12 @@ export function wordQuestion(word: Word): InputQuestion {
   }
 }
 
-/** Stage 8 : le mot est donné en romaji (ー noté ā, ī…) et en français, à dessiner. */
+/** Stage 7 : le mot est donné en romaji (ー noté ā, ī…) et en français, à dessiner. */
 export function wordDrawQuestion(word: Word): DrawQuestion {
   const kanaIds = [...kanaIdsOf(word.kana)]
   return {
     kind: 'draw',
-    stage: 8,
+    stage: 7,
     prompt: {
       type: 'draw',
       text: toRomaji(word.kana, { macron: true }),
@@ -129,7 +129,7 @@ export function wordDrawQuestion(word: Word): DrawQuestion {
 export function sentenceQuestion(sentence: Sentence): InputQuestion {
   return {
     kind: 'input',
-    stage: 9,
+    stage: 8,
     prompt: { type: 'sentence', text: sentence.text, meaning: sentence.meaning },
     kanaIds: [...kanaIdsOf(sentence.text)],
     reading: sentence.text,
@@ -156,7 +156,7 @@ function kanaDrawQuestion(target: Kana): DrawQuestion {
 }
 
 /** Question sur un kana précis ; `pool` sert de vivier prioritaire de distracteurs. */
-export function kanaQuestion(stage: Exclude<StageId, 7 | 8 | 9>, target: Kana, pool: readonly Kana[], rng: Rng): Question {
+export function kanaQuestion(stage: Exclude<StageId, 6 | 7 | 8>, target: Kana, pool: readonly Kana[], rng: Rng): Question {
   const sameScript = (list: readonly Kana[]) => list.filter((k) => k.script === target.script)
   const poolTier = shuffle(sameScript(pool), rng)
   const scriptTier = shuffle(kanaOfScript(target.script), rng)
@@ -183,8 +183,6 @@ export function kanaQuestion(stage: Exclude<StageId, 7 | 8 | 9>, target: Kana, p
       }
     case 5:
       return kanaDrawQuestion(target)
-    case 6:
-      return choiceQuestion(6, target, pickDistractors(target, [poolTier, scriptTier], 3), 'kana', { type: 'audio', text: target.char }, rng)
   }
 }
 
@@ -196,9 +194,9 @@ export function generateQuestions(
   rng: Rng = Math.random,
   sentenceFilter: SentenceFilter = 'all',
 ): Question[] {
-  if (stage === 7) return drawCycling(wordsForPool(pool), count, rng).map(wordQuestion)
-  if (stage === 8) return drawCycling(wordsForPool(pool), count, rng).map(wordDrawQuestion)
-  if (stage === 9) return drawCycling(sentencesForPool(pool, sentenceFilter), count, rng).map(sentenceQuestion)
+  if (stage === 6) return drawCycling(wordsForPool(pool), count, rng).map(wordQuestion)
+  if (stage === 7) return drawCycling(wordsForPool(pool), count, rng).map(wordDrawQuestion)
+  if (stage === 8) return drawCycling(sentencesForPool(pool, sentenceFilter), count, rng).map(sentenceQuestion)
   return drawCycling(pool, count, rng).map((target) => kanaQuestion(stage, target, pool, rng))
 }
 

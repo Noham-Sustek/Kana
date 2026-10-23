@@ -1,15 +1,13 @@
 import type { ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { Icon } from '@/components/Icon'
-import { JapaneseVoiceHelp } from '@/components/JapaneseVoiceHelp'
 import { PageHeader } from '@/components/PageHeader'
 import { ScriptToggle } from '@/components/ScriptToggle'
 import { SegmentedControl } from '@/components/SegmentedControl'
 import { Switch } from '@/components/Switch'
 import { GROUP_KIND_LABELS, getKana, groupGlyph, groupsOfScript, type GroupKind, type KanaGroup } from '@/data/kana'
-import { useKanaAudio } from '@/features/audio/useKanaAudio'
 import { generateQuestions, sentencesForPool, wordsForPool, type SentenceFilter } from '@/features/quiz/questions'
-import { autoStages } from '@/features/quiz/auto'
+import { AUTO_STAGES } from '@/features/quiz/auto'
 import { STAGES, getStage } from '@/features/quiz/stages'
 import type { StageId } from '@/features/quiz/types'
 import { useAutoOverview } from '@/features/quiz/useAutoOverview'
@@ -48,7 +46,6 @@ export function LearnPage() {
   const startAuto = useQuizSessionStore((s) => s.startAuto)
   const navigate = useNavigate()
   const pool = useQuizPool()
-  const audio = useKanaAudio()
   const wordCount = wordsForPool(pool).length
   const sentenceCount = sentencesForPool(pool, settings.sentenceFilter).length
   const isAuto = settings.mode === 'auto'
@@ -60,15 +57,11 @@ export function LearnPage() {
       : null
     : pool.length === 0
       ? 'Sélectionnez au moins un groupe.'
-      : settings.stage === 6 && !audio.available
-        ? audio.status === 'checking'
-          ? 'Recherche d’une voix japonaise…'
-          : 'Aucune voix japonaise sur cet appareil (voir ci-dessus).'
-        : (settings.stage === 7 || settings.stage === 8) && wordCount === 0
-          ? 'Aucun mot ne s’écrit avec ces kana : ajoutez des groupes.'
-          : settings.stage === 9 && sentenceCount === 0
-            ? 'Aucune phrase ne s’écrit avec ces kana : ajoutez des groupes ou changez d’écriture.'
-            : null
+      : (settings.stage === 6 || settings.stage === 7) && wordCount === 0
+        ? 'Aucun mot ne s’écrit avec ces kana : ajoutez des groupes.'
+        : settings.stage === 8 && sentenceCount === 0
+          ? 'Aucune phrase ne s’écrit avec ces kana : ajoutez des groupes ou changez d’écriture.'
+          : null
 
   const start = async () => {
     const options = { retry: settings.retry, timerSeconds: settings.timerSeconds }
@@ -76,7 +69,7 @@ export function LearnPage() {
       await startAuto({
         script: settings.autoScript,
         kanaIds: isSelection ? pool.map((k) => k.id) : undefined,
-        stages: autoStages(audio.available),
+        stages: AUTO_STAGES,
         questionCount: settings.questionCount,
         options,
       })
@@ -169,8 +162,7 @@ function AutoPanel() {
 function PathPanel() {
   const script = useQuizSettingsStore((s) => s.autoScript)
   const setScript = useQuizSettingsStore((s) => s.setAutoScript)
-  const audio = useKanaAudio()
-  const overview = useAutoOverview(script, autoStages(audio.available))
+  const overview = useAutoOverview(script, AUTO_STAGES)
 
   return (
     <Card title="Progression">
@@ -223,12 +215,6 @@ function PathPanel() {
 
           <StageMastery perStage={overview.perStage} />
 
-          {(audio.status === 'missing' || audio.status === 'unsupported') && (
-            <Link to="/settings" className="block text-xs text-slate-500 dark:text-slate-400">
-              Stage 5 « Écouter » ignoré : aucune voix japonaise.{' '}
-              <span className="font-medium text-accent-600 underline dark:text-accent-500">Installer une voix</span>
-            </Link>
-          )}
         </div>
       )}
     </Card>
@@ -238,8 +224,7 @@ function PathPanel() {
 function SelectionPanel() {
   const settings = useQuizSettingsStore()
   const pool = useQuizPool()
-  const audio = useKanaAudio()
-  const overview = useAutoOverview(settings.autoScript, autoStages(audio.available), pool.map((k) => k.id))
+  const overview = useAutoOverview(settings.autoScript, AUTO_STAGES, pool.map((k) => k.id))
 
   return (
     <>
@@ -286,7 +271,6 @@ function StageMastery({ perStage }: { perStage: { stage: StageId; mastered: numb
 function ManualPanel() {
   const settings = useQuizSettingsStore()
   const pool = useQuizPool()
-  const audio = useKanaAudio()
   const wordCount = wordsForPool(pool).length
   const sentenceCount = sentencesForPool(pool, settings.sentenceFilter).length
   const plural = (n: number, word: string) => `${n} ${word}${n > 1 ? 's' : ''} disponible${n > 1 ? 's' : ''}`
@@ -298,13 +282,11 @@ function ManualPanel() {
           {STAGES.map((stage) => {
             const selected = settings.stage === stage.id
             const note =
-              stage.id === 6 && !audio.available
-                ? 'Voix japonaise requise'
-                : stage.id === 7 || stage.id === 8
-                  ? plural(wordCount, 'mot')
-                  : stage.id === 9
-                    ? plural(sentenceCount, 'phrase')
-                    : null
+              stage.id === 6 || stage.id === 7
+                ? plural(wordCount, 'mot')
+                : stage.id === 8
+                  ? plural(sentenceCount, 'phrase')
+                  : null
             return (
               <button
                 key={stage.id}
@@ -327,8 +309,7 @@ function ManualPanel() {
             )
           })}
         </div>
-        {settings.stage === 6 && audio.status === 'missing' && <JapaneseVoiceHelp />}
-        {settings.stage === 9 && (
+        {settings.stage === 8 && (
           <div className="mt-4">
             <Field label="Écriture des phrases">
               <SegmentedControl

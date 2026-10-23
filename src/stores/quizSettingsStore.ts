@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Script } from '@/data/kana'
 import type { SentenceFilter } from '@/features/quiz/questions'
-import { renumberStageV1 } from '@/features/quiz/stages'
+import { migrateStage } from '@/features/quiz/stages'
 import type { StageId } from '@/features/quiz/types'
 
 export const QUESTION_COUNTS = [10, 20, 50] as const
@@ -18,7 +18,7 @@ interface QuizSettingsState {
   autoScript: Script
   autoSource: AutoSource
   stage: StageId
-  /** Écriture des phrases (stage 9, mode manuel). */
+  /** Écriture des phrases (stage 8, mode manuel). */
   sentenceFilter: SentenceFilter
   /** Groupes prédéfinis cochés (ids de KANA_GROUPS). */
   groupIds: string[]
@@ -80,10 +80,10 @@ export const useQuizSettingsStore = create<QuizSettingsState>()(
     }),
     {
       name: 'kana-quiz-settings',
-      version: 2,
+      version: 3,
       migrate: (persisted, version) => {
         const state = persisted as { stage?: number }
-        if (version < 2 && state.stage) state.stage = renumberStageV1(state.stage)
+        if (state.stage) state.stage = migrateStage(state.stage, version) ?? 1
         return state as QuizSettingsState
       },
     },

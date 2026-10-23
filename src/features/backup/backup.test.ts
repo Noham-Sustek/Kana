@@ -68,14 +68,18 @@ describe('parseBackup', () => {
     expect(() => parseBackup(data)).toThrow(/réponses, élément 2/)
   })
 
-  it('renumérote les stages d’une sauvegarde v1 (avant les stages de dessin)', () => {
+  it('renumérote les stages des anciennes sauvegardes et abandonne le stage audio', () => {
+    // v1 : 5 = Écouter (supprimé), 6 = Lire (→ 6).
     const v1 = { ...sample(), version: 1 }
     v1.answers[0]!.stage = 5
     v1.answers[1]!.stage = 6
-    const parsed = parseBackup(v1)
-    expect(parsed.version).toBe(BACKUP_VERSION)
-    expect(parsed.answers.map((a) => a.stage)).toEqual([6, 7])
-    // Une sauvegarde v2 est prise telle quelle.
+    expect(parseBackup(v1).answers.map((a) => [a.id, a.stage])).toEqual([[4, 6]])
+    // v2 : 6 = Écouter (supprimé), 7 = Lire, 9 = Phrases.
+    const v2 = { ...sample(), version: 2 }
+    v2.answers[0]!.stage = 6
+    v2.answers[1]!.stage = 9
+    expect(parseBackup(v2).answers.map((a) => [a.id, a.stage])).toEqual([[4, 8]])
+    // Version courante : prise telle quelle.
     expect(parseBackup(sample()).answers.map((a) => a.stage)).toEqual([1, 6])
   })
 

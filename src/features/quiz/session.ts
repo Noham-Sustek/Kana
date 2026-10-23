@@ -88,7 +88,7 @@ export function submitAnswer(state: SessionState, answer: string, now: number): 
   }
 }
 
-/** Dessin terminé (stages 5 et 8) : juste seulement sans erreur de trait ni indice. */
+/** Dessin terminé (stages 5 et 7) : juste seulement sans erreur de trait ni indice. */
 export function submitDrawing(state: SessionState, correct: boolean, now: number): Transition {
   const question = currentQuestion(state)
   if (question?.kind !== 'draw' || state.status !== 'pending') return { state }

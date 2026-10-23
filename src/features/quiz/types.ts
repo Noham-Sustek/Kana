@@ -1,12 +1,10 @@
 import type { Script } from '@/data/kana'
 
-export type StageId = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+export type StageId = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
 
 export type Prompt =
   | { type: 'kana'; text: string }
   | { type: 'romaji'; text: string }
-  /** Son à jouer ; `text` = kana à prononcer. */
-  | { type: 'audio'; text: string }
   | { type: 'word'; text: string; meaning: string }
   /** Phrase à lire (mots séparés par des espaces). */
   | { type: 'sentence'; text: string; meaning: string }
@@ -43,7 +41,7 @@ export interface InputQuestion extends QuestionBase {
   wordId?: string
 }
 
-/** Dessin au doigt, caractère par caractère (stages 5 et 8). */
+/** Dessin au doigt, caractère par caractère (stages 5 et 7). */
 export interface DrawQuestion extends QuestionBase {
   kind: 'draw'
   /** Texte en kana attendu. */
