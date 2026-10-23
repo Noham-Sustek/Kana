@@ -35,14 +35,15 @@ function QuizRunner({ session }: { session: SessionState }) {
   const settled = status !== 'pending'
   const isAuto = useQuizSessionStore((s) => s.auto !== null)
 
-  // Bonne réponse : passage automatique à la question suivante (sauf dessin :
-  // on laisse le temps de comparer avec le modèle).
+  // Bonne réponse : passage automatique à la question suivante, sauf s'il y a
+  // quelque chose à regarder (comparaison d'un dessin, traduction d'un mot).
   const isDrawing = question.kind === 'draw'
+  const stayAfterAnswer = isDrawing || question.prompt.type === 'word'
   useEffect(() => {
-    if (status !== 'correct' || isDrawing) return
+    if (status !== 'correct' || stayAfterAnswer) return
     const timer = setTimeout(next, AUTO_ADVANCE_MS)
     return () => clearTimeout(timer)
-  }, [status, next, session.index, isDrawing])
+  }, [status, next, session.index, stayAfterAnswer])
 
   // Chrono : à expiration, la réponse est révélée (compte comme une erreur).
   useEffect(() => {
@@ -110,7 +111,7 @@ function QuizRunner({ session }: { session: SessionState }) {
       </p>
 
       <div className={`flex flex-col justify-center ${isDrawing ? 'py-4' : 'flex-1 py-6'}`}>
-        <PromptView key={session.index} question={question} />
+        <PromptView key={session.index} question={question} settled={settled} />
       </div>
 
       {question.kind === 'choice' && <ChoiceAnswers question={question} session={session} onPick={submit} />}
@@ -181,7 +182,7 @@ function UnlockBanner() {
   )
 }
 
-function PromptView({ question }: { question: Question }) {
+function PromptView({ question, settled }: { question: Question; settled: boolean }) {
   const { prompt } = question
   switch (prompt.type) {
     case 'kana':
@@ -192,7 +193,10 @@ function PromptView({ question }: { question: Question }) {
       return (
         <div className="text-center">
           <p className="font-jp text-6xl leading-tight break-keep">{prompt.text}</p>
-          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">{prompt.meaning}</p>
+          {/* Traduction révélée après la réponse ; hauteur réservée pour éviter un saut. */}
+          <p className="mt-3 min-h-5 text-sm text-slate-500 dark:text-slate-400">
+            {settled && <span style={{ animation: 'fade-in 0.2s' }}>{prompt.meaning}</span>}
+          </p>
         </div>
       )
     case 'sentence':
