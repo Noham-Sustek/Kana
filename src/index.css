@@ -3,6 +3,9 @@
 /* Le mode sombre est piloté par la classe .dark sur <html> (cf. useApplyTheme). */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Écran bas, en pratique clavier virtuel ouvert (viewport interactive-widget=resizes-content). */
+@custom-variant short (@media (max-height: 600px));
+
 @theme {
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-jp: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif;

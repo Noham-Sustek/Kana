@@ -93,7 +93,7 @@ function QuizRunner({ session }: { session: SessionState }) {
         </span>
       </header>
 
-      <div className="mt-2 h-1">
+      <div className="mt-2 h-1 short:mt-1">
         {options.timerSeconds > 0 && status === 'pending' && (
           <div
             key={session.index}
@@ -105,11 +105,11 @@ function QuizRunner({ session }: { session: SessionState }) {
 
       <UnlockBanner />
 
-      <p className="mt-3 text-center text-xs font-medium text-slate-400 dark:text-slate-500">
+      <p className="mt-3 text-center text-xs font-medium text-slate-400 short:mt-1 dark:text-slate-500">
         {isAuto && 'Auto · '}Stage {question.stage} · {getStage(question.stage).description}
       </p>
 
-      <div className={`flex flex-col justify-center ${isDrawing ? 'py-4' : 'flex-1 py-6'}`}>
+      <div className={`flex flex-col justify-center ${isDrawing ? 'py-4' : 'flex-1 py-6 short:py-2'}`}>
         <PromptView key={session.index} question={question} settled={settled} />
       </div>
 
@@ -131,7 +131,7 @@ function QuizRunner({ session }: { session: SessionState }) {
         </>
       )}
 
-      <div className="mt-4 min-h-12">
+      <div className="mt-4 min-h-12 short:mt-1">
         {settled ? (
           <button
             type="button"
@@ -191,9 +191,9 @@ function PromptView({ question, settled }: { question: Question; settled: boolea
     case 'word':
       return (
         <div className="text-center">
-          <p className="font-jp text-6xl leading-tight break-keep">{prompt.text}</p>
+          <p className="font-jp text-6xl leading-tight break-keep short:text-5xl">{prompt.text}</p>
           {/* Traduction révélée après la réponse ; hauteur réservée pour éviter un saut. */}
-          <p className="mt-3 min-h-5 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-3 min-h-5 text-sm text-slate-500 short:mt-1 dark:text-slate-400">
             {settled && <span style={{ animation: 'fade-in 0.2s' }}>{prompt.meaning}</span>}
           </p>
         </div>
@@ -202,12 +202,12 @@ function PromptView({ question, settled }: { question: Question; settled: boolea
       return (
         <div className="text-center">
           {/* Un bloc par mot : le japonais se couperait sinon au milieu d'un mot. */}
-          <p className="flex flex-wrap justify-center gap-x-[0.4em] font-jp text-3xl leading-relaxed">
+          <p className="flex flex-wrap justify-center gap-x-[0.4em] font-jp text-3xl leading-relaxed short:text-2xl short:leading-snug">
             {prompt.text.split(' ').map((word, i) => (
               <span key={i}>{word}</span>
             ))}
           </p>
-          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">{prompt.meaning}</p>
+          <p className="mt-3 text-sm text-slate-500 short:mt-1 dark:text-slate-400">{prompt.meaning}</p>
         </div>
       )
     case 'draw':
@@ -309,11 +309,11 @@ function InputAnswer({ question, session, onSubmit, onNext }: InputAnswerProps) 
         enterKeyHint={status === 'pending' ? 'done' : 'next'}
         placeholder={status === 'pending' ? 'romaji' : ''}
         aria-label="Votre réponse en romaji"
-        className={`min-h-14 w-full rounded-xl border-2 px-4 text-center outline-none ${
+        className={`min-h-14 w-full rounded-xl border-2 px-4 short:min-h-12 text-center outline-none ${
           question.stage === 8 ? 'text-lg' : 'text-2xl'
         } placeholder:text-slate-400 focus:ring-2 focus:ring-accent-500/40 ${stateClass}`}
       />
-      <p className="mt-2 min-h-5 text-center text-sm">
+      <p className="mt-2 min-h-5 text-center text-sm short:mt-1">
         {status === 'failed' && (
           <span>
             Réponse : <strong className="text-emerald-700 dark:text-emerald-400">{question.expected}</strong>
