@@ -191,7 +191,7 @@ function PromptView({ question, settled }: { question: Question; settled: boolea
     case 'word':
       return (
         <div className="text-center">
-          <p className="font-jp text-6xl leading-tight break-keep short:text-5xl">{prompt.text}</p>
+          <p className={`font-jp leading-tight break-keep ${wordSizeClass(prompt.text)}`}>{prompt.text}</p>
           {/* Traduction révélée après la réponse ; hauteur réservée pour éviter un saut. */}
           <p className="mt-3 min-h-5 text-sm text-slate-500 short:mt-1 dark:text-slate-400">
             {settled && <span style={{ animation: 'fade-in 0.2s' }}>{prompt.meaning}</span>}
@@ -213,7 +213,7 @@ function PromptView({ question, settled }: { question: Question; settled: boolea
     case 'draw':
       return (
         <div className="text-center">
-          <p className="text-4xl font-semibold tracking-wide">{prompt.text}</p>
+          <p className={`font-semibold tracking-wide break-all ${romajiSizeClass(prompt.text)}`}>{prompt.text}</p>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             En {prompt.script}
             {prompt.note && ` · ${prompt.note}`}
@@ -225,6 +225,20 @@ function PromptView({ question, settled }: { question: Question; settled: boolea
         </div>
       )
   }
+}
+
+// Tailles choisies pour tenir sur une ligne à ~350 px de large (mots jusqu'à 10 kana).
+function wordSizeClass(text: string): string {
+  if (text.length <= 5) return 'text-6xl short:text-5xl'
+  if (text.length <= 6) return 'text-5xl'
+  if (text.length <= 8) return 'text-4xl'
+  return 'text-3xl'
+}
+
+function romajiSizeClass(text: string): string {
+  if (text.length <= 10) return 'text-4xl'
+  if (text.length <= 14) return 'text-3xl'
+  return 'text-2xl'
 }
 
 interface ChoiceAnswersProps {
