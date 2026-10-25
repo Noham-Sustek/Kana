@@ -29,6 +29,7 @@ npm run preview    # sert dist/ (pour tester le service worker / l'installation 
 npm run typecheck  # tsc -b seul
 npm test           # tests Vitest (vitest run) ; npm run test:watch en continu
 npm run icons      # régénère les icônes PNG/SVG de public/ (scripts/build-icons.mjs)
+npm run words      # régénère src/data/dictWords.json depuis le dictionnaire Jiyomi (scripts/build-words.mjs)
 ```
 
 Tester sur le S24 : `npm run dev -- --host` puis ouvrir l'IP locale depuis le téléphone (le SW n'est actif qu'en HTTPS ou localhost — pour tester l'installation, passer par `preview` + tunnel ou le déploiement).
@@ -44,13 +45,16 @@ src/
   db/          base Dexie (db.ts) — schéma versionné ; un fichier d'accès par domaine (answers, profiles, backup…)
   engine/      scheduler.ts : planificateur du mode auto (répétition espacée, pur)
   lib/         hooks et utilitaires génériques
-  data/        données statiques : kana.ts (kana + groupes), words.ts (~1800 mots), sentences.ts (phrases), confusables.ts,
+  data/        données statiques : kana.ts (kana + groupes), words.ts (~1800 mots écrits à la main + dictWords.json,
+               généré : 6500 mots au total), sentences.ts (phrases), confusables.ts,
                strokes.json (généré, tracés KanjiVG) + strokes.ts (accès typé)
   features/    logique métier par domaine (quiz/, writing/, stats/, backup/)
 scripts/       build-icons.mjs : icônes PWA (192/512, maskable, apple-touch, icon.svg) depuis le tracé de あ,
                rasterisation + encodage PNG maison, sans dépendance — `npm run icons`
                build-strokes.mjs : télécharge les SVG KanjiVG des kana (cache scripts/.cache, ignoré par git)
                et régénère src/data/strokes.json — `npm run strokes` (`-- --refresh` pour retélécharger)
+               build-words.mjs : télécharge la base SQLite du dictionnaire Jiyomi (JMdict + français, release figée
+               `dico-60`, cache scripts/.cache) et régénère src/data/dictWords.json — `npm run words`
 public/        assets statiques (icônes générées)
 .github/       workflows/deploy.yml : tests + build + GitHub Pages à chaque push sur main
 ```
@@ -82,6 +86,7 @@ Alias d'import : `@/` → `src/`. Toujours l'utiliser plutôt que des chemins re
   - Phrases (`data/sentences.ts`) : mots et particules séparés par des espaces ; は / へ / を isolés se lisent wa / e / o (`reading.ts`, lecture du kana aussi acceptée). Les phrases tout hiragana existent aussi converties en katakana (`toKatakana`) ; celles avec des mots empruntés forment la série « mixte ». Filtre d'écriture `sentenceFilter` (mode manuel).
   - Dessin (stages 5 et 7, `kind: 'draw'`) : `QuizDrawing` (chargé en différé), un `WritingPad` libre par caractère ; petits kana dessinés en grand, ー synthétisé (`drawingStrokesOf`). Juste = aucune erreur de trait ni indice sur tous les caractères (`session.submitDrawing`), puis comparaison tracé / modèle. Le romaji d'un mot à dessiner note ー par un macron (kōhī).
   - Rouge (`red-600`) = erreur, vert (`emerald-600`) = correct, identiques dans les deux thèmes ; ne pas utiliser l'accent pour un bouton affiché à côté d'une erreur.
+- **Mots** (`data/words.ts`) : liste manuelle `RAW` (prioritaire) + `dictWords.json` généré par `npm run words` (mots courants de Jiyomi/JMdict, CC BY-SA 4.0, attribution dans `/settings/about` — à conserver). Ne pas éditer `dictWords.json` à la main : ajuster les filtres ou les cibles (`TARGET`) du script. L'id d'un mot est son kana (persisté dans `answers.wordId`).
 - **Écriture** (`features/writing/`) :
   - Tracés KanjiVG (CC BY-SA 3.0, attribution dans `/settings/about` — à conserver) : repère carré de 109 unités, traits dans l'ordre, points à pas ~2. Ne jamais éditer `strokes.json` à la main.
   - `strokeMatch.ts` compare des points rééchantillonnés (32) : forme (écart moyen après recentrage), position (écart des centres), sens (endroit vs envers, ignoré pour les traits < 14 unités), ordre (le trait correspond à un trait suivant). Modes `trace` (niveau 2, strict) et `free` (niveau 3, tolère décalage et échelle ×1,4). `session.ts` = machine à états pure, indice après 2 erreurs sur un trait.

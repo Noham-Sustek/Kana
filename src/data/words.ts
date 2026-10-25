@@ -1,3 +1,5 @@
+import dict from '@/data/dictWords.json'
+
 export interface Word {
   /** Le mot en kana, qui sert aussi d'id stable. */
   id: string
@@ -1928,4 +1930,7 @@ const RAW: [kana: string, meaning: string][] = [
   ['サンフランシスコ', 'San Francisco'],
 ]
 
-export const WORDS: readonly Word[] = RAW.map(([kana, meaning]) => ({ id: kana, kana, meaning }))
+// Complément généré depuis le dictionnaire Jiyomi (npm run words), sans doublon avec RAW.
+const DICT = dict.words as [kana: string, meaning: string][]
+
+export const WORDS: readonly Word[] = [...RAW, ...DICT].map(([kana, meaning]) => ({ id: kana, kana, meaning }))
