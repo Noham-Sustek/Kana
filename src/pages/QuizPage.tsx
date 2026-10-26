@@ -125,7 +125,10 @@ function QuizRunner({ session }: { session: SessionState }) {
           {settled && (
             <p className={`mt-3 text-center text-sm font-medium ${status === 'correct' ? 'text-emerald-600' : 'text-red-600'}`}>
               {status === 'correct' ? 'Parfait, sans erreur !' : 'À revoir : comparez avec le modèle.'}{' '}
-              <span className="font-jp text-base text-slate-900 dark:text-slate-100">{question.target}</span>
+              <span className="font-jp text-base text-slate-900 dark:text-slate-100">
+                {question.target}
+                {question.kanji && ` · ${question.kanji}`}
+              </span>
             </p>
           )}
         </>
@@ -192,9 +195,19 @@ function PromptView({ question, settled }: { question: Question; settled: boolea
       return (
         <div className="text-center">
           <p className={`font-jp leading-tight break-keep ${wordSizeClass(prompt.text)}`}>{prompt.text}</p>
-          {/* Traduction révélée après la réponse ; hauteur réservée pour éviter un saut. */}
-          <p className="mt-3 min-h-5 text-sm text-slate-500 short:mt-1 dark:text-slate-400">
-            {settled && <span style={{ animation: 'fade-in 0.2s' }}>{prompt.meaning}</span>}
+          {/* Kanji et traduction révélés après la réponse ; hauteur réservée pour éviter un saut. */}
+          <p className="mt-3 min-h-6 text-sm text-slate-500 short:mt-1 dark:text-slate-400">
+            {settled && (
+              <span style={{ animation: 'fade-in 0.2s' }}>
+                {prompt.kanji && (
+                  <>
+                    <span className="font-jp text-base text-slate-900 dark:text-slate-100">{prompt.kanji}</span>
+                    {' · '}
+                  </>
+                )}
+                {prompt.meaning}
+              </span>
+            )}
           </p>
         </div>
       )

@@ -2,7 +2,8 @@
 // Télécharge le dictionnaire japonais → français Jiyomi (base SQLite, JMdict +
 // sens français) et en extrait les mots courants lisibles avec les kana de
 // l'app dans src/data/dictWords.json, en complément de la liste écrite à la
-// main (src/data/words.ts, prioritaire).
+// main (src/data/words.ts, prioritaire), avec l'écriture en kanji de chaque mot
+// quand elle est d'usage (y compris pour les mots de la liste manuelle).
 //
 //   node scripts/build-words.mjs            # utilise le cache s'il existe
 //   node scripts/build-words.mjs --refresh  # retélécharge la base
@@ -131,11 +132,136 @@ function frequencyOf(entry) {
   return Math.max(0, ...scores) || (entry.k.length ? 0 : (entry.z ?? 0))
 }
 
+// Écritures à ne pas montrer : rares, réservées à la recherche, irrégulières ou désuètes.
+const HIDDEN_KANJI_INFO = new Set(['rK', 'sK', 'iK', 'oK'])
+const KANJI_FORM = /^[぀-ヿ㐀-鿿々]+$/
+const HAS_KANJI = /[㐀-鿿々]/
+
+/**
+ * Écriture en kanji usuelle pour la lecture `reading` de l'entrée, ou null si le
+ * mot s'écrit d'habitude en kana (ありがとう) ou n'a pas de kanji.
+ */
+function kanjiOf(entry, reading) {
+  if (entry.s[0]?.uk) return null
+  const r = entry.r.indexOf(reading)
+  // rr[r] : 1 = toutes les écritures, 0 = aucune (lecture propre aux kana), sinon les indices permis.
+  const allowed = entry.rr?.[r] ?? 1
+  if (allowed === 0) return null
+  return (
+    entry.k.find(
+      (form, i) =>
+        (allowed === 1 || allowed.includes(i)) &&
+        !HIDDEN_KANJI_INFO.has(entry.ki?.[String(i)]) &&
+        KANJI_FORM.test(form) &&
+        HAS_KANJI.test(form),
+    ) ?? null
+  )
+}
+
+const STOP_WORDS = new Set(['les', 'des', 'une', 'pour', 'avec', 'dans', 'sur', 'par', 'qui', 'que', 'est', 'être'])
+
+function meaningTokens(text) {
+  return (
+    text
+      .toLowerCase()
+      .split(/[^\p{L}]+/u)
+      .filter((t) => t.length >= 3 && !STOP_WORDS.has(t))
+      // Radical grossier : accords et pluriels (prochain / prochaine, lèvre / lèvres).
+      .map((t) => t.replace(/(es|s|x|e)$/, '').slice(0, 6))
+  )
+}
+
+/** Corrections à la main des rapprochements automatiques (null = pas de kanji). */
+const KANJI_OVERRIDES = {
+  いっこ: '一個',
+  ひつじ: '羊',
+  あう: '会う',
+  かたい: '硬い',
+  // Deux sens, deux écritures : 速い / 早い, 五日 / 何時か.
+  はやい: null,
+  いつか: null,
+}
+
+/** Écart de fréquence (zipf × 100) au-delà duquel un homophone domine nettement (×10). */
+const DOMINANT_GAP = 100
+
+/** Glose sans précision entre parenthèses : « pomme (fruit) » → « pomme ». */
+function bareGloss(gloss) {
+  return gloss
+    .replace(/\s*\([^)]*\)/g, '')
+    .trim()
+    .toLowerCase()
+}
+
+/**
+ * Kanji des mots de la liste manuelle. Chaque sens de la traduction (« pont,
+ * baguettes ») est rapproché de l'homophone dont les gloses le recoupent, en
+ * préférant le plus fréquent (兄 plutôt que 義兄 pour « grand frère »). Si deux
+ * sens mènent à deux kanji (はし : 橋 / 箸), pas de kanji plutôt qu'un kanji faux.
+ */
+function manualKanji(db, manual) {
+  const lookup = db.prepare('SELECT e.freq, e.data FROM form f JOIN entry e ON e.id = f.id WHERE f.text = ?')
+  const result = {}
+  for (const [word, meaning] of manual) {
+    // Les mots en katakana n'ont guère que des ateji (越南 pour ベトナム) : pas de kanji.
+    if (!/^[ぁ-ゖ]/.test(word)) continue
+    const candidates = []
+    for (const row of lookup.all(word)) {
+      const entry = JSON.parse(row.data)
+      if (entry.s.some((s) => s.np) || !entry.r.includes(word)) continue
+      // Les gloses anglaises rattrapent les traductions qui gardent le mot japonais (« kanji »).
+      const glosses = entry.s.flatMap((s) => [...(s.fr ?? []), ...(s.en ?? [])])
+      candidates.push({
+        common: row.freq < 99,
+        usuallyKana: Boolean(entry.s[0]?.uk),
+        frequency: frequencyOf(entry),
+        kanji: kanjiOf(entry, word),
+        phrases: new Set(glosses.map(bareGloss)),
+        tokens: new Set(glosses.flatMap(meaningTokens)),
+      })
+    }
+    // Un mot courant l'emporte toujours sur un mot rare (唇 plutôt que 口唇), puis le plus fréquent.
+    candidates.sort((a, b) => Number(b.common) - Number(a.common) || b.frequency - a.frequency)
+
+    // « ; » sépare des sens distincts (ちゅうしゃ : piqûre ; stationnement) : chacun doit
+    // être reconnu, sinon le kanji trouvé ne vaudrait que pour l'un d'eux.
+    const matched = new Set()
+    let unmatchedSense = false
+    for (const sense of meaning.split(/\s*;\s*/)) {
+      let found = false
+      for (const part of sense.split(/\s*,\s*/)) {
+        const phrase = bareGloss(part)
+        const tokens = meaningTokens(part)
+        const match = candidates.find((c) => c.phrases.has(phrase) || tokens.some((t) => c.tokens.has(t)))
+        if (match) {
+          matched.add(match.kanji)
+          found = true
+        }
+      }
+      if (!found) unmatchedSense = true
+    }
+
+    let kanji = matched.size === 1 && !unmatchedSense ? [...matched][0] : null
+    if (word in KANJI_OVERRIDES) kanji = KANJI_OVERRIDES[word]
+    // Traduction formulée autrement (神社 « sanctuaire » / « temple shinto ») : on se rabat
+    // sur l'homophone courant s'il domine nettement, sauf si l'un d'eux s'écrit en kana
+    // (いか : 烏賊 « calmar » plutôt que 以下).
+    if (matched.size === 0 && !(word in KANJI_OVERRIDES) && !candidates.some((c) => c.usuallyKana)) {
+      const [first, second] = candidates.filter((c) => c.common)
+      if (first && first.frequency - (second?.frequency ?? 0) >= DOMINANT_GAP) kanji = first.kanji
+    }
+    if (kanji) result[word] = kanji
+  }
+  return result
+}
+
 async function main() {
   await ensureDatabase()
   const kana = await collectKana()
-  const manual = new Set(
-    [...(await readFile(WORDS_SOURCE, 'utf8')).matchAll(/^\s*\['([^']+)',/gm)].map((m) => m[1]),
+  const manual = new Map(
+    [...(await readFile(WORDS_SOURCE, 'utf8')).matchAll(/^\s*\['([^']+)', (?:'([^']*)'|"([^"]*)")\]/gm)].map(
+      (m) => [m[1], m[2] ?? m[3]],
+    ),
   )
 
   const { DatabaseSync } = await import('node:sqlite')
@@ -155,27 +281,38 @@ async function main() {
     // Homophones : on garde le plus fréquent (score wordfreq, puis rang JMdict).
     const score = frequencyOf(entry) * 1000 - row.freq
     const known = best.get(word)
-    if (!known || score > known.score) best.set(word, { word, meaning, score })
+    const kanji = /^[ぁ-ゖ]/.test(word) ? kanjiOf(entry, word) : null
+    if (!known || score > known.score) best.set(word, { word, meaning, kanji, score })
   }
+  const kanjiOfManual = manualKanji(db, manual)
   db.close()
 
   const ranked = [...best.values()].sort((a, b) => b.score - a.score)
-  const countManual = (re) => [...manual].filter((w) => re.test(w)).length
+  const countManual = (re) => [...manual.keys()].filter((w) => re.test(w)).length
   const pick = (re, target) =>
     ranked
       .filter((w) => re.test(w.word))
       .slice(0, Math.max(0, target - countManual(re)))
-      .map((w) => [w.word, w.meaning])
+      .map((w) => (w.kanji ? [w.word, w.meaning, w.kanji] : [w.word, w.meaning]))
   const hiragana = pick(/^[ぁ-ゖ]/, TARGET.hiragana)
   const katakana = pick(/^[ァ-ヺ]/, TARGET.katakana)
 
   const out = JSON.stringify({
     source: `Jiyomi ${RELEASE} (JMdict © EDRDG, sens français © Jiyomi) — CC BY-SA 4.0`,
     words: [...hiragana, ...katakana],
+    manualKanji: kanjiOfManual,
   })
   // Une ligne par mot : diffs lisibles.
-  await writeFile(OUTPUT, out.replace(/\],\[/g, '],\n[').replace('"words":[[', '"words":[\n[') + '\n')
-  console.log(`${OUTPUT} : ${hiragana.length} hiragana, ${katakana.length} katakana`)
+  await writeFile(
+    OUTPUT,
+    out
+      .replace(/\],\[/g, '],\n[')
+      .replace('"words":[[', '"words":[\n[')
+      .replace(/,"(?=[^"]+":"[^"]*"[,}])/g, ',\n"') + '\n',
+  )
+  const withKanji = [...hiragana, ...katakana].filter((w) => w[2]).length
+  console.log(`${OUTPUT} : ${hiragana.length} hiragana, ${katakana.length} katakana (${withKanji} avec kanji)`)
+  console.log(`Kanji trouvés pour ${Object.keys(kanjiOfManual).length} / ${manual.size} mots de la liste manuelle`)
 }
 
 main().catch((err) => {

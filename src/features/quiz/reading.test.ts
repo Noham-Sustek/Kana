@@ -60,6 +60,20 @@ describe('liste de mots', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
+  it('donne le kanji usuel des mots qui en ont un', () => {
+    const kanjiOf = (kana: string) => WORDS.find((w) => w.kana === kana)?.kanji
+    expect(kanjiOf('やま')).toBe('山')
+    expect(kanjiOf('かみ')).toBe('紙') // « papier », pas 神
+    expect(kanjiOf('あに')).toBe('兄')
+    expect(kanjiOf('ありがとう')).toBeUndefined() // s'écrit d'habitude en kana
+    expect(kanjiOf('はし')).toBeUndefined() // pont, baguettes : 橋 / 箸
+    for (const w of WORDS) {
+      if (!w.kanji) continue
+      expect(w.kanji).toMatch(/[㐀-鿿々]/)
+      expect(w.kana).toMatch(/^[ぁ-ゖ]/)
+    }
+  })
+
   it.each(WORDS.map((w) => [w.kana, w] as const))('%s est lisible', (_, word) => {
     expect(tokenize(word.kana)).not.toBeNull()
     expect(kanaIdsOf(word.kana).length).toBeGreaterThan(0)

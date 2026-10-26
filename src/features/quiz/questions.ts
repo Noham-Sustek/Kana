@@ -99,7 +99,7 @@ export function wordQuestion(word: Word): InputQuestion {
   return {
     kind: 'input',
     stage: 6,
-    prompt: { type: 'word', text: word.kana, meaning: word.meaning },
+    prompt: { type: 'word', text: word.kana, meaning: word.meaning, kanji: word.kanji },
     kanaIds: [...kanaIdsOf(word.kana)],
     reading: word.kana,
     expected: toRomaji(word.kana),
@@ -123,6 +123,7 @@ export function wordDrawQuestion(word: Word): DrawQuestion {
     target: word.kana,
     chars: [...word.kana],
     wordId: word.id,
+    kanji: word.kanji,
   }
 }
 

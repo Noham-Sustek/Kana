@@ -5,7 +5,7 @@ export type StageId = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
 export type Prompt =
   | { type: 'kana'; text: string }
   | { type: 'romaji'; text: string }
-  | { type: 'word'; text: string; meaning: string }
+  | { type: 'word'; text: string; meaning: string; kanji?: string }
   /** Phrase à lire (mots séparés par des espaces). */
   | { type: 'sentence'; text: string; meaning: string }
   /** À dessiner : `text` = romaji ; `note` lève une ambiguïté (じ/ぢ…). */
@@ -49,6 +49,8 @@ export interface DrawQuestion extends QuestionBase {
   /** Caractères à dessiner, dans l'ordre (きゃ → き, ゃ). */
   chars: string[]
   wordId?: string
+  /** Écriture en kanji du mot, montrée après la réponse. */
+  kanji?: string
 }
 
 export type Question = ChoiceQuestion | InputQuestion | DrawQuestion

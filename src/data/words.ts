@@ -6,6 +6,8 @@ export interface Word {
   kana: string
   /** Sens en français. */
   meaning: string
+  /** Écriture usuelle en kanji, montrée après la réponse (absente si le mot s'écrit en kana). */
+  kanji?: string
 }
 
 // Mots courts et courants, écrits uniquement en kana présents dans kana.ts
@@ -1931,6 +1933,10 @@ const RAW: [kana: string, meaning: string][] = [
 ]
 
 // Complément généré depuis le dictionnaire Jiyomi (npm run words), sans doublon avec RAW.
-const DICT = dict.words as [kana: string, meaning: string][]
+const DICT = dict.words as [kana: string, meaning: string, kanji?: string][]
+const MANUAL_KANJI: Record<string, string | undefined> = dict.manualKanji
 
-export const WORDS: readonly Word[] = [...RAW, ...DICT].map(([kana, meaning]) => ({ id: kana, kana, meaning }))
+export const WORDS: readonly Word[] = [
+  ...RAW.map(([kana, meaning]): Word => ({ id: kana, kana, meaning, kanji: MANUAL_KANJI[kana] })),
+  ...DICT.map(([kana, meaning, kanji]): Word => ({ id: kana, kana, meaning, kanji })),
+]
