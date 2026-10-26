@@ -8,7 +8,7 @@ export function BottomTabBar() {
       aria-label="Navigation principale"
       className="border-t border-slate-200 bg-white/90 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-slate-800 dark:bg-slate-900/90"
     >
-      <ul className="grid grid-cols-5">
+      <ul className="mx-auto grid max-w-lg grid-cols-5">
         {TABS.map((tab) => (
           <li key={tab.path}>
             <NavLink

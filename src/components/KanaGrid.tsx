@@ -25,13 +25,14 @@ interface KanaGridProps {
 export function KanaGrid({ script, renderCell, kinds = KIND_ORDER }: KanaGridProps) {
   const groups = groupsOfScript(script)
   return (
-    <>
+    // Grand écran : sections sur deux colonnes.
+    <div className="lg:columns-2 lg:gap-8">
       {KIND_ORDER.filter((kind) => kinds.includes(kind)).map((kind) => {
         const sectionGroups = groups.filter((g) => g.kind === kind)
         if (sectionGroups.length === 0) return null
         return <KanaSection key={kind} kind={kind} groups={sectionGroups} renderCell={renderCell} />
       })}
-    </>
+    </div>
   )
 }
 
@@ -46,7 +47,7 @@ function KanaSection({ kind, groups, renderCell }: KanaSectionProps) {
   const gridCols = kind === 'yoon' ? 'grid-cols-[2.5rem_repeat(3,1fr)]' : 'grid-cols-[2.5rem_repeat(5,1fr)]'
 
   return (
-    <section className="mt-6">
+    <section className="mt-6 break-inside-avoid">
       <h2 className="mb-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
         {GROUP_KIND_LABELS[kind]}
       </h2>
@@ -83,8 +84,8 @@ function KanaSection({ kind, groups, renderCell }: KanaSectionProps) {
 export function KanaCellContent({ kana }: { kana: Kana }) {
   return (
     <>
-      <span className="font-jp text-2xl leading-none">{kana.char}</span>
-      <span className="mt-1 text-[0.65rem] opacity-70">{kana.romaji[0]}</span>
+      <span className="font-jp text-2xl leading-none lg:text-3xl">{kana.char}</span>
+      <span className="mt-1 text-[0.65rem] opacity-70 lg:text-xs">{kana.romaji[0]}</span>
     </>
   )
 }

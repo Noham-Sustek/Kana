@@ -2,15 +2,23 @@ import { useLayoutEffect, useRef, type UIEvent } from 'react'
 import { Outlet, useLocation } from 'react-router'
 import { BottomTabBar } from '@/components/BottomTabBar'
 
+const WIDE_PATHS = ['/learn', '/table', '/writing', '/stats', '/settings']
+
 export function AppLayout() {
   const { mainRef, onScroll } = useScrollRestoration()
   // Plein écran pendant un quiz : plus de place pour le clavier, pas de sortie accidentelle.
-  const immersive = useLocation().pathname.startsWith('/learn/quiz')
+  const { pathname } = useLocation()
+  const immersive = pathname.startsWith('/learn/quiz')
+  // Sur grand écran, les pages d'onglet prennent de la largeur ; quiz, écriture et
+  // détails restent en colonne (lecture et tracé centrés).
+  const wide = WIDE_PATHS.includes(pathname)
 
   return (
-    <div className="mx-auto flex h-full max-w-lg flex-col">
+    <div className="flex h-full flex-col">
       <main ref={mainRef} onScroll={onScroll} className="flex-1 overflow-y-auto px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-4">
-        <Outlet />
+        <div className={`mx-auto max-w-lg ${wide ? 'lg:max-w-5xl' : ''}`}>
+          <Outlet />
+        </div>
       </main>
       {!immersive && <BottomTabBar />}
     </div>

@@ -32,7 +32,7 @@ export function StatsPage() {
 
       {stats && stats.summary.questions > 0 && (
         <>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
             <Tile
               label="Série"
               value={`${stats.streak.current} j`}
@@ -55,13 +55,15 @@ export function StatsPage() {
             <Tile label="Kana vus" value={String(stats.perKana.size)} detail="au moins une fois" />
           </div>
 
-          <Card title={`Activité (${ACTIVITY_DAYS} derniers jours)`}>
-            <ActivityChart days={stats.activity} />
-          </Card>
+          <div className="lg:grid lg:grid-cols-2 lg:items-start lg:gap-4">
+            <Card title={`Activité (${ACTIVITY_DAYS} derniers jours)`}>
+              <ActivityChart days={stats.activity} />
+            </Card>
 
-          <Card title="Kana les plus ratés">
-            <MissedList missed={mostMissed(stats.perKana, MISSED_LIMIT)} />
-          </Card>
+            <Card title="Kana les plus ratés">
+              <MissedList missed={mostMissed(stats.perKana, MISSED_LIMIT)} />
+            </Card>
+          </div>
 
           <Card title="Réussite par kana">
             <ScriptToggle value={script} onChange={setScript} />

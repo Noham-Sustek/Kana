@@ -83,7 +83,7 @@ export function LearnPage() {
   }
 
   return (
-    <div className="pb-20">
+    <div className="pb-20 lg:pb-0">
       <PageHeader
         title="Apprendre"
         subtitle={
@@ -93,53 +93,60 @@ export function LearnPage() {
         }
       />
 
-      <div className="mb-4">
-        <SegmentedControl label="Mode" options={MODE_OPTIONS} value={settings.mode} onChange={settings.setMode} />
-      </div>
+      {/* Grand écran : réglages à gauche, options et bouton dans une colonne fixe à droite. */}
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-6">
+        <div>
+          <div className="mb-4">
+            <SegmentedControl label="Mode" options={MODE_OPTIONS} value={settings.mode} onChange={settings.setMode} />
+          </div>
 
-      {isAuto ? <AutoPanel /> : <ManualPanel />}
-
-      <Card title="Options">
-        <div className="space-y-4">
-          <Field label="Questions">
-            <SegmentedControl
-              label="Nombre de questions"
-              options={QUESTION_COUNTS.map((n) => ({ value: n, label: String(n) }))}
-              value={settings.questionCount}
-              onChange={settings.setQuestionCount}
-            />
-          </Field>
-          <Field label="Chrono par question">
-            <SegmentedControl
-              label="Chrono par question"
-              options={TIMER_OPTIONS.map((s) => ({ value: s, label: s === 0 ? 'Aucun' : `${s} s` }))}
-              value={settings.timerSeconds}
-              onChange={settings.setTimerSeconds}
-            />
-          </Field>
-          <Switch
-            label="Réessayer après une erreur"
-            description="Sinon, la bonne réponse est affichée tout de suite."
-            checked={settings.retry}
-            onChange={settings.setRetry}
-          />
+          {isAuto ? <AutoPanel /> : <ManualPanel />}
         </div>
-      </Card>
 
-      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-10 mx-auto max-w-lg px-4 pb-3">
-        {unavailableReason && (
-          <p className="mb-2 rounded-lg bg-slate-200/90 px-3 py-2 text-center text-xs text-slate-600 backdrop-blur dark:bg-slate-800/90 dark:text-slate-300">
-            {unavailableReason}
-          </p>
-        )}
-        <button
-          type="button"
-          onClick={start}
-          disabled={unavailableReason !== null}
-          className="min-h-12 w-full rounded-xl bg-accent-600 font-semibold text-white shadow-lg transition-transform active:scale-[0.98] disabled:bg-slate-400 disabled:shadow-none dark:disabled:bg-slate-700"
-        >
-          Commencer
-        </button>
+        <div className="lg:sticky lg:top-0">
+          <Card title="Options">
+            <div className="space-y-4">
+              <Field label="Questions">
+                <SegmentedControl
+                  label="Nombre de questions"
+                  options={QUESTION_COUNTS.map((n) => ({ value: n, label: String(n) }))}
+                  value={settings.questionCount}
+                  onChange={settings.setQuestionCount}
+                />
+              </Field>
+              <Field label="Chrono par question">
+                <SegmentedControl
+                  label="Chrono par question"
+                  options={TIMER_OPTIONS.map((s) => ({ value: s, label: s === 0 ? 'Aucun' : `${s} s` }))}
+                  value={settings.timerSeconds}
+                  onChange={settings.setTimerSeconds}
+                />
+              </Field>
+              <Switch
+                label="Réessayer après une erreur"
+                description="Sinon, la bonne réponse est affichée tout de suite."
+                checked={settings.retry}
+                onChange={settings.setRetry}
+              />
+            </div>
+          </Card>
+
+          <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-10 mx-auto max-w-lg px-4 pb-3 lg:static lg:max-w-none lg:p-0">
+            {unavailableReason && (
+              <p className="mb-2 rounded-lg bg-slate-200/90 px-3 py-2 text-center text-xs text-slate-600 backdrop-blur dark:bg-slate-800/90 dark:text-slate-300">
+                {unavailableReason}
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={start}
+              disabled={unavailableReason !== null}
+              className="min-h-12 w-full rounded-xl bg-accent-600 font-semibold text-white shadow-lg transition-transform active:scale-[0.98] disabled:bg-slate-400 disabled:shadow-none dark:disabled:bg-slate-700"
+            >
+              Commencer
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -214,7 +221,6 @@ function PathPanel() {
           )}
 
           <StageMastery perStage={overview.perStage} />
-
         </div>
       )}
     </Card>
@@ -224,7 +230,11 @@ function PathPanel() {
 function SelectionPanel() {
   const settings = useQuizSettingsStore()
   const pool = useQuizPool()
-  const overview = useAutoOverview(settings.autoScript, AUTO_STAGES, pool.map((k) => k.id))
+  const overview = useAutoOverview(
+    settings.autoScript,
+    AUTO_STAGES,
+    pool.map((k) => k.id),
+  )
 
   return (
     <>
@@ -299,7 +309,9 @@ function ManualPanel() {
                     : 'border-slate-200 dark:border-slate-700'
                 }`}
               >
-                <span className={`text-xs font-semibold ${selected ? 'text-accent-600 dark:text-accent-500' : 'text-slate-400'}`}>
+                <span
+                  className={`text-xs font-semibold ${selected ? 'text-accent-600 dark:text-accent-500' : 'text-slate-400'}`}
+                >
                   Stage {stage.id}
                 </span>
                 <span className="text-sm font-semibold">{stage.title}</span>
@@ -368,7 +380,9 @@ function GroupPicker({ groups }: { groups: KanaGroup[] }) {
         return (
           <div key={kind}>
             <div className="mb-1.5 flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">{GROUP_KIND_LABELS[kind]}</span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                {GROUP_KIND_LABELS[kind]}
+              </span>
               <button
                 type="button"
                 onClick={() => setGroupsSelected(ids, !allSelected)}
