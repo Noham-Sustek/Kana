@@ -9,14 +9,17 @@ export function AppLayout() {
   // Plein écran pendant un quiz : plus de place pour le clavier, pas de sortie accidentelle.
   const { pathname } = useLocation()
   const immersive = pathname.startsWith('/learn/quiz')
-  // Sur grand écran, les pages d'onglet prennent de la largeur ; quiz, écriture et
-  // détails restent en colonne (lecture et tracé centrés).
+  // Sur grand écran, les pages d'onglet prennent de la largeur, le quiz un peu ;
+  // écriture et détails restent en colonne.
   const wide = WIDE_PATHS.includes(pathname)
+  // Pages en min-h-full (quiz, détail d'un kana, exercice d'écriture) : le conteneur doit
+  // avoir une hauteur fixée pour qu'elles occupent tout l'écran.
+  const fill = immersive || pathname.startsWith('/table/') || pathname.startsWith('/writing/')
 
   return (
     <div className="flex h-full flex-col">
       <main ref={mainRef} onScroll={onScroll} className="flex-1 overflow-y-auto px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-4">
-        <div className={`mx-auto max-w-lg ${wide ? 'lg:max-w-5xl' : ''}`}>
+        <div className={`mx-auto max-w-lg ${fill ? 'h-full' : ''} ${wide ? 'lg:max-w-5xl' : immersive ? 'lg:max-w-2xl' : ''}`}>
           <Outlet />
         </div>
       </main>

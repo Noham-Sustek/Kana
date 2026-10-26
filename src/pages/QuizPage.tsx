@@ -120,10 +120,14 @@ function QuizRunner({ session }: { session: SessionState }) {
       {question.kind === 'draw' && (
         <>
           <Suspense>
-            <QuizDrawing key={session.index} question={question} settled={settled} onDone={submitDrawing} />
+            <div className="lg:mx-auto lg:w-full lg:max-w-md">
+              <QuizDrawing key={session.index} question={question} settled={settled} onDone={submitDrawing} />
+            </div>
           </Suspense>
           {settled && (
-            <p className={`mt-3 text-center text-sm font-medium ${status === 'correct' ? 'text-emerald-600' : 'text-red-600'}`}>
+            <p
+              className={`mt-3 text-center text-sm font-medium ${status === 'correct' ? 'text-emerald-600' : 'text-red-600'}`}
+            >
               {status === 'correct' ? 'Parfait, sans erreur !' : 'À revoir : comparez avec le modèle.'}{' '}
               <span className="font-jp text-base text-slate-900 dark:text-slate-100">
                 {question.target}
@@ -178,7 +182,10 @@ function UnlockBanner() {
   const group = unlocked.at(-1)
   if (hidden || !group) return null
   return (
-    <p role="status" className="mt-3 rounded-xl bg-amber-100 px-3 py-2 text-center text-sm font-medium text-amber-900 dark:bg-amber-500/20 dark:text-amber-200">
+    <p
+      role="status"
+      className="mt-3 rounded-xl bg-amber-100 px-3 py-2 text-center text-sm font-medium text-amber-900 dark:bg-amber-500/20 dark:text-amber-200"
+    >
       Nouveau groupe débloqué : <span className="font-jp">{groupGlyph(group)}</span> {group.label}
     </p>
   )
@@ -188,20 +195,22 @@ function PromptView({ question, settled }: { question: Question; settled: boolea
   const { prompt } = question
   switch (prompt.type) {
     case 'kana':
-      return <p className="text-center font-jp text-8xl leading-none">{prompt.text}</p>
+      return <p className="text-center font-jp text-8xl leading-none lg:text-9xl">{prompt.text}</p>
     case 'romaji':
-      return <p className="text-center text-6xl font-semibold tracking-wide">{prompt.text}</p>
+      return <p className="text-center text-6xl font-semibold tracking-wide lg:text-7xl">{prompt.text}</p>
     case 'word':
       return (
         <div className="text-center">
           <p className={`font-jp leading-tight break-keep ${wordSizeClass(prompt.text)}`}>{prompt.text}</p>
           {/* Kanji et traduction révélés après la réponse ; hauteur réservée pour éviter un saut. */}
-          <p className="mt-3 min-h-6 text-sm text-slate-500 short:mt-1 dark:text-slate-400">
+          <p className="mt-3 min-h-6 text-sm text-slate-500 short:mt-1 lg:text-base dark:text-slate-400">
             {settled && (
               <span style={{ animation: 'fade-in 0.2s' }}>
                 {prompt.kanji && (
                   <>
-                    <span className="font-jp text-base text-slate-900 dark:text-slate-100">{prompt.kanji}</span>
+                    <span className="font-jp text-base text-slate-900 lg:text-2xl dark:text-slate-100">
+                      {prompt.kanji}
+                    </span>
                     {' · '}
                   </>
                 )}
@@ -215,12 +224,12 @@ function PromptView({ question, settled }: { question: Question; settled: boolea
       return (
         <div className="text-center">
           {/* Un bloc par mot : le japonais se couperait sinon au milieu d'un mot. */}
-          <p className="flex flex-wrap justify-center gap-x-[0.4em] font-jp text-3xl leading-relaxed short:text-2xl short:leading-snug">
+          <p className="flex flex-wrap justify-center gap-x-[0.4em] font-jp text-3xl leading-relaxed short:text-2xl short:leading-snug lg:text-4xl">
             {prompt.text.split(' ').map((word, i) => (
               <span key={i}>{word}</span>
             ))}
           </p>
-          <p className="mt-3 text-sm text-slate-500 short:mt-1 dark:text-slate-400">{prompt.meaning}</p>
+          <p className="mt-3 text-sm text-slate-500 short:mt-1 lg:text-base dark:text-slate-400">{prompt.meaning}</p>
         </div>
       )
     case 'draw':
@@ -240,18 +249,19 @@ function PromptView({ question, settled }: { question: Question; settled: boolea
   }
 }
 
-// Tailles choisies pour tenir sur une ligne à ~350 px de large (mots jusqu'à 10 kana).
+// Tailles choisies pour tenir sur une ligne à ~350 px de large (mots jusqu'à 10 kana),
+// ~640 px sur grand écran.
 function wordSizeClass(text: string): string {
-  if (text.length <= 5) return 'text-6xl short:text-5xl'
-  if (text.length <= 6) return 'text-5xl'
-  if (text.length <= 8) return 'text-4xl'
-  return 'text-3xl'
+  if (text.length <= 5) return 'text-6xl short:text-5xl lg:text-7xl'
+  if (text.length <= 6) return 'text-5xl lg:text-6xl'
+  if (text.length <= 8) return 'text-4xl lg:text-6xl'
+  return 'text-3xl lg:text-5xl'
 }
 
 function romajiSizeClass(text: string): string {
-  if (text.length <= 10) return 'text-4xl'
-  if (text.length <= 14) return 'text-3xl'
-  return 'text-2xl'
+  if (text.length <= 10) return 'text-4xl lg:text-5xl'
+  if (text.length <= 14) return 'text-3xl lg:text-5xl'
+  return 'text-2xl lg:text-4xl'
 }
 
 interface ChoiceAnswersProps {
@@ -281,8 +291,8 @@ function ChoiceAnswers({ question, session, onPick }: ChoiceAnswersProps) {
             disabled={settled || wrong}
             onClick={() => onPick(choice.id)}
             className={`rounded-xl border-2 font-medium transition-transform enabled:active:scale-95 ${stateClass} ${
-              question.choices.length > 4 ? 'min-h-14' : 'min-h-16'
-            } ${isKana ? 'font-jp text-3xl' : 'text-xl'} ${settled && !wrong && !right ? 'opacity-50' : ''}`}
+              question.choices.length > 4 ? 'min-h-14 lg:min-h-16' : 'min-h-16 lg:min-h-20'
+            } ${isKana ? 'font-jp text-3xl lg:text-4xl' : 'text-xl lg:text-2xl'} ${settled && !wrong && !right ? 'opacity-50' : ''}`}
           >
             {choice.label}
           </button>
@@ -337,10 +347,10 @@ function InputAnswer({ question, session, onSubmit, onNext }: InputAnswerProps) 
         placeholder={status === 'pending' ? 'romaji' : ''}
         aria-label="Votre réponse en romaji"
         className={`min-h-14 w-full rounded-xl border-2 px-4 short:min-h-12 text-center outline-none ${
-          question.stage === 8 ? 'text-lg' : 'text-2xl'
-        } placeholder:text-slate-400 focus:ring-2 focus:ring-accent-500/40 ${stateClass}`}
+          question.stage === 8 ? 'text-lg lg:text-xl' : 'text-2xl lg:text-3xl'
+        } lg:min-h-16 placeholder:text-slate-400 focus:ring-2 focus:ring-accent-500/40 ${stateClass}`}
       />
-      <p className="mt-2 min-h-5 text-center text-sm short:mt-1">
+      <p className="mt-2 min-h-5 text-center text-sm short:mt-1 lg:text-base">
         {status === 'failed' && (
           <span>
             Réponse : <strong className="text-emerald-700 dark:text-emerald-400">{question.expected}</strong>
@@ -408,7 +418,10 @@ function QuizSummary({ session }: { session: SessionState }) {
           <h2 className="mb-3 text-sm font-semibold text-slate-500 dark:text-slate-400">À revoir</h2>
           <ul className="flex flex-wrap gap-2">
             {[...missed.entries()].map(([key, q]) => (
-              <li key={key} className="flex items-baseline gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1.5 dark:bg-slate-800">
+              <li
+                key={key}
+                className="flex items-baseline gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1.5 dark:bg-slate-800"
+              >
                 <span className="font-jp text-lg">{missedKey(q)}</span>
                 <span className="text-xs text-slate-500 dark:text-slate-400">{missedReading(q)}</span>
               </li>
