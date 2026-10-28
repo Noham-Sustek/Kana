@@ -15,6 +15,7 @@ export const STAGES: readonly StageInfo[] = [
   { id: 6, title: 'Lire', description: 'Mot → lecture au clavier' },
   { id: 7, title: 'Écrire', description: 'Mot en romaji → tracé au doigt' },
   { id: 8, title: 'Phrases', description: 'Phrase → lecture au clavier' },
+  { id: 9, title: 'Composer', description: 'Phrase en romaji → étiquettes en kana' },
 ]
 
 export function getStage(id: StageId): StageInfo {
@@ -26,6 +27,7 @@ export function getStage(id: StageId): StageInfo {
 // v1 : 1-4, 5 Écouter, 6 Lire
 // v2 : 1-4, 5 Dessiner, 6 Écouter, 7 Lire, 8 Écrire, 9 Phrases
 // v3 : 1-4, 5 Dessiner, 6 Lire, 7 Écrire, 8 Phrases (stage audio supprimé)
+//      + 9 Composer, ajouté en fin de liste (aucune renumérotation)
 
 /** v1 → v2. */
 export function renumberStageV1(stage: number): number {

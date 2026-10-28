@@ -18,8 +18,10 @@ interface QuizSettingsState {
   autoScript: Script
   autoSource: AutoSource
   stage: StageId
-  /** Écriture des phrases (stage 8, mode manuel). */
+  /** Phrases des stages 8 et 9 (mode manuel) : écriture, ou série d'anime. */
   sentenceFilter: SentenceFilter
+  /** Option « Phrases d'anime » : propose les séries d'anime dans le filtre des phrases. */
+  animeSentences: boolean
   /** Groupes prédéfinis cochés (ids de KANA_GROUPS). */
   groupIds: string[]
   /** Listes personnalisées cochées (ids Dexie). */
@@ -35,12 +37,19 @@ interface QuizSettingsState {
   setAutoSource: (source: AutoSource) => void
   setStage: (stage: StageId) => void
   setSentenceFilter: (filter: SentenceFilter) => void
+  setAnimeSentences: (enabled: boolean) => void
   setGroupsSelected: (ids: string[], selected: boolean) => void
   toggleCustomGroup: (id: number) => void
   setQuestionCount: (n: number) => void
   setRetry: (retry: boolean) => void
   setTimerSeconds: (s: number) => void
   setPickerScript: (script: Script) => void
+}
+
+/** Filtre des phrases réellement appliqué : une série d'anime n'est retenue que si l'option est active. */
+export function effectiveSentenceFilter(state: Pick<QuizSettingsState, 'sentenceFilter' | 'animeSentences'>): SentenceFilter {
+  const isAnime = state.sentenceFilter === 'dragonball'
+  return isAnime && !state.animeSentences ? 'all' : state.sentenceFilter
 }
 
 export const useQuizSettingsStore = create<QuizSettingsState>()(
@@ -51,6 +60,7 @@ export const useQuizSettingsStore = create<QuizSettingsState>()(
       autoSource: 'path',
       stage: 1,
       sentenceFilter: 'all',
+      animeSentences: false,
       groupIds: ['hiragana-a'],
       customGroupIds: [],
       questionCount: 20,
@@ -63,6 +73,7 @@ export const useQuizSettingsStore = create<QuizSettingsState>()(
       setAutoSource: (autoSource) => set({ autoSource }),
       setStage: (stage) => set({ stage }),
       setSentenceFilter: (sentenceFilter) => set({ sentenceFilter }),
+      setAnimeSentences: (animeSentences) => set({ animeSentences }),
       setGroupsSelected: (ids, selected) =>
         set((s) => ({
           groupIds: selected ? [...new Set([...s.groupIds, ...ids])] : s.groupIds.filter((id) => !ids.includes(id)),

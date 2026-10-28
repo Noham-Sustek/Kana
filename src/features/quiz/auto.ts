@@ -10,6 +10,7 @@ import {
   type CardState,
 } from '@/engine/scheduler'
 import {
+  composeQuestion,
   kanaQuestion,
   sentenceQuestion,
   sentencesForPool,
@@ -97,7 +98,7 @@ export function nextAutoQuestion(ctx: AutoContext, now: number, rng: Rng): { que
     now,
     recent: ctx.recent,
     isApplicable: ({ kanaId, stage }) =>
-      stage === 8 ? inSentences.has(kanaId) : stage >= 6 ? inWords.has(kanaId) : true,
+      stage >= 8 ? inSentences.has(kanaId) : stage >= 6 ? inWords.has(kanaId) : true,
     rng,
   })
   if (!card) return null
@@ -107,8 +108,9 @@ export function nextAutoQuestion(ctx: AutoContext, now: number, rng: Rng): { que
   if (card.stage === 6 || card.stage === 7) {
     const word = pick(words.filter((w) => kanaIdsOf(w.kana).includes(card.kanaId)))
     question = card.stage === 6 ? wordQuestion(word) : wordDrawQuestion(word)
-  } else if (card.stage === 8) {
-    question = sentenceQuestion(pick(sentences.filter((s) => kanaIdsOf(s.text).includes(card.kanaId))))
+  } else if (card.stage === 8 || card.stage === 9) {
+    const sentence = pick(sentences.filter((s) => kanaIdsOf(s.text).includes(card.kanaId)))
+    question = card.stage === 8 ? sentenceQuestion(sentence) : composeQuestion(sentence, rng)
   } else {
     question = kanaQuestion(card.stage, getKana(card.kanaId)!, pool, rng)
   }

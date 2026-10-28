@@ -145,6 +145,6 @@ export function toAnswerRecords(question: Question, outcome: Outcome, answeredAt
     responseMs: outcome.responseMs,
     answeredAt,
     revealed: outcome.revealed,
-    ...(question.kind !== 'choice' && question.wordId ? { wordId: question.wordId } : {}),
+    ...('wordId' in question && question.wordId ? { wordId: question.wordId } : {}),
   }))
 }

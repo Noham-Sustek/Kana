@@ -1,13 +1,16 @@
 import type { Script } from '@/data/kana'
 
-export type StageId = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
+export type StageId = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
 export type Prompt =
   | { type: 'kana'; text: string }
   | { type: 'romaji'; text: string }
   | { type: 'word'; text: string; meaning: string; kanji?: string }
-  /** Phrase à lire (mots séparés par des espaces). */
-  | { type: 'sentence'; text: string; meaning: string }
+  /**
+   * Phrase à lire (`text` en kana, mots séparés par des espaces) ou, au stage 9, à
+   * composer (`text` en romaji). `original` / `source` : réplique d'anime et sa scène.
+   */
+  | { type: 'sentence' | 'romajiSentence'; text: string; meaning: string; original?: string; source?: string }
   /** À dessiner : `text` = romaji ; `note` lève une ambiguïté (じ/ぢ…). */
   | { type: 'draw'; text: string; script: Script; meaning?: string; note?: string }
 
@@ -53,7 +56,16 @@ export interface DrawQuestion extends QuestionBase {
   kanji?: string
 }
 
-export type Question = ChoiceQuestion | InputQuestion | DrawQuestion
+/** Phrase à reconstruire avec des étiquettes en kana (stage 9). */
+export interface ComposeQuestion extends QuestionBase {
+  kind: 'compose'
+  /** Phrase attendue, mots séparés par des espaces (une étiquette par mot). */
+  reading: string
+  /** Étiquettes proposées : les mots de la phrase et des intrus, mélangés. */
+  tiles: string[]
+}
+
+export type Question = ChoiceQuestion | InputQuestion | DrawQuestion | ComposeQuestion
 
 export interface QuizOptions {
   /** Après une erreur, laisser retenter au lieu de passer à la correction. */

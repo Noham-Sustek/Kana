@@ -1,8 +1,21 @@
 import { describe, expect, it } from 'vitest'
 import { KANA, getKana, groupsOfScript, kanaOfScript, type Kana } from '@/data/kana'
-import { checkAnswer, correctAnswerLabel, generateQuestions, looksAlike, wordsForPool } from '@/features/quiz/questions'
+import { ANIME_SENTENCES } from '@/data/animeSentences'
+import { SENTENCES } from '@/data/sentences'
+import {
+  checkAnswer,
+  composeQuestion,
+  correctAnswerLabel,
+  generateQuestions,
+  looksAlike,
+  sentencesForPool,
+  tileDistractors,
+  wordsForPool,
+} from '@/features/quiz/questions'
 import { seededRng } from '@/features/quiz/random'
-import type { ChoiceQuestion, StageId } from '@/features/quiz/types'
+import { toRomaji, tokenize } from '@/features/quiz/reading'
+import type { ChoiceQuestion, ComposeQuestion, StageId } from '@/features/quiz/types'
+import { effectiveSentenceFilter } from '@/stores/quizSettingsStore'
 
 const k = (id: string) => getKana(id)!
 const groupKana = (groupId: string) => KANA.filter((kana) => kana.groupId === groupId)
@@ -176,5 +189,62 @@ describe('questions à dessiner', () => {
       expect(q.wordId).toBe(q.target)
       expect(q.prompt).toMatchObject({ type: 'draw', script: 'katakana', meaning: expect.any(String) })
     }
+  })
+})
+
+describe('phrases à composer (stage 9)', () => {
+  const ALL_SENTENCES = [...SENTENCES, ...ANIME_SENTENCES]
+
+  it('propose les mots de la phrase et des intrus jamais justes ni homophones', () => {
+    for (const sentence of ALL_SENTENCES) {
+      const words = sentence.text.split(' ')
+      const distractors = tileDistractors(sentence.text, 4, seededRng(3))
+      for (const d of distractors) {
+        expect(words).not.toContain(d)
+        expect(tokenize(d)).not.toBeNull()
+        // Remis dans la phrase, l'intrus change la lecture : le romaji permet de l'écarter.
+        for (let i = 0; i < words.length; i++) {
+          const variant = words.map((w, j) => (j === i ? d : w)).join(' ')
+          if (tokenize(variant)) expect(toRomaji(variant)).not.toBe(toRomaji(sentence.text))
+        }
+      }
+    }
+  })
+
+  it('trouve des intrus pour presque toutes les phrases', () => {
+    const without = ALL_SENTENCES.filter((s) => tileDistractors(s.text, 2, seededRng(1)).length === 0)
+    expect(without.length).toBeLessThan(ALL_SENTENCES.length / 20)
+  })
+
+  it('donne le romaji, toutes les étiquettes utiles, et accepte la phrase reconstruite', () => {
+    const sentence = SENTENCES.find((s) => s.text === 'わたし は がくせい です')!
+    const q = composeQuestion(sentence, seededRng(5))
+    expect(q.prompt.text).toBe('watashi wa gakusei desu')
+    for (const word of sentence.text.split(' ')) expect(q.tiles).toContain(word)
+    expect(q.tiles.length).toBeGreaterThan(4)
+    expect(checkAnswer(q, 'わたし は がくせい です')).toBe(true)
+    expect(checkAnswer(q, 'がくせい は わたし です')).toBe(false)
+    expect(correctAnswerLabel(q)).toBe('わたし は がくせい です')
+  })
+
+  it('garde la réplique originale et la scène des phrases d’anime', () => {
+    const goku = ANIME_SENTENCES.find((s) => s.text === 'オッス オラ ごくう')!
+    const q = composeQuestion(goku, seededRng(1))
+    expect(q.prompt).toMatchObject({ text: 'ossu ora gokuu', original: 'オッス！オラ悟空！' })
+    expect(q.prompt.type === 'romajiSentence' && q.prompt.source).toContain('Dragon Ball')
+  })
+
+  it('propose les répliques de Dragon Ball quels que soient les kana cochés', () => {
+    expect(sentencesForPool([], 'dragonball')).toHaveLength(ANIME_SENTENCES.length)
+    expect(sentencesForPool(FULL_HIRAGANA, 'all').some((s) => s.series)).toBe(false)
+    const questions = generateQuestions(9, [], 10, seededRng(2), 'dragonball') as ComposeQuestion[]
+    expect(questions).toHaveLength(10)
+    expect(questions.every((q) => q.kind === 'compose' && q.stage === 9)).toBe(true)
+  })
+
+  it("n'applique le filtre Dragon Ball que si l'option est cochée", () => {
+    expect(effectiveSentenceFilter({ sentenceFilter: 'dragonball', animeSentences: true })).toBe('dragonball')
+    expect(effectiveSentenceFilter({ sentenceFilter: 'dragonball', animeSentences: false })).toBe('all')
+    expect(effectiveSentenceFilter({ sentenceFilter: 'katakana', animeSentences: false })).toBe('katakana')
   })
 })

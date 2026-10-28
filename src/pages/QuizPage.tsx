@@ -5,9 +5,9 @@ import { getKana, groupGlyph } from '@/data/kana'
 import { generateQuestions } from '@/features/quiz/questions'
 import { currentQuestion, score, type SessionState } from '@/features/quiz/session'
 import { getStage } from '@/features/quiz/stages'
-import type { ChoiceQuestion, InputQuestion, Question } from '@/features/quiz/types'
+import type { ChoiceQuestion, ComposeQuestion, InputQuestion, Question } from '@/features/quiz/types'
 import { useQuizPool } from '@/features/quiz/useQuizPool'
-import { useQuizSettingsStore } from '@/stores/quizSettingsStore'
+import { effectiveSentenceFilter, useQuizSettingsStore } from '@/stores/quizSettingsStore'
 import { useQuizSessionStore } from '@/stores/quizSessionStore'
 
 const AUTO_ADVANCE_MS = 700
@@ -35,9 +35,14 @@ function QuizRunner({ session }: { session: SessionState }) {
   const isAuto = useQuizSessionStore((s) => s.auto !== null)
 
   // Bonne réponse : passage automatique à la question suivante, sauf s'il y a
-  // quelque chose à regarder (comparaison d'un dessin, traduction d'un mot).
+  // quelque chose à regarder (comparaison d'un dessin, traduction d'un mot,
+  // réplique originale d'un anime).
   const isDrawing = question.kind === 'draw'
-  const stayAfterAnswer = isDrawing || question.prompt.type === 'word'
+  const { prompt } = question
+  const stayAfterAnswer =
+    isDrawing ||
+    prompt.type === 'word' ||
+    ((prompt.type === 'sentence' || prompt.type === 'romajiSentence') && !!prompt.original)
   useEffect(() => {
     if (status !== 'correct' || stayAfterAnswer) return
     const timer = setTimeout(next, AUTO_ADVANCE_MS)
@@ -116,6 +121,9 @@ function QuizRunner({ session }: { session: SessionState }) {
       {question.kind === 'choice' && <ChoiceAnswers question={question} session={session} onPick={submit} />}
       {question.kind === 'input' && (
         <InputAnswer key={session.index} question={question} session={session} onSubmit={submit} onNext={next} />
+      )}
+      {question.kind === 'compose' && (
+        <ComposeAnswer key={session.index} question={question} session={session} onSubmit={submit} />
       )}
       {question.kind === 'draw' && (
         <>
@@ -221,15 +229,32 @@ function PromptView({ question, settled }: { question: Question; settled: boolea
         </div>
       )
     case 'sentence':
+    case 'romajiSentence':
       return (
         <div className="text-center">
-          {/* Un bloc par mot : le japonais se couperait sinon au milieu d'un mot. */}
-          <p className="flex flex-wrap justify-center gap-x-[0.4em] font-jp text-3xl leading-relaxed short:text-2xl short:leading-snug lg:text-4xl">
-            {prompt.text.split(' ').map((word, i) => (
-              <span key={i}>{word}</span>
-            ))}
-          </p>
+          {prompt.source && (
+            <p className="mb-3 text-xs font-medium text-amber-700 short:mb-1 dark:text-amber-400">{prompt.source}</p>
+          )}
+          {prompt.type === 'sentence' ? (
+            // Un bloc par mot : le japonais se couperait sinon au milieu d'un mot.
+            <p className="flex flex-wrap justify-center gap-x-[0.4em] font-jp text-3xl leading-relaxed short:text-2xl short:leading-snug lg:text-4xl">
+              {prompt.text.split(' ').map((word, i) => (
+                <span key={i}>{word}</span>
+              ))}
+            </p>
+          ) : (
+            <p className="text-2xl leading-snug font-semibold short:text-xl lg:text-3xl">{prompt.text}</p>
+          )}
           <p className="mt-3 text-sm text-slate-500 short:mt-1 lg:text-base dark:text-slate-400">{prompt.meaning}</p>
+          {/* Réplique d'origine (kanji) : seulement après la réponse, elle la contiendrait. */}
+          {settled && prompt.original && (
+            <p
+              className="mt-2 font-jp text-base text-slate-700 lg:text-lg dark:text-slate-200"
+              style={{ animation: 'fade-in 0.2s' }}
+            >
+              {prompt.original}
+            </p>
+          )}
         </div>
       )
     case 'draw':
@@ -298,6 +323,95 @@ function ChoiceAnswers({ question, session, onPick }: ChoiceAnswersProps) {
           </button>
         )
       })}
+    </div>
+  )
+}
+
+interface ComposeAnswerProps {
+  question: ComposeQuestion
+  session: SessionState
+  onSubmit: (value: string) => void
+}
+
+/** Stage 9 : la phrase se reconstruit en touchant les étiquettes dans l'ordre. */
+function ComposeAnswer({ question, session, onSubmit }: ComposeAnswerProps) {
+  // Indices des étiquettes posées, dans l'ordre.
+  const [picked, setPicked] = useState<number[]>([])
+  const { status, wrongAnswers } = session
+  const settled = status !== 'pending'
+  const wordCount = question.reading.split(' ').length
+  const answerOf = (indices: number[]) => indices.map((i) => question.tiles[i]!).join(' ')
+  const showWrong = status === 'failed' || (picked.length === wordCount && wrongAnswers.includes(answerOf(picked)))
+
+  const pick = (index: number) => {
+    if (settled || picked.length >= wordCount) return
+    const next = [...picked, index]
+    setPicked(next)
+    // Phrase complète : vérifiée tout de suite, sans bouton à valider.
+    if (next.length === wordCount) onSubmit(answerOf(next))
+  }
+  const unpick = (position: number) => {
+    if (!settled) setPicked(picked.filter((_, p) => p !== position))
+  }
+
+  const placedClass =
+    status === 'correct'
+      ? RIGHT_CLASS
+      : showWrong
+        ? WRONG_CLASS
+        : 'border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900'
+
+  return (
+    <div>
+      <div
+        aria-label="Votre phrase"
+        className="flex min-h-16 flex-wrap content-start gap-1.5 rounded-xl border-2 border-dashed border-slate-300 p-2 dark:border-slate-700"
+      >
+        {picked.map((tileIndex, position) => (
+          <button
+            key={position}
+            type="button"
+            onClick={() => unpick(position)}
+            disabled={settled}
+            className={`min-h-11 rounded-lg border-2 px-3 font-jp text-xl lg:text-2xl ${placedClass}`}
+          >
+            {question.tiles[tileIndex]}
+          </button>
+        ))}
+      </div>
+
+      <p className="mt-2 min-h-5 text-center text-sm lg:text-base">
+        {status === 'failed' && (
+          <span>
+            Réponse : <strong className="font-jp text-emerald-700 dark:text-emerald-400">{question.reading}</strong>
+          </span>
+        )}
+        {status === 'pending' && showWrong && (
+          <span className="text-red-600 dark:text-red-400">
+            Pas tout à fait : touchez une étiquette pour la retirer.
+          </span>
+        )}
+      </p>
+
+      {/* Étiquettes posées gardées invisibles : la réserve ne se réorganise pas. */}
+      <div className="mt-2 flex flex-wrap justify-center gap-2">
+        {question.tiles.map((tile, index) => {
+          const used = picked.includes(index)
+          return (
+            <button
+              key={index}
+              type="button"
+              onClick={() => pick(index)}
+              disabled={settled || used}
+              className={`min-h-11 rounded-lg border-2 border-slate-200 bg-white px-3 font-jp text-xl shadow-sm enabled:active:scale-95 lg:text-2xl dark:border-slate-700 dark:bg-slate-900 ${
+                used ? 'invisible' : settled ? 'opacity-50' : ''
+              }`}
+            >
+              {tile}
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -381,10 +495,13 @@ function QuizSummary({ session }: { session: SessionState }) {
 
   const restart = () => {
     if (autoParams) return void startAuto(autoParams)
-    start(generateQuestions(settings.stage, pool, settings.questionCount, Math.random, settings.sentenceFilter), {
-      retry: settings.retry,
-      timerSeconds: settings.timerSeconds,
-    })
+    start(
+      generateQuestions(settings.stage, pool, settings.questionCount, Math.random, effectiveSentenceFilter(settings)),
+      {
+        retry: settings.retry,
+        timerSeconds: settings.timerSeconds,
+      },
+    )
   }
 
   return (
@@ -462,7 +579,7 @@ function QuizSummary({ session }: { session: SessionState }) {
 
 /** Texte en kana d'une question, pour la liste « À revoir ». */
 function missedKey(q: Question): string {
-  if (q.kind === 'input') return q.reading
+  if (q.kind === 'input' || q.kind === 'compose') return q.reading
   if (q.kind === 'draw') return q.target
   return getKana(q.kanaIds[0]!)!.char
 }
@@ -470,5 +587,6 @@ function missedKey(q: Question): string {
 function missedReading(q: Question): string {
   if (q.kind === 'input') return q.expected
   if (q.kind === 'draw' && q.prompt.type === 'draw') return q.prompt.text
+  if (q.kind === 'compose') return q.prompt.text
   return getKana(q.kanaIds[0]!)!.romaji[0]!
 }

@@ -15,6 +15,7 @@ import { useCustomGroups, useQuizPool } from '@/features/quiz/useQuizPool'
 import {
   QUESTION_COUNTS,
   TIMER_OPTIONS,
+  effectiveSentenceFilter,
   useQuizSettingsStore,
   type AutoSource,
   type QuizMode,
@@ -35,6 +36,11 @@ const SENTENCE_FILTER_OPTIONS: { value: SentenceFilter; label: string }[] = [
   { value: 'mixed', label: 'Mixte' },
 ]
 
+/** Proposées en plus quand l'option « Phrases d'anime » est cochée. */
+const ANIME_FILTER_OPTIONS: { value: SentenceFilter; label: string }[] = [{ value: 'dragonball', label: 'Dragon Ball' }]
+
+const isSentenceStage = (stage: StageId) => stage === 8 || stage === 9
+
 const SOURCE_OPTIONS: { value: AutoSource; label: string }[] = [
   { value: 'path', label: 'Parcours guidé' },
   { value: 'selection', label: 'Mon choix' },
@@ -47,19 +53,22 @@ export function LearnPage() {
   const navigate = useNavigate()
   const pool = useQuizPool()
   const wordCount = wordsForPool(pool).length
-  const sentenceCount = sentencesForPool(pool, settings.sentenceFilter).length
+  const sentenceFilter = effectiveSentenceFilter(settings)
+  const sentenceCount = sentencesForPool(pool, sentenceFilter).length
   const isAuto = settings.mode === 'auto'
   const isSelection = isAuto && settings.autoSource === 'selection'
+  // Les répliques d'anime ne dépendent pas des kana cochés.
+  const needsPool = !(isSentenceStage(settings.stage) && sentenceFilter === 'dragonball')
 
   const unavailableReason = isAuto
     ? isSelection && pool.length === 0
       ? 'Sélectionnez au moins un groupe.'
       : null
-    : pool.length === 0
+    : pool.length === 0 && needsPool
       ? 'Sélectionnez au moins un groupe.'
       : (settings.stage === 6 || settings.stage === 7) && wordCount === 0
         ? 'Aucun mot ne s’écrit avec ces kana : ajoutez des groupes.'
-        : settings.stage === 8 && sentenceCount === 0
+        : isSentenceStage(settings.stage) && sentenceCount === 0
           ? 'Aucune phrase ne s’écrit avec ces kana : ajoutez des groupes ou changez d’écriture.'
           : null
 
@@ -75,7 +84,7 @@ export function LearnPage() {
       })
     } else {
       startSession(
-        generateQuestions(settings.stage, pool, settings.questionCount, Math.random, settings.sentenceFilter),
+        generateQuestions(settings.stage, pool, settings.questionCount, Math.random, sentenceFilter),
         options,
       )
     }
@@ -127,6 +136,12 @@ export function LearnPage() {
                 description="Sinon, la bonne réponse est affichée tout de suite."
                 checked={settings.retry}
                 onChange={settings.setRetry}
+              />
+              <Switch
+                label="Phrases d'anime"
+                description="Ajoute les répliques de Dragon Ball au choix des phrases (stages 8 et 9, mode manuel)."
+                checked={settings.animeSentences}
+                onChange={settings.setAnimeSentences}
               />
             </div>
           </Card>
@@ -282,7 +297,8 @@ function ManualPanel() {
   const settings = useQuizSettingsStore()
   const pool = useQuizPool()
   const wordCount = wordsForPool(pool).length
-  const sentenceCount = sentencesForPool(pool, settings.sentenceFilter).length
+  const sentenceFilter = effectiveSentenceFilter(settings)
+  const sentenceCount = sentencesForPool(pool, sentenceFilter).length
   const plural = (n: number, word: string) => `${n} ${word}${n > 1 ? 's' : ''} disponible${n > 1 ? 's' : ''}`
 
   return (
@@ -294,7 +310,7 @@ function ManualPanel() {
             const note =
               stage.id === 6 || stage.id === 7
                 ? plural(wordCount, 'mot')
-                : stage.id === 8
+                : isSentenceStage(stage.id)
                   ? plural(sentenceCount, 'phrase')
                   : null
             return (
@@ -321,13 +337,17 @@ function ManualPanel() {
             )
           })}
         </div>
-        {settings.stage === 8 && (
+        {isSentenceStage(settings.stage) && (
           <div className="mt-4">
-            <Field label="Écriture des phrases">
+            <Field label="Phrases">
               <SegmentedControl
-                label="Écriture des phrases"
-                options={SENTENCE_FILTER_OPTIONS}
-                value={settings.sentenceFilter}
+                label="Phrases"
+                options={
+                  settings.animeSentences
+                    ? [...SENTENCE_FILTER_OPTIONS, ...ANIME_FILTER_OPTIONS]
+                    : SENTENCE_FILTER_OPTIONS
+                }
+                value={sentenceFilter}
                 onChange={settings.setSentenceFilter}
               />
             </Field>

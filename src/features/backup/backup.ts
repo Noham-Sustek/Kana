@@ -33,7 +33,7 @@ const isInt = (v: unknown): v is number => Number.isInteger(v)
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
 const isStr = (v: unknown): v is string => typeof v === 'string'
 const isBool = (v: unknown): v is boolean => typeof v === 'boolean'
-const isStage = (v: unknown): v is StageId => isInt(v) && v >= 1 && v <= 8
+const isStage = (v: unknown): v is StageId => isInt(v) && v >= 1 && v <= 9
 
 function list<T>(data: Rec, key: string, label: string, check: (r: Rec) => boolean): T[] {
   const value = data[key]

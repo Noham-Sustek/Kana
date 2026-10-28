@@ -11,7 +11,15 @@ export interface Sentence {
   /** Sens en français. */
   meaning: string
   script: SentenceScript
+  /** Série d'anime d'où vient la réplique (absent pour les phrases d'exemple). */
+  series?: AnimeSeries
+  /** Réplique originale (avec kanji et ponctuation), montrée après la réponse. */
+  original?: string
+  /** Scène de la réplique. */
+  scene?: string
 }
+
+export type AnimeSeries = 'dragonball'
 
 // Phrases simples (niveau débutant), sans kanji ni ponctuation. Les phrases tout
 // en hiragana existent aussi converties en katakana ; celles qui contiennent des
@@ -187,6 +195,12 @@ export function toKatakana(text: string): string {
 const hasKatakana = (text: string) => /[ァ-ヺ]/.test(text)
 const hasHiragana = (text: string) =>
   [...text].some((c) => c.charCodeAt(0) >= HIRAGANA_START && c.charCodeAt(0) <= HIRAGANA_END)
+
+/** Écriture d'un texte : mélange si hiragana et katakana s'y côtoient. */
+export function scriptOf(text: string): SentenceScript {
+  if (hasKatakana(text) && hasHiragana(text)) return 'mixed'
+  return hasKatakana(text) ? 'katakana' : 'hiragana'
+}
 
 export const SENTENCES: readonly Sentence[] = RAW.flatMap(([text, meaning]): Sentence[] => {
   if (hasKatakana(text) && hasHiragana(text)) return [{ id: text, text, meaning, script: 'mixed' }]
