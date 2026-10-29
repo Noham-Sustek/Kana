@@ -5,7 +5,7 @@ import { matchesReading, toRomaji, tokenize } from '@/features/quiz/reading'
 
 describe("phrases d'anime", () => {
   it('existent, sans doublon ni collision avec les phrases d’exemple', () => {
-    expect(ANIME_SENTENCES.length).toBeGreaterThanOrEqual(80)
+    expect(ANIME_SENTENCES.length).toBeGreaterThanOrEqual(180)
     const ids = [...SENTENCES, ...ANIME_SENTENCES].map((s) => s.id)
     expect(new Set(ids).size).toBe(ids.length)
   })
