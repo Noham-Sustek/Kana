@@ -237,13 +237,15 @@ function PromptView({ question, settled }: { question: Question; settled: boolea
           )}
           {prompt.type === 'sentence' ? (
             // Un bloc par mot : le japonais se couperait sinon au milieu d'un mot.
-            <p className="flex flex-wrap justify-center gap-x-[0.4em] font-jp text-3xl leading-relaxed short:text-2xl short:leading-snug lg:text-4xl">
+            <p
+              className={`flex flex-wrap justify-center gap-x-[0.4em] font-jp leading-relaxed short:leading-snug ${sentenceSizeClass(prompt.text)}`}
+            >
               {prompt.text.split(' ').map((word, i) => (
                 <span key={i}>{word}</span>
               ))}
             </p>
           ) : (
-            <p className="text-2xl leading-snug font-semibold short:text-xl lg:text-3xl">{prompt.text}</p>
+            <p className={`leading-snug font-semibold ${romajiSentenceSizeClass(prompt.text)}`}>{prompt.text}</p>
           )}
           <p className="mt-3 text-sm text-slate-500 short:mt-1 lg:text-base dark:text-slate-400">{prompt.meaning}</p>
           {/* Réplique d'origine (kanji) : seulement après la réponse, elle la contiendrait. */}
@@ -287,6 +289,19 @@ function romajiSizeClass(text: string): string {
   if (text.length <= 10) return 'text-4xl lg:text-5xl'
   if (text.length <= 14) return 'text-3xl lg:text-5xl'
   return 'text-2xl lg:text-4xl'
+}
+
+// Les répliques longues (discours) doivent tenir à l'écran avec le clavier ouvert.
+function sentenceSizeClass(text: string): string {
+  if (text.length <= 30) return 'text-3xl short:text-2xl lg:text-4xl'
+  if (text.length <= 60) return 'text-2xl short:text-xl lg:text-3xl'
+  return 'text-xl short:text-lg lg:text-2xl'
+}
+
+function romajiSentenceSizeClass(text: string): string {
+  if (text.length <= 60) return 'text-2xl short:text-xl lg:text-3xl'
+  if (text.length <= 120) return 'text-xl short:text-lg lg:text-2xl'
+  return 'text-lg short:text-base lg:text-xl'
 }
 
 interface ChoiceAnswersProps {

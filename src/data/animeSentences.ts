@@ -42,7 +42,7 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'できそこねえ の バケモン は おめえ の ほう だー',
     'Le monstre raté… c’est toi !',
     'できそこねえのバケモンは… おめえのほうだーーーっ！！！！',
-    'Goku petit face à un monstre',
+    'Goku petit face à un adversaire',
   ],
   [
     'ねらい は ぶぶたい だ きこうほう',
@@ -54,30 +54,47 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'くっくっく ドラゴン ボール か',
     'Hé hé hé… les Dragon Balls…',
     'くっくっくドラゴンボールか…',
-    'Piccolo Daimao convoite les Dragon Balls',
+    'Piccolo Daimao (le Roi Démon) convoite les Dragon Balls',
   ],
   [
     'いっこく も はやく ななこ すべて を て に いれ ふたたび わかさ を て に いれたい もの だ',
     'Il me tarde de réunir les sept pour retrouver ma jeunesse…',
     '一刻もはやく７個すべてを手にいれ再び若さを手にいれたいものだ…',
-    'Piccolo Daimao convoite les Dragon Balls',
+    'Piccolo Daimao (le Roi Démon) convoite les Dragon Balls',
   ],
-  ['さあ いえ ねがい は なん だ', 'Allez, dis-moi ton vœu.', 'さあいえ願いはなんだ', 'Piccolo Daimao fait son vœu'],
+  [
+    'くっくっく ドラゴン ボール か いっこく も はやく ななこ すべて を て に いれ ふたたび わかさ を て に いれたい もの だ',
+    'Hé hé hé… les Dragon Balls… Il me tarde de réunir les sept pour retrouver ma jeunesse…',
+    'くっくっくドラゴンボールか… 一刻もはやく７個すべてを手にいれ再び若さを手にいれたいものだ…',
+    'Piccolo Daimao (le Roi Démon) convoite les Dragon Balls',
+  ],
+  [
+    'さあ いえ ねがい は なん だ',
+    'Allez, dis-moi ton vœu.',
+    'さあいえ願いはなんだ',
+    'Piccolo Daimao (le Roi Démon) fait son vœu',
+  ],
   [
     'この わたし を わかがえらせて くれ',
     'Rends-moi ma jeunesse !',
     'このわたしを若がえらせてくれ！！',
-    'Piccolo Daimao fait son vœu',
+    'Piccolo Daimao (le Roi Démon) fait son vœu',
   ],
   [
     'もっとも パワー に あふれて いた あの ころ に な',
     'Celle de l’époque où je débordais de puissance !',
     'もっともパワーにあふれていたあの頃にな！！！',
-    'Piccolo Daimao fait son vœu',
+    'Piccolo Daimao (le Roi Démon) fait son vœu',
+  ],
+  [
+    'この わたし を わかがえらせて くれ もっとも パワー に あふれて いた あの ころ に な',
+    'Rends-moi ma jeunesse ! Celle de l’époque où je débordais de puissance !',
+    'このわたしを若がえらせてくれ！！ もっともパワーにあふれていたあの頃にな！！！',
+    'Piccolo Daimao (le Roi Démon) fait son vœu',
   ],
   [
     'この オレ は ピッコロ だいまおう の うまれかわり だ',
-    'Je suis la réincarnation du Démon Piccolo !',
+    'Je suis la réincarnation du Roi Démon Piccolo !',
     'このオレはピッコロ大魔王の生まれかわりだっ！！！！',
     'Piccolo Jr. au Tenkaichi Budokai',
   ],
@@ -85,6 +102,12 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'ふたたび ピッコロ さま の てんか が よみがえる の だ',
     'Le règne de Piccolo va renaître !',
     'ふたたびピッコロさまの天下がよみがえるのだ！！！！',
+    'Piccolo Jr. au Tenkaichi Budokai',
+  ],
+  [
+    'この オレ は ピッコロ だいまおう の うまれかわり だ ふたたび ピッコロ さま の てんか が よみがえる の だ',
+    'Je suis la réincarnation du Roi Démon Piccolo ! Le règne de Piccolo va renaître !',
+    'このオレはピッコロ大魔王の生まれかわりだっ！！！！ ふたたびピッコロさまの天下がよみがえるのだ！！！！',
     'Piccolo Jr. au Tenkaichi Budokai',
   ],
   [
@@ -104,6 +127,12 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'ほんとう の な も わすれて しまった ナメックせいじん だ',
     'Juste un Namek qui a oublié son vrai nom.',
     '本当の名もわすれてしまったナメック星人だ',
+    'Piccolo fusionne avec Kami-sama',
+  ],
+  [
+    'もう かみ でも ピッコロ でも ない ほんとう の な も わすれて しまった ナメックせいじん だ',
+    'Je ne suis plus ni Kami ni Piccolo… Juste un Namek qui a oublié son vrai nom.',
+    'もう神でもピッコロでもない… 本当の名もわすれてしまったナメック星人だ',
     'Piccolo fusionne avec Kami-sama',
   ],
   [
@@ -166,6 +195,12 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'La pose des Forces Spéciales Ginyu',
   ],
   [
+    'リクーム バータ ジース グルド ギニュー みんな そろって ギニュー とくせんたい',
+    'Recoome ! Burter ! Jeice ! Guldo ! Ginyu ! Tous ensemble… Les Forces Spéciales Ginyu !',
+    'リクーム！！！ バータ！！！ ジース！！！ グルド！！！ ギニュー！！！ みんなそろって ギニュー特戦隊！！！！',
+    'La pose des Forces Spéciales Ginyu',
+  ],
+  [
     'よし いく ぞ き を かいほう しろ',
     'Bon… on y va… Libère ton ki !',
     'よし…いくぞ…… 気を開放しろ！！！！！',
@@ -204,6 +239,12 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'Goku se présente à Freezer',
   ],
   [
+    'オレ は ちきゅう から きさま を たおす ため に やって きた サイヤじん おだやか な こころ を もちながら はげしい いかり に よって めざめた でんせつ の せんし スーパー サイヤじん そん ごくう だ',
+    'Je suis un Saiyan venu de la Terre pour te vaincre… Le guerrier légendaire au cœur pur, éveillé par une colère terrible… Super Saiyan Son Goku !',
+    'オレは地球からきさまをたおすためにやってきたサイヤ人……… おだやかな心をもちながらはげしい怒りによって目覚めた伝説の戦士… 超サイヤ人孫悟空だ！！！！！',
+    'Goku se présente à Freezer',
+  ],
+  [
     'おめえ は もう あやまったって ゆるさねえ ぞ',
     'Même si tu t’excuses maintenant, je ne te pardonnerai pas…',
     'おめえはもうあやまったってゆるさねえぞ…',
@@ -223,6 +264,12 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'Freezer à bout',
   ],
   [
+    'オレ は うちゅういち なんだ だから きさま は オレ に ころされる べき なんだー',
+    "Je suis le plus fort de l'univers… ! Alors toi, tu dois mourir de ma main !",
+    'オレは宇宙一なんだ……！！ だからきさまは！！ オレに… 殺されるべきなんだーーーっ！！！！！',
+    'Freezer à bout',
+  ],
+  [
     'やめ だ にど と わるさ すんじゃ ねえ ぞ',
     'J’arrête. Ne refais plus jamais de mal à personne.',
     'やめだ 二度と悪さすんじゃねえぞ',
@@ -237,6 +284,12 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'Bardock face à Freezer',
   ],
   ['これ で さいご だー', "C'est la fin !", 'これで最後だーーーっ！！！', 'Bardock face à Freezer'],
+  [
+    'これ で すべて が かわる この オレ の うんめい そして きさま の うんめい も これ で さいご だー',
+    "Avec ça, tout va changer… Mon destin… et le tien aussi… C'est la fin !",
+    'これですべてが変わる… このオレの運命…そして…きさまの運命も… これで最後だーーーっ！！！',
+    'Bardock face à Freezer',
+  ],
   [
     'この オレ が みらい を かえて みせる',
     'Moi… je vais changer l’avenir !',
@@ -253,6 +306,12 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'ここ に も いた と いう こと だ',
     'Il y en avait un autre ici… !',
     'ここにもいたということだ……！！',
+    'Trunks du futur face à Freezer',
+  ],
+  [
+    'スーパー サイヤじん は そん ごくう さん ひとり じゃ ない ここ に も いた と いう こと だ',
+    "Goku n'est pas le seul Super Saiyan… Il y en avait un autre ici… !",
+    '超サイヤ人は孫悟空さんひとりじゃない… ここにもいたということだ……！！',
     'Trunks du futur face à Freezer',
   ],
   [
@@ -287,6 +346,12 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
   ],
   ['たのしみ に して いる ぞ', "J'ai hâte.", '楽しみにしているぞ', 'Cell annonce le Cell Game'],
   [
+    'セル ゲーム と いう ぶどう たいかい を おこなう こと に した つよさ に じしん の ある もの は どんどん さんか して ほしい たのしみ に して いる ぞ',
+    "J'ai décidé d'organiser un tournoi d'arts martiaux : le Cell Game… ! Que tous ceux qui ont confiance en leur force viennent y participer. J'ai hâte.",
+    'セルゲームという武道大会をおこなうことにした……！ 強さに自信のある者はどんどん参加してほしい 楽しみにしているぞ',
+    'Cell annonce le Cell Game',
+  ],
+  [
     'まいった おめえ の でばん だ ぞ ごはん',
     "J'abandonne ! À toi de jouer, Gohan !",
     'まいった！ おめえの出番だぞ悟飯！！',
@@ -302,19 +367,25 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'おとうさん が たすけて くれた',
     'Mon père m’a aidé…',
     'おとうさんが助けてくれた…',
-    'Gohan Super Saiyan 2 face aux Cell Jr.',
+    'Gohan Super Saiyan 2 face à Bojack (film Bojack Unbound)',
   ],
   [
     'そして おまえたち を ぜったい ゆるさない と いって いた',
     'Et il a dit qu’il ne vous pardonnerait jamais !',
     'そしておまえたちを絶対ゆるさないと言っていた！',
-    'Gohan Super Saiyan 2 face aux Cell Jr.',
+    'Gohan Super Saiyan 2 face à Bojack (film Bojack Unbound)',
   ],
   [
     'ボク に ちきゅう を まもれ と いってた',
     'Il m’a dit de protéger la Terre !',
     'ボクに地球を守れと言ってた！！',
-    'Gohan Super Saiyan 2 face aux Cell Jr.',
+    'Gohan Super Saiyan 2 face à Bojack (film Bojack Unbound)',
+  ],
+  [
+    'おとうさん が たすけて くれた そして おまえたち を ぜったい ゆるさない と いって いた ボク に ちきゅう を まもれ と いってた',
+    'Mon père m’a aidé… Et il a dit qu’il ne vous pardonnerait jamais ! Il m’a dit de protéger la Terre !',
+    'おとうさんが助けてくれた… そしておまえたちを絶対ゆるさないと言っていた！ ボクに地球を守れと言ってた！！',
+    'Gohan Super Saiyan 2 face à Bojack (film Bojack Unbound)',
   ],
   [
     'さいご に みせて くれ よ オラたち ふたり で つくった ちから を',
@@ -338,6 +409,12 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'トランクス だかせて くれ',
     'Trunks… Laisse-moi te serrer…',
     'トランクス…… 抱かせてくれ……',
+    'Vegeta prend Trunks dans ses bras',
+  ],
+  [
+    'おまえ は あかんぼう の ころ から いちど も だいて やった こと が なかった な トランクス だかせて くれ',
+    'Je ne t’ai jamais pris dans mes bras, même quand tu étais bébé… Trunks… Laisse-moi te serrer…',
+    'おまえは赤ん坊の頃から一度も抱いてやったことがなかったな…… トランクス…… 抱かせてくれ……',
     'Vegeta prend Trunks dans ses bras',
   ],
   [
@@ -371,6 +448,12 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'Vegeta avant son sacrifice',
   ],
   [
+    'きさま の かたづけかた が わかった ぜ やっと な きさま を たおす に は にど と しゅうふく できない よう こなごな に ふっとばす こと だ さらば だ ブルマ トランクス そして カカロット',
+    'J’ai enfin compris comment me débarrasser de toi… Pour te vaincre, il faut te pulvériser pour que tu ne puisses jamais te reformer ! Adieu, Bulma… Trunks… Et… Kakarot…',
+    'きさまのかたづけかたがわかったぜ…やっとな……… きさまを倒すにはにどと修復できないようこなごなに吹っとばすことだ…！！ さらばだブルマ…トランクス…… そして…カカロット……',
+    'Vegeta décide de se sacrifier',
+  ],
+  [
     'カカロット すごい ヤツ だ よ おまえ は',
     "Kakarot… t'es vraiment quelqu'un, toi…",
     'カカロット…すごいヤツだよおまえは…',
@@ -387,6 +470,12 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'がんばれ カカロット おまえ が ナンバー ワン だ',
     "Courage, Kakarot… C'est toi le numéro un !",
     'がんばれカカロット…おまえがナンバー１だ！！',
+    'Vegeta reconnaît la supériorité de Goku',
+  ],
+  [
+    'カカロット すごい ヤツ だ よ おまえ は アタマ に くる ぜ たたかい が だいすき で やさしい サイヤじん なんて よ がんばれ カカロット おまえ が ナンバー ワン だ',
+    "Kakarot… t'es vraiment quelqu'un, toi… Ça m’énerve… ! Un Saiyan qui adore se battre et qui est gentil… ! Courage, Kakarot… C'est toi le numéro un !",
+    'カカロット…すごいヤツだよおまえは… …アタマにくるぜ…！ 闘いが大好きでやさしいサイヤ人なんてよ…！！ がんばれカカロット…おまえがナンバー１だ！！',
     'Vegeta reconnaît la supériorité de Goku',
   ],
   [
@@ -425,6 +514,12 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'すぐ らく に して やる ほんの すこし くるしむ だけ だ',
     'Je vais vite abréger tes souffrances… Tu ne souffriras qu’un tout petit peu…',
     'すぐ楽にしてやる…ほんの少し苦しむだけだ…',
+    'Buu absorbe Gotenks',
+  ],
+  [
+    'ふははは これ は いい まえ より さらに パワー アップ して しまった ぞ すぐ らく に して やる ほんの すこし くるしむ だけ だ',
+    'Hahaha… Excellent ! Je suis encore plus puissant qu’avant ! Je vais vite abréger tes souffrances… Tu ne souffriras qu’un tout petit peu…',
+    'ふ…ふははは…！！これはいい！！ 前よりさらにパワーアップしてしまったぞ！！ すぐ楽にしてやる…ほんの少し苦しむだけだ…',
     'Buu absorbe Gotenks',
   ],
   [
@@ -517,7 +612,7 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'オレ は いま きゅうきょく の パワー を て に いれた の だー',
     'J’ai maintenant obtenu la puissance ultime !',
     'オレはいま究極のパワーを手に入れたのだーーっ！！！！',
-    'Un ennemi croit avoir gagné, avant le retour de Piccolo',
+    'Garlic Jr. se croit invincible, avant le retour de Piccolo (film Dead Zone)',
   ],
   [
     'オレ は ごくう でも ベジータ でも ない',
@@ -545,7 +640,12 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'Cooler dévoile sa transformation',
   ],
   ['カカロット', 'Kakarot…', 'カカロット……', 'Broly'],
-  ['オレ は あくま だ', 'Je suis un démon.', 'オレは悪魔だ', 'Broly (film de 1993)'],
+  [
+    'オレ が バケモノ ちがう オレ は あくま だ',
+    'Je suis un monstre ? Tu te trompes… Je suis le diable…',
+    'オレがバケモノ…？違う…オレは悪魔だ…',
+    'Broly à Goku (film de 1993)',
+  ],
   [
     'サイヤじん の おうじ は この オレ だ',
     'Le prince des Saiyans, c’est moi !',
@@ -569,15 +669,25 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'オラ に げんき を すべて の げんき を わけて くれ',
     'Donnez-moi votre énergie… toute votre énergie !',
     'オラに元気を…すべての元気をわけてくれ……！！',
-    'Le Genkidama contre Broly',
+    'Le Genkidama contre C-13 (film Super Android 13)',
   ],
-  ['カカロット は オレ の もの だ', 'Kakarot est à moi !', 'カカロットはオレのものだ！！', 'Le Genkidama contre Broly'],
-  ['ごくう さん に げんきだま を', 'Le Genkidama pour Goku !', '悟空さんに元気玉を…！！', 'Le Genkidama contre Broly'],
+  [
+    'カカロット は オレ の もの だ',
+    'Kakarot est à moi !',
+    'カカロットはオレのものだ！！',
+    'Le Genkidama contre C-13 (film Super Android 13)',
+  ],
+  [
+    'ごくう さん に げんきだま を',
+    'Le Genkidama pour Goku !',
+    '悟空さんに元気玉を…！！',
+    'Le Genkidama contre C-13 (film Super Android 13)',
+  ],
   [
     'おまえたち が たたかう いし を みせなければ オレ は この ほし を はかい しつくす だけ だ',
     'Si vous ne montrez pas de volonté de vous battre, je détruirai entièrement cette planète, c’est tout !',
     'おまえたちが闘う意志を見せなければオレはこの星を破壊しつくすだけだ！！',
-    'Broly provoque ses adversaires',
+    'Broly provoque ses adversaires (film de 1993)',
   ],
   [
     'シェンロン おねがい たすけて',
@@ -613,56 +723,62 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'そろそろ おたがい ほんき を だして けっせん も けっせん',
     'Il est temps qu’on se batte sérieusement tous les deux…',
     'そろそろお互い本気を出して決戦も決戦……',
-    'Goku Super Saiyan 4 relance le combat',
+    'Goku Super Saiyan 4 face à Baby (GT)',
   ],
   [
     'ちょう さいしゅう けっせん と いこう じゃ ねえ か',
     'Faisons de ce combat l’ultime combat final !',
     '超最終決戦といこうじゃねえか！！',
-    'Goku Super Saiyan 4 relance le combat',
+    'Goku Super Saiyan 4 face à Baby (GT)',
   ],
   [
     'さあ つづき を たのしもう じゃ ねえ か',
     'Allez… profitons de la suite !',
     'さあ…続きを楽しもうじゃねえか！',
-    'Goku Super Saiyan 4 relance le combat',
+    'Goku Super Saiyan 4 face à Baby (GT)',
   ],
   ['さいこう だ ぜ ベジータ', 'Génial, Vegeta !', '最高だぜ！ベジータ！', 'La fusion en Gogeta Super Saiyan 4'],
   [
     'げんき を みんな の げんき を くれ',
     'De l’énergie… Donnez-moi votre énergie…',
     'げ…元気を…みんなの元気をくれ…',
-    'Goku appelle à l’aide contre Super C-17 et Omega Shenron',
+    'Goku et Vegeta face à Omega Shenron (GT)',
   ],
   [
     'この まま じゃ オラ しねねえ んだ',
     'Je peux pas mourir… comme ça…',
     'このままじゃ…オラ死ねねえんだ……',
-    'Goku appelle à l’aide contre Super C-17 et Omega Shenron',
+    'Goku et Vegeta face à Omega Shenron (GT)',
   ],
   [
     'たのむ ぜ カカロット オレ に この オレ に ちから を くれ',
     'Je compte sur toi, Kakarot… Donne-moi ta force !',
     '頼むぜカカロット…オレに…このオレに力をくれ！',
-    'Goku appelle à l’aide contre Super C-17 et Omega Shenron',
+    'Goku et Vegeta face à Omega Shenron (GT)',
   ],
   [
     'まだまだ しねねえ なあ おめえ を やっつける まで は な',
     'Je peux pas encore mourir… pas avant de t’avoir battu !',
     'まだまだ死ねねえなあ… おめえを…やっつけるまではな…！',
-    'Le dernier Genkidama de GT',
+    'Le Genkidama final contre Omega Shenron (GT)',
   ],
   [
     'うちゅう の みんな オラ に げんき を わけて くれー',
     'Habitants de l’univers ! Donnez-moi votre énergie !',
     '宇宙のみんな！オラに元気をわけてくれーーっ！！',
-    'Le dernier Genkidama de GT',
+    'Le Genkidama final contre Omega Shenron (GT)',
+  ],
+  [
+    'まだまだ しねねえ なあ おめえ を やっつける まで は な うちゅう の みんな オラ に げんき を わけて くれー',
+    'Je peux pas encore mourir… pas avant de t’avoir battu ! Habitants de l’univers ! Donnez-moi votre énergie !',
+    'まだまだ死ねねえなあ… おめえを…やっつけるまではな…！ 宇宙のみんな！オラに元気をわけてくれーーっ！！',
+    'Le Genkidama final contre Omega Shenron (GT)',
   ],
   [
     'サンキュー うちゅう の みんな',
     'Merci, tout l’univers !',
     'サンキュー！宇宙のみんな！！',
-    'Le dernier Genkidama de GT',
+    'Le Genkidama final contre Omega Shenron (GT)',
   ],
   [
     'これ が スーパー サイヤじん ゴッド',
@@ -695,10 +811,16 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'Shenron explique le Super Saiyan God',
   ],
   [
+    'スーパー サイヤじん ゴッド と いう の は その むかし おなじ なかま で ある サイヤじん の あくぎょう に ぎもん を かんじ はんらん を おこした ひとにぎり の ただしい サイヤじんたち が ぐうぜん つくりだした きゅうせいしゅ だ',
+    'Le Super Saiyan God, autrefois… …doutant des méfaits de leurs semblables Saiyans… …une poignée de Saiyans justes se sont rebellés et ont créé par hasard un sauveur.',
+    '超サイヤ人ゴッドというのはその昔… 同じ仲間であるサイヤ人の悪業に疑問を感じ… 反乱を起こしたひと握りの正しいサイヤ人たちが偶然つくりだした救世主だ',
+    'Shenron explique le Super Saiyan God',
+  ],
+  [
     'かせいで やる ぜ いっぷんかん オレさま の ほこり に かけて な',
     'Je vais te gagner une minute… ! Sur ma fierté… !',
     'かせいでやるぜ1分間…！オレさまの誇りにかけてな…！',
-    'Vegeta gagne du temps pour Goku Super Saiyan 3',
+    'Vegeta gagne du temps pour Goku Super Saiyan 3 contre Kid Buu',
   ],
   [
     'オラ は べつ に せいぎ の ヒーロー でも なん でも ねえ',
@@ -713,6 +835,12 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'Goku Ultra Instinct',
   ],
   [
+    'オラ は べつ に せいぎ の ヒーロー でも なん でも ねえ けど な なかま を きずつける やつ は ゆるさねえ ぞー',
+    'Je suis pas un héros de la justice ni rien du tout… Mais ceux qui font du mal à mes amis… je les pardonnerai pas !',
+    'オラは別に正義のヒーローでもなんでもねえ… けどな！ 仲間を傷つけるやつは！！ ゆるさねえぞーーー！！！！',
+    'Goku Ultra Instinct',
+  ],
+  [
     'はかい しきれん ほど の わざ を くらわせて やる',
     'Je vais t’envoyer une attaque que tu ne pourras pas détruire !',
     '破壊しきれんほどの技をくらわせてやる！！',
@@ -723,6 +851,12 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'Voilà tout ce que je suis !',
     'これがオレのすべてだ！！',
     'Vegeta contre Jiren : toute sa force',
+  ],
+  [
+    'オレ は あいつ と の やくそく を まもらなければ ならない んだ だから オレ の やりかた で げんかい なんぞ こえて やる これ が オレ の すべて だ',
+    'Je dois tenir ma promesse envers lui ! Alors je dépasserai mes limites à ma façon ! Voilà tout ce que je suis !',
+    'オレは…あいつとの約束を守らなければならないんだ…！！ だからオレのやり方で限界なんぞ超えてやる！！ これがオレのすべてだ！！',
+    'Vegeta et sa promesse à Cabba',
   ],
   ['ブルマ トランクス ブラ', 'Bulma… Trunks… Bra…', 'ブルマ…トランクス…ブラ……', 'Vegeta contre Jiren'],
   [
@@ -735,6 +869,12 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'オレ の すべて すてて たまる かー',
     "Tout ce que je suis… Je refuse de l'abandonner !",
     'オレのすべて…… 捨ててたまるかあぁぁ！！！',
+    'Vegeta contre Jiren',
+  ],
+  [
+    'ブルマ トランクス ブラ キャベ と の やくそく サイヤじん として の ほこり オレ の すべて すてて たまる かー',
+    "Bulma… Trunks… Bra… Ma promesse à Cabba… Ma fierté de Saiyan… Tout ce que je suis… Je refuse de l'abandonner !",
+    'ブルマ…トランクス…ブラ…… キャベとの約束…サイヤ人としての誇り… オレのすべて…… 捨ててたまるかあぁぁ！！！',
     'Vegeta contre Jiren',
   ],
   [
@@ -762,6 +902,12 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'Zamasu fusionné',
   ],
   [
+    'かみ が おこなえば ぜん と なる こと も ひと が おこなえば これ みな あく と なり つみ と なる の だ',
+    'Ce qui est bien quand un dieu le fait… devient mal quand un humain le fait… et devient un péché !',
+    '神が行えば善となることも… 人が行えばこれ皆悪となり… 罪となるのだ！！',
+    'Zamasu fusionné',
+  ],
+  [
     'せいぎ の ひかり よ われ を うて',
     'Lumière de la justice, abats-toi sur moi !',
     '正義の光よ我を討て！！',
@@ -774,6 +920,12 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'Zamasu fusionné, pouvoir divin',
   ],
   [
+    'せいぎ の ひかり よ われ を うて あく を めっせぬ よわき かみ は ふよう なり',
+    'Lumière de la justice, abats-toi sur moi ! Un dieu trop faible pour anéantir le mal ne sert à rien !',
+    '正義の光よ我を討て！！ 悪を滅せぬ弱き神は不要なり！！',
+    'Zamasu fusionné, pouvoir divin',
+  ],
+  [
     'この いたみ が また オレ を つよく する',
     'Cette douleur me rend encore plus fort…',
     'この痛みがまたオレを強くする…',
@@ -783,6 +935,12 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'かみ の いかり の つよさ が いかほど の もの なの か その み に きざみこめ',
     'Ce que vaut la colère d’un dieu… grave-le dans ta chair !',
     '神の怒りの強さがいかほどのものなのか… その身に刻み込め！！',
+    'Goku Black Rosé',
+  ],
+  [
+    'この いたみ が また オレ を つよく する かみ の いかり の つよさ が いかほど の もの なの か その み に きざみこめ',
+    'Cette douleur me rend encore plus fort… Ce que vaut la colère d’un dieu… grave-le dans ta chair !',
+    'この痛みがまたオレを強くする… 神の怒りの強さがいかほどのものなのか… その身に刻み込め！！',
     'Goku Black Rosé',
   ],
   ['ほら よ ベジータ', 'Tiens, Vegeta !', 'ほらよベジータ！', 'Naissance de Vegetto Blue'],
@@ -802,6 +960,12 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'そして これ が ベジット ブルー',
     'Et voici… Vegetto Blue !',
     'そしてこれが… ベジットブルー！！',
+    'Naissance de Vegetto Blue',
+  ],
+  [
+    'オレ は ベジータ と カカロット の がったい ベジット だ そして これ が ベジット ブルー',
+    'Je suis la fusion de Vegeta et Kakarot… Vegetto ! Et voici… Vegetto Blue !',
+    'オレはベジータとカカロットの合体…ベジットだ！！ そしてこれが… ベジットブルー！！',
     'Naissance de Vegetto Blue',
   ],
   [
@@ -837,6 +1001,12 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'Vegeta et Trunks contre Zamasu : la fierté',
   ],
   [
+    'この さき を みろ まだ みぬ てき を うちゅう さいきょう を おまえ が ほこり たかき サイヤじん の ち を ひく もの ならば オレ の むすこ ならば だれ に も まける こと は ゆるさん',
+    'Regarde plus loin ! Les ennemis que tu n’as pas encore vus ! Le plus fort de l’univers ! Si tu as dans les veines le sang des fiers Saiyans… Si tu es mon fils ! Je t’interdis de perdre contre qui que ce soit !',
+    'この先をみろ！まだ見ぬ敵を！！宇宙最強を！！ おまえが誇り高きサイヤ人の血をひく者ならば… オレの息子ならば！ 誰にも負けることはゆるさん！！',
+    'Vegeta et Trunks contre Zamasu : la fierté',
+  ],
+  [
     'オレ こえて みせます め の まえ の てき も とうさん も',
     'Je vais les dépasser ! L’ennemi devant moi, et toi aussi, papa !',
     'オレ超えてみせます！ 目の前の敵も父さんも！！',
@@ -846,6 +1016,12 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'オレ は あきらめない ぜったい に',
     'Je n’abandonnerai pas ! Jamais !',
     'オレはあきらめない！！絶対に！！',
+    'Vegeta et Trunks contre Zamasu : la fierté',
+  ],
+  [
+    'オレ こえて みせます め の まえ の てき も とうさん も オレ は あきらめない ぜったい に',
+    'Je vais les dépasser ! L’ennemi devant moi, et toi aussi, papa ! Je n’abandonnerai pas ! Jamais !',
+    'オレ超えてみせます！ 目の前の敵も父さんも！！ オレはあきらめない！！絶対に！！',
     'Vegeta et Trunks contre Zamasu : la fierté',
   ],
   [
@@ -876,6 +1052,12 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
     'くらえ ギャリックほう',
     'Prends ça ! Garlic Ho !',
     'くらえ！！！ ギャリック砲！！！！',
+    'Vegeta et Trunks contre Zamasu : l’attaque',
+  ],
+  [
+    'オレ の ちから よ この せかい の にんげん の たて に なれ みんな の ねがい を この いちげき に こめる サイヤじん の にんげん の そこぢから を あなどる な よ くらえ ギャリックほう',
+    'Ma force… deviens le bouclier de ce monde… des humains ! Je mets les espoirs de tous dans ce coup ! Ne sous-estime pas la force cachée des Saiyans… des humains ! Prends ça ! Garlic Ho !',
+    'オレの力よ… この世界の…人間の盾になれ！！ みんなの願いをこの一撃に込める！！！ サイヤ人の…人間の底力をあなどるなよ！！ くらえ！！！ ギャリック砲！！！！',
     'Vegeta et Trunks contre Zamasu : l’attaque',
   ],
   [
@@ -918,7 +1100,7 @@ const DRAGON_BALL: [text: string, meaning: string, original: string, scene: stri
   ],
   [
     'オレ は だいまおう じゃ ない ただ の ピッコロ だ',
-    'Je ne suis pas le Démon ! Je suis juste Piccolo !',
+    'Je ne suis pas le Roi Démon ! Je suis juste Piccolo !',
     'オレは大魔王じゃない！ただのピッコロだ！',
     'Piccolo à Gamma 2',
   ],
