@@ -96,7 +96,7 @@ Alias d'import : `@/` → `src/`. Toujours l'utiliser plutôt que des chemins re
   - Seuls les kana d'un caractère sont exercés (pas les yōon/combinaisons).
   - La page d'exercice est chargée en différé (`lazy`) pour sortir les tracés du bundle principal.
 - **Stats** (`features/stats/`) : fonctions pures sur l'historique `answers` du profil (`now` injecté, jours locaux). Une question = un horodatage (`questionsOf`, le stage 6 écrit une ligne par kana). Heatmap = réussite sur les 10 dernières réponses du kana ; couleurs identiques dans les deux thèmes.
-- **PWA** : tout le build est précaché (Workbox generateSW, cache-first), `navigateFallback` sur `index.html`. Vérifier qu'aucune URL distante n'est chargée et que l'app se recharge serveur coupé.
+- **PWA** : compatible Android (Chrome) et iPhone (Safari, métas `apple-mobile-web-app-*`, hauteur en `dvh`). Boutons d’action (Commencer, Suivant) en `sticky bottom-0`, jamais en `fixed`. Tout le build est précaché (Workbox generateSW, cache-first), `navigateFallback` sur `index.html`. Vérifier qu'aucune URL distante n'est chargée et que l'app se recharge serveur coupé.
 - Tests Vitest à côté du code (`foo.test.ts`), pour toute logique pure.
 - Vérifier que `npm run build` et `npm test` passent avant chaque commit.
 

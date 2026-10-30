@@ -91,8 +91,26 @@ export function LearnPage() {
     navigate('/learn/quiz')
   }
 
+  const startBlock = (
+    <>
+      {unavailableReason && (
+        <p className="mb-2 rounded-lg bg-slate-200/90 px-3 py-2 text-center text-xs text-slate-600 backdrop-blur dark:bg-slate-800/90 dark:text-slate-300">
+          {unavailableReason}
+        </p>
+      )}
+      <button
+        type="button"
+        onClick={start}
+        disabled={unavailableReason !== null}
+        className="min-h-12 w-full rounded-xl bg-accent-600 font-semibold text-white shadow-lg transition-transform active:scale-[0.98] disabled:bg-slate-400 disabled:shadow-none dark:disabled:bg-slate-700"
+      >
+        Commencer
+      </button>
+    </>
+  )
+
   return (
-    <div className="pb-20 lg:pb-0">
+    <div>
       <PageHeader
         title="Apprendre"
         subtitle={
@@ -146,23 +164,12 @@ export function LearnPage() {
             </div>
           </Card>
 
-          <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-10 mx-auto max-w-lg px-4 pb-3 lg:static lg:max-w-none lg:p-0">
-            {unavailableReason && (
-              <p className="mb-2 rounded-lg bg-slate-200/90 px-3 py-2 text-center text-xs text-slate-600 backdrop-blur dark:bg-slate-800/90 dark:text-slate-300">
-                {unavailableReason}
-              </p>
-            )}
-            <button
-              type="button"
-              onClick={start}
-              disabled={unavailableReason !== null}
-              className="min-h-12 w-full rounded-xl bg-accent-600 font-semibold text-white shadow-lg transition-transform active:scale-[0.98] disabled:bg-slate-400 disabled:shadow-none dark:disabled:bg-slate-700"
-            >
-              Commencer
-            </button>
-          </div>
+          <div className="hidden lg:block">{startBlock}</div>
         </div>
       </div>
+
+      {/* Mobile : collé en bas de la zone qui défile, juste au-dessus des onglets (iPhone compris). */}
+      <div className="sticky bottom-0 z-10 pt-3 lg:hidden">{startBlock}</div>
     </div>
   )
 }

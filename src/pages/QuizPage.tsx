@@ -146,7 +146,8 @@ function QuizRunner({ session }: { session: SessionState }) {
         </>
       )}
 
-      <div className="mt-4 min-h-12 short:mt-1">
+      {/* Collé en bas : une longue phrase ou beaucoup d’étiquettes ne doivent pas le pousser hors de l’écran. */}
+      <div className="sticky bottom-0 z-10 -mx-4 mt-2 bg-slate-50 px-4 pt-2 pb-1 short:mt-0 short:pt-1 dark:bg-slate-950">
         {settled ? (
           <button
             type="button"
