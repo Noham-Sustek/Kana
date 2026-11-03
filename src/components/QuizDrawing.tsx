@@ -15,6 +15,10 @@ interface QuizDrawingProps {
   settled: boolean
   /** Dessin terminé : juste si aucun caractère n'a eu d'erreur de trait ni d'indice. */
   onDone: (correct: boolean) => void
+  /** Validation par l'utilisateur : pas de vérification des traits, le dessin fini est comparé au modèle. */
+  selfCheck: boolean
+  /** Validation par l'utilisateur : dessin terminé, en attente de son verdict. */
+  onDrawn: () => void
 }
 
 /**
@@ -22,7 +26,7 @@ interface QuizDrawingProps {
  * kana s'y dessinent en grand). Une fois le résultat fixé, le tracé et le modèle
  * sont comparés.
  */
-export function QuizDrawing({ question, settled, onDone }: QuizDrawingProps) {
+export function QuizDrawing({ question, settled, onDone, selfCheck, onDrawn }: QuizDrawingProps) {
   const { chars } = question
   const [results, setResults] = useState<WritingResult[]>([])
   const [pendingNext, setPendingNext] = useState(false)
@@ -42,10 +46,11 @@ export function QuizDrawing({ question, settled, onDone }: QuizDrawingProps) {
       setPendingNext(true)
       return
     }
-    onDone(next.every((r) => r.mistakes === 0 && !r.hinted))
+    if (selfCheck) onDrawn()
+    else onDone(next.every((r) => r.mistakes === 0 && !r.hinted))
   }
 
-  if (settled) {
+  if (settled || (selfCheck && index === chars.length)) {
     const drawn = chars.map((_, i) => results[i]?.drawn)
     return (
       <div style={{ animation: 'fade-in 0.2s' }}>
@@ -86,6 +91,7 @@ export function QuizDrawing({ question, settled, onDone }: QuizDrawingProps) {
           key={padIndex}
           strokes={drawingStrokesOf(current) ?? []}
           mode="free"
+          validate={!selfCheck}
           showCompare={false}
           onComplete={onCharDone}
         />

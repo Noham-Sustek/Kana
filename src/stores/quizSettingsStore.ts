@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 import type { Script } from '@/data/kana'
 import type { SentenceFilter } from '@/features/quiz/questions'
 import { migrateStage } from '@/features/quiz/stages'
-import type { StageId } from '@/features/quiz/types'
+import type { DrawingCheck, StageId } from '@/features/quiz/types'
 
 export const QUESTION_COUNTS = [10, 20, 50] as const
 export const TIMER_OPTIONS = [0, 5, 10, 20] as const
@@ -29,6 +29,8 @@ interface QuizSettingsState {
   questionCount: number
   retry: boolean
   timerSeconds: number
+  /** Validation des dessins (stages 5 et 7) : automatique ou par l'utilisateur. */
+  drawingCheck: DrawingCheck
   /** Écriture affichée dans le sélecteur de groupes. */
   pickerScript: Script
 
@@ -43,6 +45,7 @@ interface QuizSettingsState {
   setQuestionCount: (n: number) => void
   setRetry: (retry: boolean) => void
   setTimerSeconds: (s: number) => void
+  setDrawingCheck: (check: DrawingCheck) => void
   setPickerScript: (script: Script) => void
 }
 
@@ -66,6 +69,7 @@ export const useQuizSettingsStore = create<QuizSettingsState>()(
       questionCount: 20,
       retry: true,
       timerSeconds: 0,
+      drawingCheck: 'auto',
       pickerScript: 'hiragana',
 
       setMode: (mode) => set({ mode }),
@@ -87,6 +91,7 @@ export const useQuizSettingsStore = create<QuizSettingsState>()(
       setQuestionCount: (questionCount) => set({ questionCount }),
       setRetry: (retry) => set({ retry }),
       setTimerSeconds: (timerSeconds) => set({ timerSeconds }),
+      setDrawingCheck: (drawingCheck) => set({ drawingCheck }),
       setPickerScript: (pickerScript) => set({ pickerScript }),
     }),
     {

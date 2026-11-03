@@ -33,6 +33,15 @@ function QuizRunner({ session }: { session: SessionState }) {
   const { status, options } = session
   const settled = status !== 'pending'
   const isAuto = useQuizSessionStore((s) => s.auto !== null)
+  // Validation du dessin par l'utilisateur : index de la question dont le dessin est fini.
+  const selfCheck = options.drawingCheck === 'self'
+  const [drawnIndex, setDrawnIndex] = useState<number | null>(null)
+  const awaitingVerdict = selfCheck && drawnIndex === session.index && !settled
+  // Le verdict vaut réponse : on enchaîne directement, la comparaison a déjà été vue.
+  const judge = (correct: boolean) => {
+    submitDrawing(correct)
+    next()
+  }
 
   // Bonne réponse : passage automatique à la question suivante, sauf s'il y a
   // quelque chose à regarder (comparaison d'un dessin, traduction d'un mot,
@@ -51,11 +60,11 @@ function QuizRunner({ session }: { session: SessionState }) {
 
   // Chrono : à expiration, la réponse est révélée (compte comme une erreur).
   useEffect(() => {
-    if (!options.timerSeconds || status !== 'pending') return
+    if (!options.timerSeconds || status !== 'pending' || awaitingVerdict) return
     const remaining = session.questionStartedAt + options.timerSeconds * 1000 - Date.now()
     const timer = setTimeout(reveal, Math.max(0, remaining))
     return () => clearTimeout(timer)
-  }, [options.timerSeconds, status, reveal, session.questionStartedAt])
+  }, [options.timerSeconds, status, reveal, session.questionStartedAt, awaitingVerdict])
 
   // Clavier physique : Entrée pour continuer, chiffres pour les choix.
   useEffect(() => {
@@ -129,9 +138,25 @@ function QuizRunner({ session }: { session: SessionState }) {
         <>
           <Suspense>
             <div className="lg:mx-auto lg:w-full lg:max-w-md">
-              <QuizDrawing key={session.index} question={question} settled={settled} onDone={submitDrawing} />
+              <QuizDrawing
+                key={session.index}
+                question={question}
+                settled={settled}
+                onDone={submitDrawing}
+                selfCheck={selfCheck}
+                onDrawn={() => setDrawnIndex(session.index)}
+              />
             </div>
           </Suspense>
+          {awaitingVerdict && (
+            <p className="mt-3 text-center text-sm font-medium text-slate-600 dark:text-slate-300">
+              Votre tracé correspond-il au modèle ?{' '}
+              <span className="font-jp text-base text-slate-900 dark:text-slate-100">
+                {question.target}
+                {question.kanji && ` · ${question.kanji}`}
+              </span>
+            </p>
+          )}
           {settled && (
             <p
               className={`mt-3 text-center text-sm font-medium ${status === 'correct' ? 'text-emerald-600' : 'text-red-600'}`}
@@ -148,7 +173,24 @@ function QuizRunner({ session }: { session: SessionState }) {
 
       {/* Collé en bas : une longue phrase ou beaucoup d’étiquettes ne doivent pas le pousser hors de l’écran. */}
       <div className="sticky bottom-0 z-10 -mx-4 mt-2 bg-slate-50 px-4 pt-2 pb-1 short:mt-0 short:pt-1 dark:bg-slate-950">
-        {settled ? (
+        {awaitingVerdict ? (
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => judge(false)}
+              className={`min-h-12 rounded-xl border-2 font-semibold active:scale-[0.98] ${WRONG_CLASS}`}
+            >
+              À revoir
+            </button>
+            <button
+              type="button"
+              onClick={() => judge(true)}
+              className={`min-h-12 rounded-xl border-2 font-semibold active:scale-[0.98] ${RIGHT_CLASS}`}
+            >
+              C’est juste
+            </button>
+          </div>
+        ) : settled ? (
           <button
             type="button"
             onClick={next}
@@ -516,6 +558,7 @@ function QuizSummary({ session }: { session: SessionState }) {
       {
         retry: settings.retry,
         timerSeconds: settings.timerSeconds,
+        drawingCheck: settings.drawingCheck,
       },
     )
   }

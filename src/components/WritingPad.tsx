@@ -40,6 +40,11 @@ interface WritingPadProps {
   onComplete: (result: WritingResult) => void
   /** Bouton « Comparer » (mode libre) ; masqué quand l'appelant gère l'abandon. */
   showCompare?: boolean
+  /**
+   * Faux : aucun trait n'est vérifié, l'utilisateur dessine librement puis termine
+   * lui-même (il juge ensuite son tracé face au modèle).
+   */
+  validate?: boolean
 }
 
 /**
@@ -48,7 +53,7 @@ interface WritingPadProps {
  * dans un SVG en dessous. En mode `trace`, un trait validé est remplacé par celui
  * du modèle ; en mode `free`, il reste tel que dessiné (comparaison à la fin).
  */
-export function WritingPad({ strokes, mode, onComplete, showCompare = true }: WritingPadProps) {
+export function WritingPad({ strokes, mode, onComplete, showCompare = true, validate = true }: WritingPadProps) {
   const prepared = useMemo(() => strokes.map(prepareStroke), [strokes])
   const [session, setSession] = useState(() => createWritingState(strokes.length))
   const [hintFor, setHintFor] = useState<number | null>(null)
@@ -63,8 +68,8 @@ export function WritingPad({ strokes, mode, onComplete, showCompare = true }: Wr
 
   const dark = useIsDark()
   const ink = dark ? INK_DARK : INK_LIGHT
-  const complete = isComplete(session)
-  const showHint = !complete && (hintFor === session.done || shouldShowHint(session))
+  const complete = validate && isComplete(session)
+  const showHint = validate && !complete && (hintFor === session.done || shouldShowHint(session))
   const hinted = useRef(false)
   if (showHint) hinted.current = true
   const next = strokes[session.done]
@@ -137,6 +142,13 @@ export function WritingPad({ strokes, mode, onComplete, showCompare = true }: Wr
     current.current = null
     if (!points) return
 
+    if (!validate) {
+      const ctx = context(e.currentTarget)
+      if (ctx) clear(ctx)
+      setDrawn([...drawn, points])
+      return
+    }
+
     const verdict = evaluateStroke(points, prepared, session.done, mode)
     const nextState = applyVerdict(session, verdict)
     setSession(nextState)
@@ -184,7 +196,12 @@ export function WritingPad({ strokes, mode, onComplete, showCompare = true }: Wr
       hinted: hinted.current,
     })
 
-  const feedback = feedbackOf(session)
+  const undo = () => setDrawn(drawn.slice(0, -1))
+  const finish = () => onComplete({ mistakes: 0, drawn, revealed: false, hinted: false })
+
+  const feedback = validate
+    ? feedbackOf(session)
+    : { text: 'Dessinez librement, puis validez.', className: 'text-slate-500 dark:text-slate-400' }
   // Traits validés : ceux du modèle (calque) ou ceux réellement dessinés (libre).
   const doneStrokes = mode === 'trace' ? strokes.slice(0, session.done) : drawn
 
@@ -247,11 +264,45 @@ export function WritingPad({ strokes, mode, onComplete, showCompare = true }: Wr
           {feedback.text}
         </p>
         <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">
-          {Math.min(session.done + 1, strokes.length)} / {strokes.length}
+          {validate
+            ? `${Math.min(session.done + 1, strokes.length)} / ${strokes.length}`
+            : `${drawn.length} trait${drawn.length > 1 ? 's' : ''}`}
         </span>
       </div>
 
-      {!complete && (
+      {!validate && (
+        <div className="mt-1 grid grid-cols-3 gap-2">
+          <button
+            type="button"
+            onClick={reset}
+            disabled={drawn.length === 0}
+            className={`${TOOL_BUTTON} disabled:opacity-40`}
+          >
+            <Icon name="replay" className="size-5" />
+            Effacer
+          </button>
+          <button
+            type="button"
+            onClick={undo}
+            disabled={drawn.length === 0}
+            className={`${TOOL_BUTTON} disabled:opacity-40`}
+          >
+            <Icon name="undo" className="size-5" />
+            Annuler
+          </button>
+          <button
+            type="button"
+            onClick={finish}
+            disabled={drawn.length === 0}
+            className={`${TOOL_BUTTON} disabled:opacity-40`}
+          >
+            <Icon name="check" className="size-5" />
+            Terminé
+          </button>
+        </div>
+      )}
+
+      {validate && !complete && (
         <div className={`mt-1 grid gap-2 ${mode === 'free' && showCompare ? 'grid-cols-3' : 'grid-cols-2'}`}>
           <button type="button" onClick={reset} className={TOOL_BUTTON}>
             <Icon name="replay" className="size-5" />

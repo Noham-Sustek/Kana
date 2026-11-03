@@ -9,7 +9,7 @@ import { GROUP_KIND_LABELS, getKana, groupGlyph, groupsOfScript, type GroupKind,
 import { generateQuestions, sentencesForPool, wordsForPool, type SentenceFilter } from '@/features/quiz/questions'
 import { AUTO_STAGES } from '@/features/quiz/auto'
 import { STAGES, getStage } from '@/features/quiz/stages'
-import type { StageId } from '@/features/quiz/types'
+import type { DrawingCheck, StageId } from '@/features/quiz/types'
 import { useAutoOverview } from '@/features/quiz/useAutoOverview'
 import { useCustomGroups, useQuizPool } from '@/features/quiz/useQuizPool'
 import {
@@ -40,6 +40,11 @@ const SENTENCE_FILTER_OPTIONS: { value: SentenceFilter; label: string }[] = [
 const ANIME_FILTER_OPTIONS: { value: SentenceFilter; label: string }[] = [{ value: 'dragonball', label: 'Dragon Ball' }]
 
 const isSentenceStage = (stage: StageId) => stage === 8 || stage === 9
+
+const DRAWING_CHECK_OPTIONS: { value: DrawingCheck; label: string }[] = [
+  { value: 'auto', label: 'Automatique' },
+  { value: 'self', label: 'Par moi' },
+]
 
 const SOURCE_OPTIONS: { value: AutoSource; label: string }[] = [
   { value: 'path', label: 'Parcours guidé' },
@@ -73,7 +78,11 @@ export function LearnPage() {
           : null
 
   const start = async () => {
-    const options = { retry: settings.retry, timerSeconds: settings.timerSeconds }
+    const options = {
+      retry: settings.retry,
+      timerSeconds: settings.timerSeconds,
+      drawingCheck: settings.drawingCheck,
+    }
     if (isAuto) {
       await startAuto({
         script: settings.autoScript,
@@ -148,6 +157,19 @@ export function LearnPage() {
                   value={settings.timerSeconds}
                   onChange={settings.setTimerSeconds}
                 />
+              </Field>
+              <Field label="Validation du dessin">
+                <SegmentedControl
+                  label="Validation du dessin"
+                  options={DRAWING_CHECK_OPTIONS}
+                  value={settings.drawingCheck}
+                  onChange={settings.setDrawingCheck}
+                />
+                <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                  {settings.drawingCheck === 'auto'
+                    ? 'Stages 5 et 7 : chaque trait est vérifié (forme, sens, ordre).'
+                    : 'Stages 5 et 7 : dessinez librement, comparez au modèle et dites si c’est juste.'}
+                </p>
               </Field>
               <Switch
                 label="Réessayer après une erreur"

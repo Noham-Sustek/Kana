@@ -72,4 +72,8 @@ export interface QuizOptions {
   retry: boolean
   /** Temps limite par question en secondes, 0 = pas de chrono. */
   timerSeconds: number
+  /** Dessin (stages 5 et 7) : validé trait par trait, ou jugé par l'utilisateur. Défaut `auto`. */
+  drawingCheck?: DrawingCheck
 }
+
+export type DrawingCheck = 'auto' | 'self'
