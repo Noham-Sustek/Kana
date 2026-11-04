@@ -44,14 +44,12 @@ function QuizRunner({ session }: { session: SessionState }) {
   }
 
   // Bonne réponse : passage automatique à la question suivante, sauf s'il y a
-  // quelque chose à regarder (comparaison d'un dessin, traduction d'un mot,
-  // réplique originale d'un anime).
+  // quelque chose à regarder (comparaison d'un dessin, traduction d'un mot ou
+  // d'une phrase).
   const isDrawing = question.kind === 'draw'
   const { prompt } = question
   const stayAfterAnswer =
-    isDrawing ||
-    prompt.type === 'word' ||
-    ((prompt.type === 'sentence' || prompt.type === 'romajiSentence') && !!prompt.original)
+    isDrawing || prompt.type === 'word' || prompt.type === 'sentence' || prompt.type === 'romajiSentence'
   useEffect(() => {
     if (status !== 'correct' || stayAfterAnswer) return
     const timer = setTimeout(next, AUTO_ADVANCE_MS)
@@ -275,9 +273,6 @@ function PromptView({ question, settled }: { question: Question; settled: boolea
     case 'romajiSentence':
       return (
         <div className="text-center">
-          {prompt.source && (
-            <p className="mb-3 text-xs font-medium text-amber-700 short:mb-1 dark:text-amber-400">{prompt.source}</p>
-          )}
           {prompt.type === 'sentence' ? (
             // Un bloc par mot : le japonais se couperait sinon au milieu d'un mot.
             <p
@@ -290,15 +285,21 @@ function PromptView({ question, settled }: { question: Question; settled: boolea
           ) : (
             <p className={`leading-snug font-semibold ${romajiSentenceSizeClass(prompt.text)}`}>{prompt.text}</p>
           )}
-          <p className="mt-3 text-sm text-slate-500 short:mt-1 lg:text-base dark:text-slate-400">{prompt.meaning}</p>
-          {/* Réplique d'origine (kanji) : seulement après la réponse, elle la contiendrait. */}
-          {settled && prompt.original && (
-            <p
-              className="mt-2 font-jp text-base text-slate-700 lg:text-lg dark:text-slate-200"
-              style={{ animation: 'fade-in 0.2s' }}
-            >
-              {prompt.original}
-            </p>
+          {/* Traduction, provenance et réplique d'origine seulement après la réponse : la phrase seule d'abord. */}
+          {settled && (
+            <div style={{ animation: 'fade-in 0.2s' }}>
+              <p className="mt-3 text-sm text-slate-500 short:mt-1 lg:text-base dark:text-slate-400">
+                {prompt.meaning}
+              </p>
+              {prompt.source && (
+                <p className="mt-2 text-xs font-medium text-amber-700 dark:text-amber-400">{prompt.source}</p>
+              )}
+              {prompt.original && (
+                <p className="mt-2 font-jp text-base text-slate-700 lg:text-lg dark:text-slate-200">
+                  {prompt.original}
+                </p>
+              )}
+            </div>
           )}
         </div>
       )
