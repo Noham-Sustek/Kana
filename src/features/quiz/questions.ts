@@ -1,4 +1,5 @@
 import { ANIME_SENTENCES, ANIME_SERIES_LABELS } from '@/data/animeSentences'
+import { BOOK_QUIZ_SENTENCES, bookSource } from '@/data/book'
 import { CONFUSABLE_SETS } from '@/data/confusables'
 import { KANA, getGroup, kanaOfScript, type Kana } from '@/data/kana'
 import { SENTENCES, type AnimeSeries, type Sentence, type SentenceScript } from '@/data/sentences'
@@ -98,6 +99,9 @@ export function wordsForPool(pool: readonly Kana[]): Word[] {
  */
 export type SentenceFilter = SentenceScript | 'all' | AnimeSeries
 
+/** Phrases d'exemple et phrases courtes du livre, mêlées. */
+const READING_SENTENCES: readonly Sentence[] = [...SENTENCES, ...BOOK_QUIZ_SENTENCES]
+
 /**
  * Phrases dont tous les kana appartiennent à la sélection. Les répliques d'anime
  * mêlent toutes sortes de kana : elles sont proposées quelle que soit la sélection.
@@ -105,13 +109,14 @@ export type SentenceFilter = SentenceScript | 'all' | AnimeSeries
 export function sentencesForPool(pool: readonly Kana[], filter: SentenceFilter = 'all'): Sentence[] {
   if (filter === 'dragonball') return ANIME_SENTENCES.filter((s) => s.series === filter)
   const ids = new Set(pool.map((k) => k.id))
-  return SENTENCES.filter(
+  return READING_SENTENCES.filter(
     (s) => (filter === 'all' || s.script === filter) && kanaIdsOf(s.text).every((id) => ids.has(id)),
   )
 }
 
-/** Contexte affiché avec une réplique d'anime (série · scène). */
+/** Contexte affiché avec une réplique d'anime (série · scène) ou une phrase du livre. */
 function sentenceSource(sentence: Sentence): string | undefined {
+  if (sentence.chapter) return bookSource(sentence.chapter)
   return sentence.series && sentence.scene ? `${ANIME_SERIES_LABELS[sentence.series]} · ${sentence.scene}` : undefined
 }
 

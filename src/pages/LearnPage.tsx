@@ -132,6 +132,22 @@ export function LearnPage() {
       {/* Grand écran : réglages à gauche, options et bouton dans une colonne fixe à droite. */}
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-6">
         <div>
+          <Link
+            to="/learn/reading"
+            className="mb-4 flex min-h-16 items-center gap-3 rounded-2xl bg-white p-3 shadow-sm dark:bg-slate-900"
+          >
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-accent-50 text-accent-600 dark:bg-accent-500/15 dark:text-accent-500">
+              <Icon name="timer" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold">Lecture chronométrée</span>
+              <span className="block text-xs text-slate-500 dark:text-slate-400">
+                Lisez un livre en romaji, le plus vite possible (1 à 5 min).
+              </span>
+            </span>
+            <Icon name="chevronRight" className="size-5 text-slate-400" />
+          </Link>
+
           <div className="mb-4">
             <SegmentedControl label="Mode" options={MODE_OPTIONS} value={settings.mode} onChange={settings.setMode} />
           </div>

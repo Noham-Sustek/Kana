@@ -8,7 +8,7 @@ export function AppLayout() {
   const { mainRef, onScroll } = useScrollRestoration()
   // Plein écran pendant un quiz : plus de place pour le clavier, pas de sortie accidentelle.
   const { pathname } = useLocation()
-  const immersive = pathname.startsWith('/learn/quiz')
+  const immersive = pathname.startsWith('/learn/quiz') || pathname.startsWith('/learn/reading')
   // Sur grand écran, les pages d'onglet prennent de la largeur, le quiz un peu ;
   // écriture et détails restent en colonne.
   const wide = WIDE_PATHS.includes(pathname)

@@ -78,6 +78,27 @@ export function AboutPage() {
           dérivée est distribuée sous la même licence.
         </p>
       </section>
+
+      <section className="mt-4 rounded-2xl bg-white p-4 text-sm leading-relaxed shadow-sm dark:bg-slate-900">
+        <h2 className="mb-2 font-semibold">Livre</h2>
+        <p className="text-slate-600 dark:text-slate-300">
+          Les phrases du livre (lecture chronométrée, stages 8 et 9) viennent de <span className="font-jp">銀河鉄道の夜</span>{' '}
+          (<em>Train de nuit dans la Voie lactée</em>) de Kenji Miyazawa, œuvre du domaine public, dans le texte saisi par{' '}
+          <a
+            href="https://www.aozora.gr.jp/cards/000081/card456.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={LINK_CLASS}
+          >
+            Aozora Bunko
+          </a>
+          .
+        </p>
+        <p className="mt-2 text-slate-600 dark:text-slate-300">
+          Kanji réécrits en kana (lectures de l’auteur quand il les donne), découpage en mots et traduction française
+          faits pour cette application.
+        </p>
+      </section>
     </>
   )
 }

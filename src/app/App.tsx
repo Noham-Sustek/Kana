@@ -18,6 +18,9 @@ const WritingExercisePage = lazy(() =>
   import('@/pages/WritingExercisePage').then((m) => ({ default: m.WritingExercisePage })),
 )
 
+// Chunk séparé : la lecture chronométrée n'est chargée qu'à l'ouverture.
+const ChronoPage = lazy(() => import('@/pages/ChronoPage').then((m) => ({ default: m.ChronoPage })))
+
 export function App() {
   useApplyTheme()
   useEnsureActiveProfile()
@@ -30,6 +33,14 @@ export function App() {
           <Route index element={<Navigate to="/learn" replace />} />
           <Route path="learn" element={<LearnPage />} />
           <Route path="learn/quiz" element={<QuizPage />} />
+          <Route
+            path="learn/reading"
+            element={
+              <Suspense>
+                <ChronoPage />
+              </Suspense>
+            }
+          />
           <Route path="learn/custom/new" element={<CustomGroupPage />} />
           <Route path="learn/custom/:groupId" element={<CustomGroupPage />} />
           <Route path="table" element={<TablePage />} />

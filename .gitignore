@@ -5,3 +5,7 @@ dev-dist
 .DS_Store
 *.local
 scripts/.cache
+
+# Livres de travail déposés à la racine (sources du texte, non publiés)
+/*.epub
+/*.pdf

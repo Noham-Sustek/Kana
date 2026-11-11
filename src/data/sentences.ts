@@ -17,6 +17,8 @@ export interface Sentence {
   original?: string
   /** Scène de la réplique. */
   scene?: string
+  /** Chapitre, pour une phrase du livre (data/book.ts). */
+  chapter?: number
 }
 
 export type AnimeSeries = 'dragonball'

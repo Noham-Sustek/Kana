@@ -10,7 +10,13 @@ export const BACKUP_FORMAT = 'kana-backup'
 export const BACKUP_VERSION = 3
 
 /** Préférences d'interface (localStorage) incluses dans la sauvegarde. */
-export const PREFERENCE_KEYS = ['kana-settings', 'kana-quiz-settings', 'kana-writing-settings', 'kana-profile'] as const
+export const PREFERENCE_KEYS = [
+  'kana-settings',
+  'kana-quiz-settings',
+  'kana-writing-settings',
+  'kana-chrono-settings',
+  'kana-profile',
+] as const
 
 export interface Backup {
   format: typeof BACKUP_FORMAT

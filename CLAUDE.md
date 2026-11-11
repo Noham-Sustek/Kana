@@ -30,6 +30,7 @@ npm run typecheck  # tsc -b seul
 npm test           # tests Vitest (vitest run) ; npm run test:watch en continu
 npm run icons      # régénère les icônes PNG/SVG de public/ (scripts/build-icons.mjs)
 npm run words      # régénère src/data/dictWords.json depuis le dictionnaire Jiyomi (scripts/build-words.mjs)
+npm run book       # régénère src/data/book.json (銀河鉄道の夜, Aozora Bunko) avec scripts/book-review.json
 ```
 
 Tester sur le S24 : `npm run dev -- --host` puis ouvrir l'IP locale depuis le téléphone (le SW n'est actif qu'en HTTPS ou localhost — pour tester l'installation, passer par `preview` + tunnel ou le déploiement).
@@ -40,21 +41,24 @@ Tester sur le S24 : `npm run dev -- --host` puis ouvrir l'IP locale depuis le t�
 src/
   app/         App.tsx (routes), tabs.ts (définition des onglets)
   components/  composants UI partagés (AppLayout, BottomTabBar, Icon, PageHeader…)
-  pages/       une page par onglet : Learn, Table, Writing, Stats, Settings
+  pages/       une page par onglet : Learn, Table, Writing, Stats, Settings (+ Quiz, Chrono, détails…)
   stores/      stores Zustand (un fichier par domaine : settingsStore.ts, profileStore.ts…)
   db/          base Dexie (db.ts) — schéma versionné ; un fichier d'accès par domaine (answers, profiles, backup…)
   engine/      scheduler.ts : planificateur du mode auto (répétition espacée, pur)
   lib/         hooks et utilitaires génériques
   data/        données statiques : kana.ts (kana + groupes), words.ts (~1800 mots écrits à la main + dictWords.json,
                généré : 6500 mots au total), sentences.ts (phrases), confusables.ts,
-               strokes.json (généré, tracés KanjiVG) + strokes.ts (accès typé)
-  features/    logique métier par domaine (quiz/, writing/, stats/, backup/)
+               strokes.json (généré, tracés KanjiVG) + strokes.ts (accès typé),
+               book.json (généré, 銀河鉄道の夜 en kana + traduction) + book.ts
+  features/    logique métier par domaine (quiz/, chrono/, writing/, stats/, backup/)
 scripts/       build-icons.mjs : icônes PWA (192/512, maskable, apple-touch, icon.svg) depuis le tracé de あ,
                rasterisation + encodage PNG maison, sans dépendance — `npm run icons`
                build-strokes.mjs : télécharge les SVG KanjiVG des kana (cache scripts/.cache, ignoré par git)
                et régénère src/data/strokes.json — `npm run strokes` (`-- --refresh` pour retélécharger)
                build-words.mjs : télécharge la base SQLite du dictionnaire Jiyomi (JMdict + français, release figée
                `dico-60`, cache scripts/.cache) et régénère src/data/dictWords.json — `npm run words`
+               build-book.mjs : télécharge 銀河鉄道の夜 (Aozora Bunko, fiche 456, cache scripts/.cache), lit les kanji
+               (furigana, sinon kuromoji, dépendance de dev), découpe en mots et régénère src/data/book.json — `npm run book`
 public/        assets statiques (icônes générées)
 .github/       workflows/deploy.yml : tests + build + GitHub Pages à chaque push sur main
 ```
@@ -89,6 +93,8 @@ Alias d'import : `@/` → `src/`. Toujours l'utiliser plutôt que des chemins re
   - Dessin (stages 5 et 7, `kind: 'draw'`) : `QuizDrawing` (chargé en différé), un `WritingPad` libre par caractère ; petits kana dessinés en grand, ー synthétisé (`drawingStrokesOf`). Juste = aucune erreur de trait ni indice sur tous les caractères (`session.submitDrawing`), puis comparaison tracé / modèle. Le romaji d'un mot à dessiner note ー par un macron (kōhī). Réglage « Validation du dessin » (`drawingCheck`, transmis dans `QuizOptions`) : `auto` (ci-dessus) ou `self` : `WritingPad validate={false}` (dessin libre, Effacer / Annuler / Terminé), comparaison au modèle puis boutons « À revoir » / « C’est juste » qui fixent le résultat et passent à la suite.
   - Rouge (`red-600`) = erreur, vert (`emerald-600`) = correct, identiques dans les deux thèmes ; ne pas utiliser l'accent pour un bouton affiché à côté d'une erreur.
 - **Mots** (`data/words.ts`) : liste manuelle `RAW` (prioritaire) + `dictWords.json` généré par `npm run words` (mots courants de Jiyomi/JMdict, CC BY-SA 4.0, attribution dans `/settings/about` — à conserver). Ne pas éditer `dictWords.json` à la main : ajuster les filtres ou les cibles (`TARGET`) du script. L'id d'un mot est son kana (persisté dans `answers.wordId`). Kanji usuel (`Word.kanji`, montré après la réponse aux stages 6 et 7) : celui de l'entrée JMdict pour les mots générés, rapproché par la traduction pour la liste manuelle (`manualKanji`, corrections dans `KANJI_OVERRIDES`) ; jamais pour un mot habituellement écrit en kana, un mot en katakana ou un sens ambigu.
+- **Livre** (`data/book.ts`, `book.json`) : 銀河鉄道の夜 de Kenji Miyazawa (domaine public, Aozora Bunko, attribution dans `/settings/about`). Ne pas éditer `book.json` : corriger dans `scripts/book-review.json` (phrase d'origine → `fr`, `kana` corrigé facultatif, `exclude` pour un passage lacunaire) ou dans `WORD_FIXES` / `SUBSTITUTIONS` du script, puis `npm run book`. Mêmes règles d'écriture que les phrases : particules séparées, は / へ / を isolés seulement comme particules, っ jamais en fin de mot, petits ぁ / ぃ remplacés. Phrases de 2 à 12 mots mêlées aux phrases des stages 8 et 9 (`BOOK_QUIZ_SENTENCES`, id `book:…`, aussi en katakana), provenance « titre · chapitre ».
+- **Lecture chronométrée** (`features/chrono/`, page `/learn/reading`, chargée en différé) : le livre défile mot par mot depuis un début de paragraphe tiré au sort ; espace (ou Entrée) valide le mot (`matchesWord` : particule lue wa / e / o), faux = on le retape, « Passer le mot » montre la lecture. Durée 1/2/3/5 min, chrono lancé à la première touche ; écriture hiragana (katakana d'origine gardés) ou tout katakana. Score = kana/min des mots justes ; records par profil dans `chronoSettingsStore` (localStorage `kana-chrono-settings`, dans `PREFERENCE_KEYS`).
 - **Écriture** (`features/writing/`) :
   - Tracés KanjiVG (CC BY-SA 3.0, attribution dans `/settings/about` — à conserver) : repère carré de 109 unités, traits dans l'ordre, points à pas ~2. Ne jamais éditer `strokes.json` à la main.
   - `strokeMatch.ts` compare des points rééchantillonnés (32) : forme (écart moyen après recentrage), position (écart des centres), sens (endroit vs envers, ignoré pour les traits < 14 unités), ordre (le trait correspond à un trait suivant). Modes `trace` (niveau 2, strict) et `free` (niveau 3, tolère décalage et échelle ×1,4). `session.ts` = machine à états pure, indice après 2 erreurs sur un trait.
@@ -119,4 +125,5 @@ Alias d'import : `@/` → `src/`. Toujours l'utiliser plutôt que des chemins re
 - Étape 4 (écriture guidée) en place : onglet Écriture, `/writing/:kanaId` avec 3 niveaux, validation trait par trait, écran À propos. Pas encore de persistance des résultats d'écriture.
 - Étape 5 abandonnée : l'audio (synthèse vocale, stage Écouter) a été retiré.
 - Étape 6 terminée : profils (Réglages → Profils, pastilles sur Stats), onglet Stats (série, réussite, temps moyen, activité 14 j, kana les plus ratés, heatmap), heatmap optionnelle sur le Tableau (`?heat=1`).
+- Livre : 銀河鉄道の夜 relu et traduit (1 153 phrases), mêlé aux stages 8 et 9, lecture chronométrée.
 - Étape 7 terminée : icônes PNG + maskable, manifeste complet, précache cache-first vérifié hors ligne, export/import JSON (Réglages → Sauvegarde), déploiement GitHub Pages par GitHub Actions.
