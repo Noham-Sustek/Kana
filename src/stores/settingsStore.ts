@@ -11,10 +11,13 @@ interface SettingsState {
   lastBackupAt: number | null
   /** Rappel de sauvegarde masqué à cette date. */
   backupReminderDismissedAt: number | null
+  /** Accueil du premier lancement vu (ou passé). */
+  onboarded: boolean
   setTheme: (theme: Theme) => void
   setVibrations: (vibrations: boolean) => void
   markBackedUp: (at: number) => void
   dismissBackupReminder: (at: number) => void
+  setOnboarded: () => void
 }
 
 // Préférences d'interface : persistées en localStorage (lecture synchrone, utilisée
@@ -27,11 +30,18 @@ export const useSettingsStore = create<SettingsState>()(
       vibrations: true,
       lastBackupAt: null,
       backupReminderDismissedAt: null,
+      onboarded: false,
       setTheme: (theme) => set({ theme }),
       setVibrations: (vibrations) => set({ vibrations }),
       markBackedUp: (at) => set({ lastBackupAt: at }),
       dismissBackupReminder: (at) => set({ backupReminderDismissedAt: at }),
+      setOnboarded: () => set({ onboarded: true }),
     }),
-    { name: 'kana-settings', version: 1 },
+    {
+      name: 'kana-settings',
+      version: 2,
+      // Réglages déjà enregistrés = application déjà utilisée : pas d'accueil du premier lancement.
+      migrate: (state, version) => (version < 2 ? { ...(state as object), onboarded: true } : state) as SettingsState,
+    },
   ),
 )

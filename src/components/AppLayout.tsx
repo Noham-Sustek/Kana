@@ -10,7 +10,8 @@ export function AppLayout() {
   const { mainRef, onScroll } = useScrollRestoration()
   const { pathname } = useLocation()
   // Plein écran pendant un quiz ou la lecture : plus de place pour le clavier, pas de sortie accidentelle.
-  const immersive = pathname.startsWith('/learn/quiz') || pathname.startsWith('/learn/reading')
+  const immersive =
+    pathname.startsWith('/learn/quiz') || pathname.startsWith('/learn/reading') || pathname === '/bienvenue'
   // Racine d'un onglet : en-tête profil / réglages, et largeur accrue sur grand écran.
   const tabRoot = TAB_PATHS.includes(pathname)
   // Pages en min-h-full (accueil, quiz, détail d'un kana, exercice d'écriture, liste, session libre) :
@@ -37,7 +38,7 @@ export function AppLayout() {
       >
         <div
           className={`mx-auto flex max-w-lg flex-col ${fill ? 'h-full' : ''} ${
-            tabRoot && pathname !== '/home' ? 'lg:max-w-5xl' : immersive ? 'lg:max-w-2xl' : ''
+            tabRoot ? 'lg:max-w-5xl' : immersive ? 'lg:max-w-2xl' : ''
           }`}
         >
           {tabRoot && <AppHeader />}

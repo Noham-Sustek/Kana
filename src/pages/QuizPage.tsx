@@ -97,7 +97,10 @@ function QuizRunner({ session }: { session: SessionState }) {
     if (confirmQuit) return
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement) return
-      if (e.key === 'Enter' && settled) next()
+      if ((e.key === 'Enter' || e.key === ' ') && settled) {
+        e.preventDefault()
+        next()
+      }
       const n = Number(e.key)
       if (question.kind === 'choice' && !settled && n >= 1 && n <= question.choices.length) {
         submit(question.choices[n - 1]!.id)

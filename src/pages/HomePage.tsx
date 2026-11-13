@@ -41,8 +41,9 @@ export function HomePage() {
     : null
 
   return (
-    <div className="flex min-h-full flex-col">
-      <section>
+    // Grand écran : parcours et kana à consolider à gauche, série et action du jour à droite.
+    <div className="flex min-h-full flex-col lg:grid lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_22rem] lg:grid-rows-[auto_1fr] lg:items-start lg:gap-x-14 lg:pt-4">
+      <section className="lg:col-start-2 lg:row-start-1">
         <Overline>Série</Overline>
         <div className="mt-3 flex items-end justify-between gap-4">
           <p className="font-serif text-[64px] leading-[0.9] font-medium tracking-[-0.02em] tabular-nums">
@@ -56,15 +57,14 @@ export function HomePage() {
         <p className="mt-2 text-[13.5px] leading-[19px] text-ink-muted">{streak.message}</p>
       </section>
 
-      <hr className="my-5 border-hairline" />
+      <hr className="my-5 border-hairline lg:hidden" />
 
-      <section>
-        <Overline
-          aside={`${path.doneCount} ligne${path.doneCount > 1 ? 's' : ''} sur ${path.total}`}
-        >
-          Parcours · {script}
-        </Overline>
-        <ul className="mt-2.5 grid grid-cols-5 gap-2">
+      <div className="lg:col-start-1 lg:row-span-2 lg:row-start-1">
+        <section>
+          <Overline aside={`${path.doneCount} ligne${path.doneCount > 1 ? 's' : ''} sur ${path.total}`}>
+            Parcours · {script}
+          </Overline>
+        <ul className="mt-2.5 grid grid-cols-5 gap-2 lg:grid-cols-8">
           {path.tiles.map((tile) => (
             <li key={tile.group.id}>
               <KanaTile
@@ -90,7 +90,7 @@ export function HomePage() {
       <section>
         <Overline aside={weak.length > 0 ? <Link to="/progress">Tout voir</Link> : undefined}>À consolider</Overline>
         {weak.length > 0 ? (
-          <ul className="mt-2 grid grid-cols-5 gap-2">
+          <ul className="mt-2 grid grid-cols-5 gap-2 lg:grid-cols-8">
             {weak.map(({ kanaId, recentRate }) => {
               const kana = getKana(kanaId)!
               return (
@@ -124,8 +124,9 @@ export function HomePage() {
           <strong className="font-semibold">{reminder}</strong>
         </Banner>
       )}
+      </div>
 
-      <div className="sticky -bottom-4 z-10 -mx-4 mt-auto bg-paper px-4 pt-6 pb-5">
+      <div className="sticky -bottom-4 z-10 -mx-4 mt-auto bg-paper px-4 pt-6 pb-5 lg:static lg:col-start-2 lg:row-start-2 lg:mx-0 lg:mt-0 lg:px-0">
         <Button variant={cta.secondary ? 'line' : 'primary'} detail={cta.detail} icon="arrow" onClick={startDaily}>
           {cta.label}
         </Button>

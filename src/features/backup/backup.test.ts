@@ -4,6 +4,9 @@ import {
   BACKUP_VERSION,
   BackupError,
   backupFileName,
+  importWarning,
+  lastExportLine,
+  longDate,
   parseBackup,
   profileToActivate,
 } from '@/features/backup/backup'
@@ -124,5 +127,19 @@ describe('profileToActivate', () => {
 describe('backupFileName', () => {
   it('contient la date locale', () => {
     expect(backupFileName(new Date(2026, 9, 2).getTime())).toBe('kana-sauvegarde-2026-10-02.json')
+  })
+})
+
+describe('dates d’export', () => {
+  const at = (y: number, m: number, d: number, h = 12) => new Date(y, m - 1, d, h).getTime()
+  it('dernier export et confirmation d’import', () => {
+    const now = at(2026, 11, 13)
+    expect(lastExportLine(null, now)).toBe('Aucun export pour l’instant.')
+    expect(lastExportLine(at(2026, 11, 13, 8), now)).toBe('Dernier export : aujourd’hui.')
+    expect(lastExportLine(at(2026, 11, 12, 23), now)).toBe('Dernier export : hier.')
+    expect(lastExportLine(at(2026, 10, 10), now)).toBe('Dernier export : 10 octobre, il y a 34 jours.')
+    expect(longDate(at(2025, 3, 1), now)).toBe('1er mars 2025')
+    const backup = { ...parseBackup(JSON.parse(JSON.stringify(sample()))), exportedAt: at(2026, 10, 10) }
+    expect(importWarning(backup, now)).toMatch(/^Le fichier du 10 octobre contient 1 profil et \d+ réponses?\. /)
   })
 })

@@ -121,10 +121,11 @@ describe('dailyActivity', () => {
     const now = at(2026, 10, 22, 18)
     const answers = [answer('h-a', true, at(2026, 10, 22, 8)), answer('h-a', false, at(2026, 10, 20)), answer('h-i', true, at(2026, 9, 1))]
     const days = dailyActivity(answers, now, 3)
-    expect(days).toEqual([
+    expect(days.map(({ timeMs: _t, ...d }) => d)).toEqual([
       { day: '2026-10-20', questions: 1, correct: 0 },
       { day: '2026-10-21', questions: 0, correct: 0 },
       { day: '2026-10-22', questions: 1, correct: 1 },
     ])
+    expect(days[2]!.timeMs).toBe(answers[0]!.responseMs)
   })
 })

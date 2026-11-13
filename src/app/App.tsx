@@ -10,9 +10,11 @@ import { CustomGroupPage } from '@/pages/CustomGroupPage'
 import { HomePage } from '@/pages/HomePage'
 import { KanaPage } from '@/pages/KanaPage'
 import { KanaDetailPage } from '@/pages/KanaDetailPage'
-import { StatsPage } from '@/pages/StatsPage'
+import { ProgressPage } from '@/pages/ProgressPage'
 import { SettingsPage } from '@/pages/SettingsPage'
 import { AboutPage } from '@/pages/AboutPage'
+import { OnboardingPage } from '@/pages/OnboardingPage'
+import { OnboardingGate } from '@/app/OnboardingGate'
 
 // Chunk séparé (tracés KanjiVG, ~150 Ko) : précaché par le service worker comme le reste.
 const WritingExercisePage = lazy(() =>
@@ -34,10 +36,12 @@ export function App() {
   return (
     // HashRouter : aucune config serveur, fonctionne hors ligne et sur n'importe quel hébergeur statique.
     <HashRouter>
+      <OnboardingGate />
       <Routes>
         <Route element={<AppLayout />}>
           <Route index element={<Navigate to="/home" replace />} />
           <Route path="home" element={<HomePage />} />
+          <Route path="bienvenue" element={<OnboardingPage />} />
           <Route path="learn" element={<LearnPage />} />
           <Route path="learn/libre" element={<FreeSessionPage />} />
           <Route path="learn/quiz" element={<QuizPage />} />
@@ -61,7 +65,7 @@ export function App() {
               </Suspense>
             }
           />
-          <Route path="progress" element={<StatsPage />} />
+          <Route path="progress" element={<ProgressPage />} />
           {/* Anciennes adresses (favoris, raccourcis) : Tableau et Écriture fusionnent dans Kana. */}
           <Route path="table" element={<Redirect to="/kana" />} />
           <Route path="table/:kanaId" element={<KanaIdRedirect />} />

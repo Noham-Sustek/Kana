@@ -121,11 +121,21 @@ export function reviewDetail({ due, seen }: ReviewSelection): string {
   return `${due.length} kana à revoir parmi vos ${seen} kana`
 }
 
+/** Meilleur score de lecture chronométrée du profil (toutes écritures), avec sa durée en secondes. */
+export function bestChronoRecord(
+  best: Readonly<Record<string, number>>,
+  profileId: number,
+): { score: number; duration: number } | null {
+  let record: { score: number; duration: number } | null = null
+  for (const [key, score] of Object.entries(best)) {
+    const [profile, , duration] = key.split(':')
+    if (Number(profile) !== profileId) continue
+    if (!record || score > record.score) record = { score, duration: Number(duration) }
+  }
+  return record
+}
+
 /** Meilleur score de lecture chronométrée du profil, toutes écritures et durées confondues. */
 export function bestChronoScore(best: Readonly<Record<string, number>>, profileId: number): number | null {
-  const prefix = `${profileId}:`
-  const scores = Object.entries(best)
-    .filter(([key]) => key.startsWith(prefix))
-    .map(([, score]) => score)
-  return scores.length > 0 ? Math.max(...scores) : null
+  return bestChronoRecord(best, profileId)?.score ?? null
 }

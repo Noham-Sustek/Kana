@@ -1,21 +1,34 @@
 import { useState, type FormEvent } from 'react'
+import { Button } from '@/components/Button'
 import { Dialog } from '@/components/Dialog'
 import { Icon } from '@/components/Icon'
-import { IconButton } from '@/components/IconButton'
+import { ProfileSeal } from '@/components/ProfileSeal'
+import { Sheet } from '@/components/Sheet'
 import { TextField } from '@/components/TextField'
-import { createProfile, deleteProfile, renameProfile } from '@/db/profiles'
 import type { Profile } from '@/db/db'
-import { useProfiles } from '@/lib/useProfiles'
+import { createProfile, deleteProfile, renameProfile } from '@/db/profiles'
+import { useProfileStreaks, useProfiles } from '@/lib/useProfiles'
 import { useProfileStore } from '@/stores/profileStore'
 
 const MAX_NAME_LENGTH = 30
 
-/** Liste des profils : choix du profil actif, ajout, renommage, suppression. */
+function streakLine(days: number): string {
+  if (days === 0) return 'pas de série en cours'
+  return `série de ${days} jour${days > 1 ? 's' : ''}`
+}
+
+const capitalize = (s: string) => s.charAt(0).toLocaleUpperCase('fr-FR') + s.slice(1)
+
+/** Profils dans Réglages : une ligne par profil (actions dans une feuille), puis « Nouveau profil ». */
 export function ProfileSettings() {
   const profiles = useProfiles()
+  const streaks = useProfileStreaks()
   const profileId = useProfileStore((s) => s.profileId)
   const setProfileId = useProfileStore((s) => s.setProfileId)
+  const [openId, setOpenId] = useState<number | null>(null)
+  const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')
+  const open = profiles.find((p) => p.id === openId)
 
   const add = async (e: FormEvent) => {
     e.preventDefault()
@@ -23,136 +36,149 @@ export function ProfileSettings() {
     if (!name) return
     setProfileId(await createProfile(name))
     setNewName('')
+    setCreating(false)
   }
 
   return (
     <>
-      <p className="mb-2 text-sm text-ink-muted">
-        Chaque profil a sa propre progression, ses listes et ses stats.
-      </p>
-      <ul className="divide-y divide-hairline">
-        {profiles.map((p) => (
-          <ProfileRow
-            key={p.id}
-            profile={p}
-            active={p.id === profileId}
-            deletable={profiles.length > 1}
-            onSelect={() => setProfileId(p.id)}
-            onDelete={async () => {
-              const other = profiles.find((o) => o.id !== p.id)
-              if (p.id === profileId && other) setProfileId(other.id)
-              await deleteProfile(p.id)
-            }}
-          />
-        ))}
+      <ul className="border-t border-hairline">
+        {profiles.map((p) => {
+          const active = p.id === profileId
+          const streak = streakLine(streaks.get(p.id) ?? 0)
+          return (
+            <li key={p.id} className="border-b border-hairline">
+              <button
+                type="button"
+                onClick={() => setOpenId(p.id)}
+                className="flex min-h-14 w-full items-center gap-3 py-2 text-left active:brightness-90"
+              >
+                <ProfileSeal name={p.name} />
+                <span className="min-w-0 flex-1">
+                  <b className="block truncate font-semibold">{p.name}</b>
+                  <small className="block text-[13px] leading-[18px] text-ink-muted">
+                    {active ? `Profil actif · ${streak}` : capitalize(streak)}
+                  </small>
+                </span>
+                <Icon name="chevronRight" className="size-5 shrink-0 text-ink-muted" />
+              </button>
+            </li>
+          )
+        })}
       </ul>
-      <form onSubmit={add} className="mt-3 flex gap-2">
-        <TextField
-          variant="ui"
-          className="min-w-0 flex-1"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          maxLength={MAX_NAME_LENGTH}
-          placeholder="Nouveau profil"
-          aria-label="Nom du nouveau profil"
-        />
-        <button
-          type="submit"
-          disabled={!newName.trim()}
-          aria-label="Ajouter le profil"
-          className="flex size-11 items-center justify-center rounded-md bg-accent text-on-accent disabled:opacity-40"
-        >
-          <Icon name="plus" className="size-5" />
-        </button>
-      </form>
-    </>
-  )
-}
 
-interface ProfileRowProps {
-  profile: Profile
-  active: boolean
-  deletable: boolean
-  onSelect: () => void
-  onDelete: () => void
-}
-
-function ProfileRow({ profile, active, deletable, onSelect, onDelete }: ProfileRowProps) {
-  const [mode, setMode] = useState<'view' | 'rename' | 'delete'>('view')
-  const [name, setName] = useState(profile.name)
-
-  const saveName = async (e: FormEvent) => {
-    e.preventDefault()
-    const trimmed = name.trim()
-    if (trimmed) await renameProfile(profile.id, trimmed)
-    setMode('view')
-  }
-
-  if (mode === 'rename') {
-    return (
-      <li className="py-2">
-        <form onSubmit={saveName} className="flex gap-2">
+      {creating ? (
+        <form onSubmit={add} className="mt-3 flex gap-2">
           <TextField
             variant="ui"
             className="min-w-0 flex-1"
             autoFocus
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
             maxLength={MAX_NAME_LENGTH}
-            aria-label="Nom du profil"
+            placeholder="Prénom"
+            aria-label="Nom du nouveau profil"
           />
-          <button
-            type="submit"
-            aria-label="Enregistrer"
-            className="flex size-11 items-center justify-center rounded-md bg-accent text-on-accent"
-          >
-            <Icon name="check" className="size-5" />
-          </button>
+          <Button type="submit" size="sm" fullWidth={false} disabled={!newName.trim()}>
+            Créer
+          </Button>
         </form>
-      </li>
-    )
+      ) : (
+        <Button
+          variant="text"
+          size="sm"
+          fullWidth={false}
+          icon="plus"
+          iconPosition="start"
+          className="mt-1 -ml-3"
+          onClick={() => setCreating(true)}
+        >
+          Nouveau profil
+        </Button>
+      )}
+
+      {open && (
+        <ProfileActions
+          profile={open}
+          active={open.id === profileId}
+          deletable={profiles.length > 1}
+          onClose={() => setOpenId(null)}
+          onSelect={() => {
+            setProfileId(open.id)
+            setOpenId(null)
+          }}
+          onDelete={async () => {
+            const other = profiles.find((o) => o.id !== open.id)
+            if (open.id === profileId && other) setProfileId(other.id)
+            setOpenId(null)
+            await deleteProfile(open.id)
+          }}
+        />
+      )}
+    </>
+  )
+}
+
+interface ProfileActionsProps {
+  profile: Profile
+  active: boolean
+  deletable: boolean
+  onClose: () => void
+  onSelect: () => void
+  onDelete: () => void
+}
+
+function ProfileActions({ profile, active, deletable, onClose, onSelect, onDelete }: ProfileActionsProps) {
+  const [name, setName] = useState(profile.name)
+  const [confirm, setConfirm] = useState(false)
+
+  const save = async (e: FormEvent) => {
+    e.preventDefault()
+    const trimmed = name.trim()
+    if (trimmed && trimmed !== profile.name) await renameProfile(profile.id, trimmed)
+    onClose()
   }
 
   return (
-    <li className="flex items-center gap-1">
-      <button
-        type="button"
-        role="radio"
-        aria-checked={active}
-        onClick={onSelect}
-        className="flex min-h-12 flex-1 items-center gap-3 text-left"
-      >
-        <span
-          className={`flex size-5 items-center justify-center rounded-full border-2 ${
-            active ? 'border-accent' : 'border-control'
-          }`}
-        >
-          {active && <span className="size-2.5 rounded-full bg-accent" />}
-        </span>
-        <span className={`truncate ${active ? 'font-semibold' : ''}`}>{profile.name}</span>
-      </button>
-      <IconButton
-        icon="writing"
-        label={`Renommer ${profile.name}`}
-        onClick={() => {
-          setName(profile.name)
-          setMode('rename')
-        }}
-      />
-      {deletable && (
-        <IconButton icon="trash" label={`Supprimer ${profile.name}`} onClick={() => setMode('delete')} />
-      )}
+    <>
+      <Sheet open={!confirm} onClose={onClose} title={profile.name}>
+        <form onSubmit={save}>
+          <label className="mb-1.5 block text-[13px] leading-[18px] font-semibold text-ink-muted" htmlFor="profile-name">
+            Nom
+          </label>
+          <div className="flex gap-2">
+            <TextField
+              id="profile-name"
+              variant="ui"
+              className="min-w-0 flex-1"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={MAX_NAME_LENGTH}
+            />
+            <Button type="submit" variant="line" size="sm" fullWidth={false} disabled={!name.trim()}>
+              Renommer
+            </Button>
+          </div>
+        </form>
+        <div className="mt-4 flex flex-col gap-1">
+          {!active && <Button onClick={onSelect}>Passer à ce profil</Button>}
+          {deletable && (
+            <Button variant="text" icon="trash" iconPosition="start" onClick={() => setConfirm(true)}>
+              Supprimer le profil
+            </Button>
+          )}
+        </div>
+      </Sheet>
       <Dialog
-        open={mode === 'delete'}
+        open={confirm}
         title={`Supprimer « ${profile.name} » ?`}
         safeLabel="Annuler"
-        onSafe={() => setMode('view')}
+        onSafe={() => setConfirm(false)}
         riskyLabel="Supprimer"
         onRisky={onDelete}
         irreversible
       >
-        Toute sa progression, ses listes et ses statistiques seront effacées de cet appareil.
+        Toute sa progression, ses listes et ses résultats seront effacés de cet appareil.
       </Dialog>
-    </li>
+    </>
   )
 }

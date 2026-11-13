@@ -151,3 +151,35 @@ export function backupFileName(at: number): string {
   const pad = (n: number) => String(n).padStart(2, '0')
   return `kana-sauvegarde-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}.json`
 }
+
+const MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']
+
+/** « 10 octobre », avec l'année si elle diffère de celle de `now`. */
+export function longDate(at: number, now: number): string {
+  const d = new Date(at)
+  const year = d.getFullYear() === new Date(now).getFullYear() ? '' : ` ${d.getFullYear()}`
+  return `${d.getDate() === 1 ? '1er' : d.getDate()} ${MONTHS[d.getMonth()]}${year}`
+}
+
+/** Jours calendaires (locaux) écoulés entre deux instants. */
+function daysBetween(from: number, to: number): number {
+  const a = new Date(from)
+  const b = new Date(to)
+  const start = new Date(a.getFullYear(), a.getMonth(), a.getDate()).getTime()
+  const end = new Date(b.getFullYear(), b.getMonth(), b.getDate()).getTime()
+  return Math.round((end - start) / 86_400_000)
+}
+
+/** « Dernier export : 10 octobre, il y a 34 jours. » */
+export function lastExportLine(at: number | null, now: number): string {
+  if (at === null) return 'Aucun export pour l’instant.'
+  const days = daysBetween(at, now)
+  const ago = days <= 0 ? 'aujourd’hui' : days === 1 ? 'hier' : `il y a ${days} jours`
+  return days <= 1 ? `Dernier export : ${ago}.` : `Dernier export : ${longDate(at, now)}, ${ago}.`
+}
+
+/** Conséquence d'un import, pour la confirmation. */
+export function importWarning(backup: Backup, now: number): string {
+  const n = backup.profiles.length
+  return `Le fichier du ${longDate(backup.exportedAt, now)} contient ${n} profil${n > 1 ? 's' : ''} et ${backup.answers.length} réponse${backup.answers.length > 1 ? 's' : ''}. L’import efface tout ce qui se trouve sur cet appareil.`
+}

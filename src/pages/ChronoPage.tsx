@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { useNavigate } from 'react-router'
 import { Button } from '@/components/Button'
-import { Link, useNavigate } from 'react-router'
 import { Icon } from '@/components/Icon'
+import { IconButton } from '@/components/IconButton'
 import { SegmentedControl } from '@/components/SegmentedControl'
-import { BOOK_AUTHOR, BOOK_ORIGINAL_TITLE, BOOK_SENTENCES, BOOK_TITLE, bookSource } from '@/data/book'
+import { TextField } from '@/components/TextField'
+import { BOOK_AUTHOR, BOOK_ORIGINAL_TITLE, BOOK_SENTENCES, bookSource } from '@/data/book'
 import {
   CHRONO_DURATIONS,
   chronoResult,
@@ -24,16 +26,20 @@ import { useProfileStore } from '@/stores/profileStore'
 
 const SCRIPT_OPTIONS: { value: ChronoScript; label: string }[] = [
   { value: 'hiragana', label: 'Hiragana' },
-  { value: 'katakana', label: 'Katakana' },
+  { value: 'katakana', label: 'Tout en katakana' },
 ]
 
 const DURATION_OPTIONS = CHRONO_DURATIONS.map((d) => ({ value: d, label: `${d / 60} min` }))
 
 const TOTAL = BOOK_SENTENCES.length
 
-type Phase = { type: 'setup' } | { type: 'running' } | { type: 'done'; result: ChronoResult; record: boolean }
+type Phase =
+  | { type: 'setup' }
+  | { type: 'running' }
+  | { type: 'done'; result: ChronoResult; record: boolean; previousBest: number | undefined }
 
 export function ChronoPage() {
+  const navigate = useNavigate()
   const settings = useChronoSettingsStore()
   const profileId = useProfileStore((s) => s.profileId)
   const [phase, setPhase] = useState<Phase>({ type: 'setup' })
@@ -49,8 +55,9 @@ export function ChronoPage() {
   const finish = useCallback(
     (state: ChronoState) => {
       const result = chronoResult(state, settings.duration)
+      const previousBest = settings.best[bestKey]
       const record = result.correctKana > 0 && settings.recordScore(bestKey, result.kanaPerMinute)
-      setPhase({ type: 'done', result, record })
+      setPhase({ type: 'done', result, record, previousBest })
     },
     [settings, bestKey],
   )
@@ -72,73 +79,57 @@ export function ChronoPage() {
       <ChronoSummary
         state={chrono}
         script={settings.script}
+        duration={settings.duration}
         result={phase.result}
         record={phase.record}
+        previousBest={phase.previousBest}
         onRestart={start}
-        onSettings={() => setPhase({ type: 'setup' })}
       />
     )
   }
 
   return (
     <div className="flex min-h-full flex-col">
-      <header className="mb-4 flex items-center gap-2">
-        <Link
-          to="/learn"
-          aria-label="Retour"
-          className="-ml-2 flex size-11 items-center justify-center text-ink-muted"
-        >
-          <Icon name="chevronLeft" />
-        </Link>
-        <h1 className="text-xl font-bold tracking-tight">Lecture chronométrée</h1>
+      <header className="-ml-2 flex items-center gap-0.5">
+        <IconButton icon="chevronLeft" label="Retour" onClick={() => navigate('/learn')} />
+        <h1 className="font-serif text-[21px] leading-tight font-medium">Lecture chronométrée</h1>
       </header>
 
-      <p className="mb-4 text-sm text-ink-muted">
-        Le livre défile à partir d’un paragraphe tiré au sort. Tapez chaque mot en romaji puis espace : juste, on passe
-        au suivant ; faux, on le retape. Le chrono part à la première touche.
-      </p>
-
-      <Card>
-        <div className="space-y-4">
-          <Field label="Durée">
-            <SegmentedControl
-              label="Durée"
-              options={DURATION_OPTIONS}
-              value={settings.duration}
-              onChange={settings.setDuration}
-            />
-          </Field>
-          <Field label="Écriture">
-            <SegmentedControl
-              label="Écriture"
-              options={SCRIPT_OPTIONS}
-              value={settings.script}
-              onChange={settings.setScript}
-            />
-            <p className="mt-1.5 text-xs text-ink-muted">
-              {settings.script === 'hiragana'
-                ? 'Kanji réécrits en hiragana, noms et mots étrangers en katakana comme dans le livre.'
-                : 'Tout le texte en katakana.'}
+      <div className="mt-3 flex flex-col gap-4">
+        <section className="rounded-md border border-hairline bg-paper-raised p-3.5">
+          <Overline>Votre record · {settings.duration / 60} min</Overline>
+          {best !== undefined ? (
+            <p className="mt-1 font-serif text-[40px] leading-[0.95] font-medium tabular-nums">
+              {best}
+              <small className="ml-1.5 text-[17px] text-ink-muted">kana par minute</small>
             </p>
-          </Field>
-          <p className="text-sm text-ink-muted">
-            Record :{' '}
-            <strong className="tabular-nums">{best !== undefined ? `${best} kana/min` : 'aucun pour l’instant'}</strong>
-          </p>
-        </div>
-      </Card>
+          ) : (
+            <p className="mt-1 text-[14.5px] leading-5 text-ink-muted">Pas encore de record pour cette durée.</p>
+          )}
+        </section>
 
-      <Card>
-        <p className="text-sm text-ink-muted">
-          Texte : <span className="font-jp">{BOOK_ORIGINAL_TITLE}</span> (<em>{BOOK_TITLE}</em>) de {BOOK_AUTHOR},{' '}
-          {BOOK_SENTENCES.length} phrases ; leur traduction est donnée dans le récapitulatif.
-        </p>
-      </Card>
+        <Field label="Durée">
+          <SegmentedControl label="Durée" options={DURATION_OPTIONS} value={settings.duration} onChange={settings.setDuration} />
+        </Field>
+        <Field label="Écriture">
+          <SegmentedControl label="Écriture" options={SCRIPT_OPTIONS} value={settings.script} onChange={settings.setScript} />
+        </Field>
 
-      <div className="sticky bottom-0 z-10 mt-auto pt-3">
-        <Button onClick={start}>
-          Commencer
-        </Button>
+        <ol className="border-t border-hairline">
+          <Step n={1} title="Le roman défile mot par mot">
+            <span className="font-jp">{BOOK_ORIGINAL_TITLE}</span>, {BOOK_AUTHOR}, écrit en kana
+          </Step>
+          <Step n={2} title="Tapez le mot, puis espace">
+            Une erreur ? Retapez-le, ou passez-le.
+          </Step>
+          <Step n={3} title="Le chrono part à la première touche">
+            Seuls les mots justes comptent. La traduction vous attend à la fin.
+          </Step>
+        </ol>
+      </div>
+
+      <div className="sticky bottom-0 z-10 -mx-4 mt-auto bg-paper px-4 pt-3 pb-1">
+        <Button onClick={start}>Commencer</Button>
       </div>
     </div>
   )
@@ -206,36 +197,33 @@ function ChronoRunner({ state, onChange, script, duration, onFinish, onQuit }: C
   const showWrong = state.wrong && value === ''
   const minutes = Math.floor(Math.ceil(remaining) / 60)
   const seconds = Math.ceil(remaining) % 60
+  const elapsedMin = state.startedAt === null ? 0 : (now - state.startedAt) / 60_000
+  // Allure en cours, affichée après quelques secondes pour ne pas s'affoler au départ.
+  const pace = elapsedMin > 0.05 ? Math.round(state.correctKana / elapsedMin) : null
 
   return (
     <div className="flex min-h-full flex-col">
-      <header className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={onQuit}
-          aria-label="Quitter la lecture"
-          className="-ml-2 flex size-11 items-center justify-center text-ink-muted"
-        >
-          <Icon name="close" />
-        </button>
-        <div className="h-2 flex-1 overflow-hidden rounded-full bg-hairline">
-          <div className="h-full rounded-full bg-ink" style={{ width: `${(remaining / duration) * 100}%` }} />
+      <header className="-ml-2 flex items-center gap-3">
+        <IconButton icon="close" label="Quitter la lecture" onClick={onQuit} />
+        <div className="h-1.5 flex-1 overflow-hidden rounded-[1px] bg-hairline" aria-hidden="true">
+          <div className="h-full bg-ink" style={{ width: `${(remaining / duration) * 100}%` }} />
         </div>
-        <span className="flex items-center gap-1 text-sm font-semibold tabular-nums text-ink-muted">
-          <Icon name="timer" className="size-4" />
+        <span className="font-serif text-[22px] leading-none font-medium tabular-nums" aria-label="Temps restant">
           {minutes}:{String(seconds).padStart(2, '0')}
         </span>
       </header>
 
-      <p className="mt-2 text-center text-xs text-ink-muted">
-        <span className="tabular-nums">{state.correctWords}</span> mots ·{' '}
-        <span className="tabular-nums">{state.correctKana}</span> kana ·{' '}
-        <span className="tabular-nums">{state.errors}</span> erreurs
-        {state.startedAt === null && ' · le chrono part à la première touche'}
+      <p className="mt-2 flex justify-between gap-3 text-[13px] leading-[18px] text-ink-muted tabular-nums">
+        <span>
+          {state.correctWords} mot{state.correctWords > 1 ? 's' : ''} lu{state.correctWords > 1 ? 's' : ''}
+        </span>
+        <span>
+          {state.startedAt === null ? 'Le chrono part à la première touche' : pace === null ? '' : `${pace} kana/min`}
+        </span>
       </p>
 
-      <div className="my-4 max-h-[45dvh] flex-1 overflow-y-auto rounded-md border border-hairline p-4 short:max-h-[30dvh]">
-        <p className="font-jp text-lg leading-loose lg:text-xl">
+      <div className="my-3 max-h-[45dvh] flex-1 overflow-y-auto short:max-h-[30dvh]">
+        <p className="font-jp text-[21px] leading-[2] font-semibold">
           {[0, 1, 2].map((offset) => {
             const index = (state.sentence + offset) % TOTAL
             return (
@@ -247,18 +235,15 @@ function ChronoRunner({ state, onChange, script, duration, onFinish, onQuit }: C
                     <span key={i}>
                       <span
                         ref={current ? currentRef : undefined}
+                        aria-current={current ? 'true' : undefined}
                         className={
                           current
-                            ? `rounded-md px-1 text-2xl font-semibold lg:text-3xl ${
-                                showWrong
-                                  ? 'bg-error text-on-signal'
-                                  : 'bg-accent-tint text-accent'
+                            ? `mx-0.5 inline-block rounded-sm border-2 px-2 align-middle text-[34px] leading-[1.3] ${
+                                showWrong ? 'animate-shake border-error bg-error-tint' : 'border-ink bg-paper-raised'
                               }`
                             : done
-                              ? 'text-correct-ink'
-                              : offset > 0
-                                ? 'text-ink-muted'
-                                : ''
+                              ? 'text-ink-muted'
+                              : ''
                         }
                       >
                         {word}
@@ -274,42 +259,30 @@ function ChronoRunner({ state, onChange, script, duration, onFinish, onQuit }: C
       </div>
 
       <div className="sticky bottom-0 z-10 -mx-4 mt-auto bg-paper px-4 pt-2 pb-1">
-        <input
+        <TextField
           ref={inputRef}
           value={value}
           onChange={(e) => handleChange(e.target.value)}
           onKeyDown={handleKeyDown}
           autoFocus
-          autoCapitalize="none"
-          autoCorrect="off"
-          autoComplete="off"
-          spellCheck={false}
           enterKeyHint="next"
           placeholder="romaji puis espace"
           aria-label="Mot en cours, en romaji"
-          className={`min-h-14 w-full rounded-md border-2 px-4 text-center text-2xl outline-none placeholder:text-base placeholder:text-ink-muted focus:ring-2 focus:ring-accent/40 ${
-            showWrong
-              ? 'border-error bg-error text-on-signal'
-              : 'border-control bg-paper-raised'
-          }`}
+          state={showWrong ? 'wrong' : 'idle'}
         />
-        <div className="mt-1 flex min-h-11 items-center justify-between gap-2 text-sm">
-          <span className="min-w-0 truncate">
+        <div className="mt-1 flex min-h-11 items-center justify-between gap-2 text-[13.5px]">
+          <span className="min-w-0 truncate" aria-live="polite">
             {showWrong && <span className="text-error-ink">Pas tout à fait, retapez le mot.</span>}
             {!showWrong && skipped && (
               <span className="text-ink-muted">
                 <span className="font-jp">{skipped.word}</span> se lit{' '}
-                <strong className="text-correct-ink">{skipped.romaji}</strong>
+                <strong className="font-semibold text-ink">{skipped.romaji}</strong>
               </span>
             )}
           </span>
-          <button
-            type="button"
-            onClick={skip}
-            className="flex min-h-11 shrink-0 items-center px-2 font-medium text-ink-muted"
-          >
+          <Button variant="quiet" size="sm" fullWidth={false} icon="skip" iconPosition="start" onClick={skip}>
             Passer le mot
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -319,73 +292,94 @@ function ChronoRunner({ state, onChange, script, duration, onFinish, onQuit }: C
 interface ChronoSummaryProps {
   state: ChronoState
   script: ChronoScript
+  duration: number
   result: ChronoResult
   record: boolean
+  previousBest: number | undefined
   onRestart: () => void
-  onSettings: () => void
 }
 
-function ChronoSummary({ state, script, result, record, onRestart, onSettings }: ChronoSummaryProps) {
+function ChronoSummary({ state, script, duration, result, record, previousBest, onRestart }: ChronoSummaryProps) {
   const navigate = useNavigate()
   const words = useWords(script)
+  const profileId = useProfileStore((s) => s.profileId)
+  const best = useChronoSettingsStore((s) => s.best)
+  const [allRead, setAllRead] = useState(false)
   // Phrases lues : jusqu'à la phrase en cours, comprise si elle est entamée.
   const read = state.word > 0 ? state.visited : state.visited.slice(0, -1)
+  const shown = allRead ? read : read.slice(0, 1)
 
   return (
     <div className="flex min-h-full flex-col">
-      <header className="mb-4 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => navigate('/learn')}
-          aria-label="Retour"
-          className="-ml-2 flex size-11 items-center justify-center text-ink-muted"
-        >
-          <Icon name="chevronLeft" />
-        </button>
-        <h1 className="text-xl font-bold tracking-tight">Résultat</h1>
+      <header className="-mr-2 flex items-center justify-between">
+        <h1 className="text-[11px] leading-[14px] font-bold tracking-[0.12em] text-ink-muted uppercase">
+          Lecture · {duration / 60} min · {script === 'hiragana' ? 'hiragana' : 'katakana'}
+        </h1>
+        <IconButton icon="close" label="Fermer" onClick={() => navigate('/learn')} />
       </header>
 
-      <Card>
-        <div className="text-center">
-          <p className="text-5xl font-bold tabular-nums">{result.kanaPerMinute}</p>
-          <p className="text-sm text-ink-muted">kana par minute</p>
-          {record && <p className="mt-2 text-sm font-semibold text-gold">Nouveau record !</p>}
-        </div>
-        <dl className="mt-4 grid grid-cols-2 gap-2 text-center">
+      <section className="mt-1">
+        {record && (
+          <p className="mb-2 flex animate-unlock items-center gap-1.5 text-[13.5px] font-semibold text-gold">
+            <Icon name="star" className="size-4" />
+            Nouveau record{previousBest !== undefined ? ` · ${previousBest} auparavant` : ''}
+          </p>
+        )}
+        <p className="font-serif text-[64px] leading-[0.9] font-medium tracking-[-0.02em] tabular-nums">
+          {result.kanaPerMinute}
+          <small className="ml-1.5 text-[17px] tracking-normal text-ink-muted">kana par minute</small>
+        </p>
+        <dl className="mt-4 grid grid-cols-3 gap-3">
           <Stat label="Mots justes" value={result.correctWords} />
-          <Stat label="Précision" value={`${result.accuracy} %`} />
-          <Stat label="Erreurs" value={result.errors} />
           <Stat label="Mots passés" value={result.skipped} />
+          <Stat label="Du premier coup" value={`${result.accuracy} %`} />
         </dl>
-      </Card>
+      </section>
+
+      <Section title="Vos records">
+        <ul className="border-t border-hairline">
+          {CHRONO_DURATIONS.map((d) => {
+            const score = best[bestScoreKey(profileId, script, d)]
+            return (
+              <li key={d} className="flex min-h-12 items-center justify-between border-b border-hairline py-2">
+                <b className="font-semibold">{d / 60} min</b>
+                <span className="text-ink-muted tabular-nums">
+                  {score === undefined ? 'pas encore' : `${score} kana/min${record && d === duration ? ' · à l’instant' : ''}`}
+                </span>
+              </li>
+            )
+          })}
+        </ul>
+      </Section>
 
       {read.length > 0 && (
-        <Card>
-          <h2 className="mb-3 text-sm font-semibold text-ink-muted">Texte lu</h2>
-          <ul className="space-y-3">
-            {read.map((index, i) => {
+        <Section title="Ce que vous avez lu" aside={bookSource(BOOK_SENTENCES[read[0]!]!.chapter)}>
+          <ul className="flex flex-col gap-4">
+            {shown.map((index, i) => {
               const sentence = BOOK_SENTENCES[index]!
               return (
                 <li key={i}>
-                  <p className="font-jp">{words(index).join(' ')}</p>
-                  <p className="font-jp text-sm text-ink-muted">{sentence.original}</p>
-                  <p className="text-sm">{sentence.meaning}</p>
+                  <p className="font-jp text-[17px] leading-relaxed">{words(index).join(' ')}</p>
+                  <p className="mt-1 font-jp text-[15px] text-ink-muted">{sentence.original}</p>
+                  <p className="mt-1 text-[13.5px] leading-[19px] text-ink-muted">« {sentence.meaning} »</p>
                 </li>
               )
             })}
           </ul>
-          <p className="mt-3 text-xs text-ink-muted">
-            {bookSource(BOOK_SENTENCES[read[0]!]!.chapter)}
-          </p>
-        </Card>
+          {read.length > 1 && (
+            <Button variant="text" size="sm" fullWidth={false} className="mt-2 -ml-3" onClick={() => setAllRead(!allRead)}>
+              {allRead ? 'N’afficher que la première' : `Afficher les ${read.length} phrases lues`}
+            </Button>
+          )}
+        </Section>
       )}
 
-      <div className="sticky bottom-0 z-10 mt-auto grid grid-cols-2 gap-2 pt-3">
-        <Button variant="line" onClick={onSettings}>
-          Réglages
+      <div className="sticky bottom-0 z-10 -mx-4 mt-auto flex gap-3 bg-paper px-4 pt-3 pb-1">
+        <Button variant="line" icon="replay" iconPosition="start" className="flex-1" onClick={onRestart}>
+          Rejouer
         </Button>
-        <Button onClick={onRestart}>
-          Recommencer
+        <Button className="flex-1" onClick={() => navigate('/learn')}>
+          Terminer
         </Button>
       </div>
     </div>
@@ -407,24 +401,50 @@ function useWords(script: ChronoScript): (sentence: number) => string[] {
   }, [script])
 }
 
-function Card({ children }: { children: ReactNode }) {
-  return <section className="mb-4 rounded-md border border-hairline p-4">{children}</section>
+function Overline({ children }: { children: ReactNode }) {
+  return <h2 className="text-[11px] leading-[14px] font-bold tracking-[0.12em] text-ink-muted uppercase">{children}</h2>
+}
+
+function Section({ title, aside, children }: { title: string; aside?: ReactNode; children: ReactNode }) {
+  return (
+    <section className="mt-5 border-t border-hairline pt-5">
+      <div className="mb-2.5">
+        <Overline>{title}</Overline>
+        {aside && <p className="mt-1 text-[12.5px] leading-4 text-ink-muted">{aside}</p>}
+      </div>
+      {children}
+    </section>
+  )
 }
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
-      <span className="mb-1.5 block text-sm font-medium">{label}</span>
+      <span className="mb-1.5 block text-[13px] leading-[18px] font-semibold text-ink-muted">{label}</span>
       {children}
     </div>
   )
 }
 
+function Step({ n, title, children }: { n: number; title: string; children: ReactNode }) {
+  return (
+    <li className="flex min-h-14 items-center gap-3 border-b border-hairline py-2">
+      <span className="grid size-8 shrink-0 place-items-center rounded-sm border-[1.5px] border-ink font-serif text-[15px] font-medium">
+        {n}
+      </span>
+      <span className="min-w-0">
+        <b className="block font-semibold">{title}</b>
+        <small className="block text-[13px] leading-[18px] text-ink-muted">{children}</small>
+      </span>
+    </li>
+  )
+}
+
 function Stat({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="rounded-lg bg-paper-raised px-2 py-2">
-      <dt className="text-xs text-ink-muted">{label}</dt>
-      <dd className="text-lg font-semibold tabular-nums">{value}</dd>
+    <div>
+      <dd className="font-serif text-[22px] leading-7 font-medium tabular-nums">{value}</dd>
+      <dt className="text-[12.5px] leading-4 text-ink-muted">{label}</dt>
     </div>
   )
 }

@@ -148,6 +148,8 @@ export interface DayActivity {
   day: string
   questions: number
   correct: number
+  /** Temps passé à répondre (plafonné par réponse à MAX_RESPONSE_MS). */
+  timeMs: number
 }
 
 /** Activité des `days` derniers jours (le plus ancien en premier, aujourd'hui en dernier). */
@@ -156,13 +158,14 @@ export function dailyActivity(answers: readonly StatsAnswer[], now: number, days
   let cursor = now
   for (let i = 0; i < days; i++) {
     const day = dayKey(cursor)
-    byDay.set(day, { day, questions: 0, correct: 0 })
+    byDay.set(day, { day, questions: 0, correct: 0, timeMs: 0 })
     cursor = previousDay(cursor)
   }
   for (const q of questionsOf(answers)) {
     const entry = byDay.get(dayKey(q.answeredAt))
     if (!entry) continue
     entry.questions++
+    entry.timeMs += Math.min(q.responseMs, MAX_RESPONSE_MS)
     if (q.correct) entry.correct++
   }
   return [...byDay.values()].reverse()

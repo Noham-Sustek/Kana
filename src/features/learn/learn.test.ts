@@ -3,6 +3,7 @@ import { groupsOfScript } from '@/data/kana'
 import { cardKey, type CardState } from '@/engine/scheduler'
 import {
   applicableOptions,
+  bestChronoRecord,
   bestChronoScore,
   freeSessionLine,
   kanaSummary,
@@ -88,4 +89,5 @@ it('record de lecture chronométrée du profil', () => {
   const best = { '1:hiragana:60': 30, '1:katakana:120': 42, '2:hiragana:60': 80 }
   expect(bestChronoScore(best, 1)).toBe(42)
   expect(bestChronoScore(best, 3)).toBeNull()
+  expect(bestChronoRecord(best, 1)).toEqual({ score: 42, duration: 120 })
 })

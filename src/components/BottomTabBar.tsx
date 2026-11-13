@@ -1,6 +1,10 @@
+import { useState } from 'react'
 import { Link, useLocation } from 'react-router'
 import { TABS, isTabActive } from '@/app/tabs'
 import { Icon } from '@/components/Icon'
+import { ProfileSeal } from '@/components/ProfileSeal'
+import { ProfileSheet } from '@/components/ProfileSheet'
+import { useActiveProfile } from '@/lib/useProfiles'
 
 interface BottomTabBarProps {
   /** Rail vertical à gauche (écran large, ≥ 840 px) au lieu de la barre du bas. */
@@ -16,10 +20,11 @@ export function BottomTabBar({ rail }: BottomTabBarProps) {
       aria-label="Navigation principale"
       className={
         rail
-          ? 'flex w-[92px] shrink-0 flex-col items-center gap-1 border-r border-hairline bg-paper pt-[max(1rem,env(safe-area-inset-top))]'
+          ? 'flex w-[92px] shrink-0 flex-col items-center gap-1 border-r border-hairline bg-paper pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]'
           : 'border-t border-hairline bg-paper pb-[env(safe-area-inset-bottom)]'
       }
     >
+      {rail && <RailProfile />}
       <ul className={rail ? 'flex flex-col gap-1' : 'mx-auto grid max-w-lg grid-cols-4'}>
         {TABS.map((tab) => {
           const active = isTabActive(tab, pathname)
@@ -45,6 +50,37 @@ export function BottomTabBar({ rail }: BottomTabBarProps) {
           )
         })}
       </ul>
+      {rail && (
+        <Link
+          to="/settings"
+          aria-label="Réglages"
+          aria-current={pathname.startsWith('/settings') ? 'page' : undefined}
+          className={`mt-auto grid size-11 place-items-center rounded-md active:brightness-90 ${
+            pathname.startsWith('/settings') ? 'text-accent' : 'text-ink-muted'
+          }`}
+        >
+          <Icon name="settings" className="size-[22px]" />
+        </Link>
+      )}
     </nav>
+  )
+}
+
+/** Sceau du profil actif en tête du rail : ouvre « Qui apprend ? ». */
+function RailProfile() {
+  const profile = useActiveProfile()
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label={profile ? `Profil : ${profile.name}. Changer de profil` : 'Changer de profil'}
+        className="mb-3 grid size-11 place-items-center"
+      >
+        {profile && <ProfileSeal name={profile.name} className="size-9" />}
+      </button>
+      <ProfileSheet open={open} onClose={() => setOpen(false)} />
+    </>
   )
 }

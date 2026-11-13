@@ -14,7 +14,8 @@ export function AppHeader() {
   const [open, setOpen] = useState(false)
 
   return (
-    <header className="-ml-1 mb-2 flex items-center justify-between">
+    // Sur grand écran, profil et Réglages sont dans le rail.
+    <header className="-ml-1 mb-2 flex items-center justify-between min-[840px]:hidden">
       <button
         type="button"
         onClick={() => setOpen(true)}
