@@ -1,0 +1,127 @@
+<!-- @dsCard group="Directions" height=812 subtitle="A · Papier et encre · sombre" -->
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{background:transparent}
+body{padding:16px;font-size:14px;line-height:1.35;-webkit-font-smoothing:antialiased}
+@font-face{font-family:"Klee One Kana";src:url("../../fonts/KleeOne-SemiBold-kana.woff2") format("woff2");font-weight:600;font-display:swap}
+@font-face{font-family:"Newsreader";src:url("../../fonts/Newsreader-latin.woff2") format("woff2");font-weight:200 800;font-display:swap}
+@font-face{font-family:"Figtree";src:url("../../fonts/Figtree-latin.woff2") format("woff2");font-weight:300 900;font-display:swap}
+.row{display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start}
+figure{display:flex;flex-direction:column;gap:10px;align-items:center}
+figcaption{font:500 12px/1.2 system-ui,sans-serif;color:#77756f;letter-spacing:.02em}
+.phone{width:360px;height:740px;display:flex;flex-direction:column;overflow:hidden;position:relative;border-radius:30px;background:var(--bg);color:var(--ink);box-shadow:0 0 0 1px var(--frame),0 0 0 7px var(--bezel)}
+.phone button{font:inherit;color:inherit;background:none;border:0;padding:0;text-align:inherit;cursor:pointer}
+.grow{flex:1;min-height:0}
+.ic{flex:none;display:block}
+.jp{font-family:var(--jp)}
+
+.A{--jp:"Klee One Kana","Hiragino Sans","Yu Gothic","Noto Sans JP",sans-serif;--ui:"Figtree",system-ui,sans-serif;--serif:"Newsreader",Georgia,serif;--ok:#0b7a53;--ko:#c8321f}
+.A.light{--bg:#f5f0e6;--raised:#fbf8f1;--ink:#1e1b17;--muted:#655d51;--line:#d6ccb9;--ctl:#8f8676;--accent:#2a4b9b;--on-accent:#ffffff;--tint:#e1e7f4;--ok-ink:#0b7a53;--ko-ink:#b42a18;--ko-tint:#f7e2dc;--frame:#cfc5b2;--bezel:#e9e2d4}
+.A.dark{--bg:#000000;--raised:#141210;--ink:#ede6d8;--muted:#a49b8c;--line:#35302a;--ctl:#6f675c;--accent:#9db4f0;--on-accent:#0b1530;--tint:#141d36;--ok-ink:#4fd1a1;--ko-ink:#ff8a75;--ko-tint:#2a100b;--frame:#2a2622;--bezel:#0d0c0b}
+.A .phone{font-family:var(--ui)}
+.A .top{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 6px}
+.A .who{display:flex;align-items:center;gap:10px;min-height:44px;font-weight:600;font-size:15px}
+.A .seal{width:32px;height:32px;border:1.5px solid var(--accent);color:var(--accent);border-radius:4px;display:grid;place-items:center;font:600 17px/1 var(--serif)}
+.A .iconbtn{width:44px;height:44px;display:grid;place-items:center;color:var(--muted)}
+.A .pad{padding:0 20px}
+.A .lab{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;align-items:baseline}
+.A .lab b{font-weight:600;letter-spacing:0;text-transform:none;font-size:12.5px;color:var(--accent)}
+.A .streak{display:flex;justify-content:space-between;align-items:flex-end;margin-top:12px}
+.A .big{font:500 64px/.9 var(--serif);letter-spacing:-.02em}
+.A .big small{font:500 17px/1 var(--serif);letter-spacing:0;margin-left:6px;color:var(--muted)}
+.A .week{display:grid;grid-template-columns:repeat(7,20px);gap:5px;text-align:center;font-size:10px;font-weight:600;color:var(--muted)}
+.A .week i{display:block;height:20px;border-radius:3px;border:1.5px solid var(--line)}
+.A .week i.on{background:var(--accent);border-color:var(--accent)}
+.A .week i.now{border:1.5px dashed var(--accent)}
+.A .hint{font-size:13px;color:var(--muted);margin-top:8px}
+.A hr{border:0;border-top:1px solid var(--line);margin:16px 20px}
+.A .path{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}
+.A .cell{aspect-ratio:1;border-radius:4px;display:grid;place-items:center;font:600 30px/1 var(--jp);position:relative;border:1.5px solid var(--line);color:var(--muted);overflow:hidden}
+.A .cell.done{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.A .cell.done::after{content:"";position:absolute;right:5px;top:6px;width:9px;height:5px;border-left:2px solid var(--on-accent);border-bottom:2px solid var(--on-accent);transform:rotate(-45deg)}
+.A .cell.cur{border:2px solid var(--accent);color:var(--ink);background:linear-gradient(to top,var(--tint) 80%,transparent 80%)}
+.A .cell.lock{border-style:dashed}
+.A .cell.lock .ic{position:absolute;right:3px;top:3px;color:var(--muted)}
+.A .next{font-size:13.5px;margin-top:10px}
+.A .next b{font-weight:700}
+.A .weak{display:flex;gap:8px;margin-top:8px}
+.A .wk{width:48px;border:1px solid var(--line);border-radius:4px;background:var(--raised);padding:5px 0 4px;text-align:center}
+.A .wk span{display:block;font:600 24px/1.1 var(--jp)}
+.A .wk small{font-size:11px;color:var(--muted)}
+.A .dock{padding:10px 16px 12px;background:var(--bg)}
+.A .cta{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:60px;padding:0 20px;border-radius:6px;background:var(--accent);color:var(--on-accent)}
+.A .cta strong{display:block;font-size:17px;font-weight:700}
+.A .cta span{font-size:12.5px;opacity:.92}
+.A .sub{display:block;width:100%;min-height:44px;text-align:center;font-weight:600;font-size:14px;color:var(--accent)}
+.A .tabs{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);padding-bottom:8px}
+.A .tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:56px;font-size:11.5px;font-weight:600;color:var(--muted);border-top:2px solid transparent;margin-top:-1px}
+.A .tab.on{color:var(--accent);border-top-color:var(--accent)}
+.A .tab .g{font:600 21px/22px var(--jp)}
+/* question */
+.A .qtop{display:flex;align-items:center;gap:8px;padding:12px 16px 0 6px}
+.A .ticks{flex:1;display:grid;grid-template-columns:repeat(12,1fr);gap:3px}
+.A .ticks i{height:5px;border-radius:1px;background:var(--line)}
+.A .ticks i.d{background:var(--accent)}
+.A .ticks i.c{background:var(--ink)}
+.A .count{font-size:12.5px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+.A .kind{display:flex;justify-content:center;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:var(--muted);margin-top:14px}
+.A .ask{text-align:center;font:500 24px/1.1 var(--serif);margin-top:4px}
+.A .genko{width:212px;height:212px;margin:0 auto 18px;border:1.5px solid var(--ink);border-radius:4px;background:var(--raised);position:relative;display:grid;place-items:center;font:600 148px/1 var(--jp)}
+.A .genko::before,.A .genko::after{content:"";position:absolute;border:0 dashed var(--line)}
+.A .genko::before{left:50%;top:8px;bottom:8px;border-left-width:1.5px}
+.A .genko::after{top:50%;left:8px;right:8px;border-top-width:1.5px}
+.A .genko span{position:relative;z-index:1}
+.A .opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px}
+.A .opt{min-height:62px;border:1.5px solid var(--ctl);border-radius:6px;background:var(--raised);font:500 25px/1 var(--serif);text-align:center;position:relative}
+.A .opt.bad{border:2px solid var(--ko);color:var(--ko-ink);text-decoration:line-through;text-decoration-thickness:1.5px}
+.A .badge{position:absolute;top:-9px;right:-9px;width:24px;height:24px;border-radius:50%;background:var(--ko);color:#fff;display:grid;place-items:center}
+.A .reveal{display:flex;justify-content:center;align-items:center;gap:8px;min-height:48px;margin:6px 0 10px;width:100%;font-weight:600;font-size:14px;color:var(--muted)}
+.A .fb{margin:12px 16px 14px;border:1.5px solid var(--ko);border-radius:6px;background:var(--ko-tint);padding:11px 12px;display:flex;gap:11px;align-items:center}
+.A .fb .x{width:30px;height:30px;border-radius:50%;background:var(--ko);color:#fff;display:grid;place-items:center;flex:none}
+.A .fb strong{display:block;font-size:14.5px;color:var(--ko-ink)}
+.A .fb p{font-size:13px}
+.A .fb .jp{font-size:17px;font-weight:600}
+</style></head>
+<body><div class="row A dark"><figure><div class="phone">
+<div class="top"><button class="who"><span class="seal">C</span>Camille <svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button><button class="iconbtn" aria-label="Réglages"><svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button></div>
+<div class="pad">
+  <div class="lab">Série</div>
+  <div class="streak"><div class="big">12<small>jours</small></div>
+    <div class="week"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span><i class="on"></i><i class="on"></i><i class="on"></i><i class="now"></i><i></i><i></i><i></i></div></div>
+  <p class="hint">Une session aujourd’hui la porte à 13.</p>
+</div>
+<hr>
+<div class="pad">
+  <div class="lab">Parcours · hiragana <b>3 lignes sur 10</b></div>
+  <div class="path">
+    <div class="cell done">あ</div><div class="cell done">か</div><div class="cell done">さ</div><div class="cell cur">た</div><div class="cell lock">な<svg class="ic" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+    <div class="cell lock">は<svg class="ic" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4"/></svg></div><div class="cell lock">ま<svg class="ic" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4"/></svg></div><div class="cell lock">や<svg class="ic" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4"/></svg></div><div class="cell lock">ら<svg class="ic" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4"/></svg></div><div class="cell lock">わ<svg class="ic" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+  </div>
+  <p class="next"><b>Ligne <span class="jp">た</span> : 4 kana acquis sur 5.</b> Encore un et la ligne <span class="jp">な</span> s’ouvre.</p>
+</div>
+<hr>
+<div class="pad">
+  <div class="lab">À consolider <b>Tout voir</b></div>
+  <div class="weak"><div class="wk"><span>ぬ</span><small>nu</small></div><div class="wk"><span>め</span><small>me</small></div><div class="wk"><span>さ</span><small>sa</small></div><div class="wk"><span>ち</span><small>chi</small></div></div>
+</div>
+<div class="grow"></div>
+<div class="dock"><button class="cta"><span><strong>Session du jour</strong><span>12 questions · environ 3 min</span></span><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button><button class="sub">Session libre</button></div>
+<nav class="tabs">
+<div class="tab on"><svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z"/></svg>Accueil</div><div class="tab"><svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>S’entraîner</div>
+<div class="tab"><span class="g">あ</span>Kana</div><div class="tab"><svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18M7 16v-4M12 16V8M17 16v-7"/></svg>Progrès</div></nav></div><figcaption>Accueil</figcaption></figure><figure><div class="phone">
+<div class="qtop"><button class="iconbtn" aria-label="Quitter"><svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg></button><div class="ticks"><i class="d"></i><i class="d"></i><i class="d"></i><i class="c"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="count">4 / 12</span></div>
+<div class="kind"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg>Reconnaître</div>
+<div class="ask">Quel est ce son ?</div>
+<div class="grow"></div><div class="genko"><span>ぬ</span></div>
+<div class="grow"></div>
+<div class="opts"><button class="opt">ne</button><button class="opt">me</button><button class="opt">nu</button><button class="opt">re</button></div>
+<button class="reveal"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg>Afficher la réponse</button></div><figcaption>Question · en attente</figcaption></figure><figure><div class="phone">
+<div class="qtop"><button class="iconbtn" aria-label="Quitter"><svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg></button><div class="ticks"><i class="d"></i><i class="d"></i><i class="d"></i><i class="c"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="count">4 / 12</span></div>
+<div class="kind"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg>Reconnaître</div>
+<div class="ask">Quel est ce son ?</div>
+<div class="grow"></div><div class="genko"><span>ぬ</span></div>
+<div class="grow"></div>
+<div class="opts"><button class="opt">ne</button><button class="opt bad">me<span class="badge"><svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg></span></button><button class="opt">nu</button><button class="opt">re</button></div>
+<div class="fb"><span class="x"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg></span><div><strong>Pas encore</strong><p>« me » s’écrit <span class="jp">め</span>. Choisissez une autre réponse.</p></div></div></div><figcaption>Question · faux, réessai</figcaption></figure></div></body></html>

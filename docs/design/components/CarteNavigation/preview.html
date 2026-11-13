@@ -1,0 +1,73 @@
+<!-- @dsCard group="Navigation" height=640 subtitle="Quatre onglets, deux raccourcis d'en-tête, un mode plein écran" -->
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+@font-face{font-family:"Klee One Kana";src:url("../../fonts/KleeOne-SemiBold-kana.woff2") format("woff2");font-weight:600}
+@font-face{font-family:"Newsreader";src:url("../../fonts/Newsreader-latin.woff2") format("woff2");font-weight:200 800}
+@font-face{font-family:"Figtree";src:url("../../fonts/Figtree-latin.woff2") format("woff2");font-weight:300 900}
+:root{--bg:#f5f0e6;--raised:#fbf8f1;--ink:#1e1b17;--muted:#655d51;--line:#d6ccb9;--ctl:#8f8676;--accent:#2a4b9b;--on:#fff;--tint:#e1e7f4}
+html[data-theme="dark"]{--bg:#000;--raised:#141210;--ink:#ede6d8;--muted:#a49b8c;--line:#35302a;--ctl:#6f675c;--accent:#9db4f0;--on:#0b1530;--tint:#141d36}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--ink);font:400 13.5px/1.4 "Figtree",system-ui,sans-serif;padding:20px 16px}
+.jp{font-family:"Klee One Kana","Hiragino Sans",sans-serif;font-weight:600}
+h2{font:700 11px/14px "Figtree",system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.head{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.chip{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border:1.5px solid var(--ctl);border-radius:6px;background:var(--raised);font-weight:600}
+.chip small{font-weight:400;color:var(--muted)}
+.seal{width:24px;height:24px;border:1.5px solid var(--accent);color:var(--accent);border-radius:4px;display:grid;place-items:center;font:600 14px/1 "Newsreader",serif}
+.tabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.col{border:1.5px solid var(--line);border-radius:6px;overflow:hidden;background:var(--raised)}
+.col header{background:var(--accent);color:var(--on);padding:10px 12px}
+.col header b{display:block;font:500 20px/1.15 "Newsreader",serif}
+.col header span{font-size:12.5px;opacity:.95}
+.col header b .jp{font-size:20px;opacity:1}
+.col ul{list-style:none;padding:4px 12px 8px}
+.col li{padding:7px 0;border-top:1px solid var(--line)}
+.col li:first-child{border-top:0}
+.col li b{font-weight:600}
+.col li small{display:block;color:var(--muted);font-size:12.5px}
+.col li.go b::after{content:" →";color:var(--accent)}
+.full{margin-top:20px;border:1.5px solid var(--ink);border-radius:6px;padding:12px}
+.flow{display:flex;flex-wrap:wrap;gap:6px 4px;align-items:center}
+.step{padding:6px 10px;border-radius:4px;background:var(--tint);font-weight:600;font-size:13px}
+.arr{color:var(--muted)}
+.full p{color:var(--muted);font-size:12.5px;margin-top:8px}
+</style></head>
+<body>
+<h2>En-tête, sur chaque onglet</h2>
+<div class="head">
+ <div class="chip"><span class="seal">C</span>Profil actif <small>changer, créer</small></div>
+ <div class="chip">Réglages <small>thème · profils · sauvegarde · à propos</small></div>
+</div>
+<h2>Barre d’onglets</h2>
+<div class="tabs">
+ <section class="col"><header><b>Accueil</b><span>Où j’en suis, que faire maintenant</span></header><ul>
+  <li><b>Série</b><small>jours consécutifs, semaine en cours</small></li>
+  <li><b>Parcours</b><small>lignes acquises, en cours, verrouillées</small></li>
+  <li><b>À consolider</b><small>kana fragiles, vers leur fiche</small></li>
+  <li class="go"><b>Session du jour</b><small>bouton principal, un geste</small></li>
+  <li class="go"><b>Session libre</b><small>lien secondaire</small></li></ul></section>
+ <section class="col"><header><b>S’entraîner</b><span>Je veux choisir</span></header><ul>
+  <li class="go"><b>Session libre</b><small>exercice, kana, options repliées</small></li>
+  <li class="go"><b>Révision ciblée</b><small>répétition espacée sur mes kana</small></li>
+  <li class="go"><b>Lecture chronométrée</b><small>record du profil visible</small></li>
+  <li class="go"><b>Écriture enchaînée</b><small>une ligne, mes kana faibles</small></li>
+  <li><b>Mes listes</b><small>créer, modifier</small></li></ul></section>
+ <section class="col"><header><b><span class="jp">あ</span> Kana</b><span>Je veux regarder un kana</span></header><ul>
+  <li><b>Grille gojūon</b><small>hiragana / katakana</small></li>
+  <li><b>Lentille Lecture ou Écriture</b><small>réussite, ou progression du tracé</small></li>
+  <li><b>Fiche kana</b><small>tracé animé, variantes, confusables, mots, statistiques</small></li>
+  <li class="go"><b>S’entraîner à l’écrire</b><small>observer, calque, de mémoire</small></li></ul></section>
+ <section class="col"><header><b>Progrès</b><span>Est-ce que j’avance</span></header><ul>
+  <li><b>Période</b><small>7 jours, 30 jours, tout</small></li>
+  <li><b>Kana acquis</b><small>sur le total, par famille d’exercice</small></li>
+  <li><b>Activité et réussite</b><small>valeurs au toucher</small></li>
+  <li><b>Kana les plus ratés</b><small>action « en faire une liste »</small></li>
+  <li><b>Records</b><small>lecture chronométrée, écriture</small></li></ul></section>
+</div>
+<div class="full">
+ <h2>Plein écran, sans barre d’onglets — tout ce qui porte une flèche</h2>
+ <div class="flow"><span class="step">Question</span><span class="arr">→</span><span class="step">Retour juste / faux</span><span class="arr">→</span><span class="step">Ligne débloquée</span><span class="arr">→</span><span class="step">Récapitulatif</span><span class="arr">→</span><span class="step">Accueil</span></div>
+ <p>La croix quitte ; une session en cours demande confirmation dans un dialogue intégré. Le premier lancement (3 écrans) suit la même règle.</p>
+</div>
+</body></html>

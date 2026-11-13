@@ -60,6 +60,10 @@ scripts/       build-icons.mjs : icônes PWA (192/512, maskable, apple-touch, ic
                build-book.mjs : télécharge 銀河鉄道の夜 (Aozora Bunko, fiche 456, cache scripts/.cache), lit les kanji
                (furigana, sinon kuromoji, dépendance de dev), découpe en mots et régénère src/data/book.json — `npm run book`
 public/        assets statiques (icônes générées)
+docs/design/   design system de la refonte UI (direction « Papier et encre ») : README.md (voix, vocabulaire, couleur,
+               typographie), navigation.md, animations.md, tokens.json / tokens.css, components/bundle.css,
+               components/*/README.md et preview.html (maquettes, à ouvrir dans un navigateur), fonts/ et licenses/ (OFL).
+               Référence à lire avant tout travail d'UI ; hors du build.
 .github/       workflows/deploy.yml : tests + build + GitHub Pages à chaque push sur main
 ```
 

@@ -1,0 +1,48 @@
+<!-- @dsCard height=300 -->
+<!doctype html>
+<html lang="fr"><head><link rel="stylesheet" href="../../tokens.css"><link rel="stylesheet" href="../bundle.css"><meta charset="utf-8">
+<style>
+@font-face{font-family:"Klee One Kana";src:url("../../fonts/KleeOne-SemiBold-kana.woff2") format("woff2");font-weight:600}
+@font-face{font-family:"Newsreader";src:url("../../fonts/Newsreader-latin.woff2") format("woff2");font-weight:200 800}
+@font-face{font-family:"Figtree";src:url("../../fonts/Figtree-latin.woff2") format("woff2");font-weight:300 900}
+*{box-sizing:border-box;margin:0}
+body{background:var(--paper)}
+.cover{position:relative;width:960px;height:300px;background:var(--paper);overflow:hidden}
+svg{position:absolute;inset:0}
+.tile{fill:none;stroke:var(--hairline);stroke-width:1.5;rx:var(--radius-sm)}
+.b{rx:var(--radius-sm)}
+.accent{fill:var(--accent)}
+.ink{fill:var(--ink)}
+.muted{fill:var(--ink-muted)}
+.correct{fill:var(--correct)}
+.error{fill:var(--error)}
+.glyph{fill:var(--on-accent);font:600 208px/1 "Klee One Kana","Hiragino Sans",sans-serif}
+.text{position:absolute;left:40px;bottom:32px;max-width:440px}
+h1{font:500 120px/.9 "Newsreader",Georgia,serif;letter-spacing:-.02em;color:var(--ink)}
+p{font:400 13.5px/1.4 "Figtree",system-ui,sans-serif;color:var(--ink-muted);margin-top:16px}
+</style></head>
+<body><div class="cover">
+<!--
+ blocs : accent 236×236 (4×4 cases), ink 116×116 (2×2), ink-muted 116×116 (2×2), correct 56×56, error 56×56 — cases au pas de 60px (action-height), marge interne 2px
+ arrangement : grille modulaire affleurante, façon papier quadrillé, un grand carré flanqué de satellites, x ≥ 480
+ motif : pavage de cases tracées en hairline, coins radius-sm — « le motif est la case de papier quadrillé (genkō yōshi) » ; la case fusionnée porte あ en Klee One Kana, on-accent
+ échelles : pas 60px = action-height, écart 4px = space-1, rayon radius-sm
+-->
+<svg viewBox="0 0 960 300" width="960" height="300" aria-hidden="true">
+<g id="g"></g>
+<rect class="b accent" x="602" y="2" width="236" height="236"/>
+<text class="glyph" x="720" y="196" text-anchor="middle">あ</text>
+<rect class="b ink" x="842" y="122" width="116" height="116"/>
+<rect class="b muted" x="482" y="182" width="116" height="116"/>
+<rect class="b correct" x="842" y="2" width="56" height="56"/>
+<rect class="b error" x="542" y="62" width="56" height="56"/>
+</svg>
+<div class="text"><h1>Kana</h1><p>Hiragana et katakana, une case à la fois.</p></div>
+</div>
+<script>
+// Cases libres du quadrillage (celles que les blocs ne couvrent pas).
+var taken={};[[2,0,4,4],[6,2,2,2],[0,3,2,2],[6,0,1,1],[1,1,1,1]].forEach(function(b){for(var i=0;i<b[2];i++)for(var j=0;j<b[3];j++)taken[(b[0]+i)+'-'+(b[1]+j)]=1});
+var g=document.getElementById('g'),ns='http://www.w3.org/2000/svg';
+for(var c=0;c<8;c++)for(var r=0;r<5;r++){if(taken[c+'-'+r])continue;var t=document.createElementNS(ns,'rect');t.setAttribute('class','tile');t.setAttribute('x',482+c*60);t.setAttribute('y',2+r*60);t.setAttribute('width',56);t.setAttribute('height',56);g.appendChild(t)}
+</script>
+</body></html>
