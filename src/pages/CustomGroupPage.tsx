@@ -74,14 +74,14 @@ function CustomGroupForm({ existing }: { existing: CustomGroup | null }) {
           className="-ml-2 flex min-h-11 items-center gap-1 px-2 text-sm font-medium text-ink-muted"
         >
           <Icon name="chevronLeft" className="size-5" />
-          Apprendre
+          S’entraîner
         </button>
         {existing && (
           <IconButton icon="trash" label="Supprimer la liste" onClick={() => setConfirmDelete(true)} />
         )}
       </header>
 
-      <h1 className="mb-4 text-2xl font-bold tracking-tight">{existing ? 'Modifier la liste' : 'Nouvelle liste'}</h1>
+      <h1 className="mb-4 font-serif text-[28px] leading-tight font-medium">{existing ? 'Modifier la liste' : 'Nouvelle liste'}</h1>
 
       <label className="mb-4 block">
         <span className="mb-1.5 block text-sm font-medium">Nom</span>

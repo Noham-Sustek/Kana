@@ -117,7 +117,7 @@ export function LearnPage() {
   return (
     <div>
       <PageHeader
-        title="Apprendre"
+        title="S’entraîner"
         subtitle={
           isAuto
             ? 'Mode auto : les questions s’adaptent à votre progression.'

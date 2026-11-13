@@ -1,14 +1,14 @@
 import { Suspense, lazy } from 'react'
-import { HashRouter, Navigate, Route, Routes } from 'react-router'
+import { HashRouter, Navigate, Route, Routes, useLocation, useParams } from 'react-router'
 import { AppLayout } from '@/components/AppLayout'
 import { useApplyTheme } from '@/lib/useApplyTheme'
 import { useEnsureActiveProfile } from '@/lib/useProfiles'
 import { LearnPage } from '@/pages/LearnPage'
 import { QuizPage } from '@/pages/QuizPage'
 import { CustomGroupPage } from '@/pages/CustomGroupPage'
-import { TablePage } from '@/pages/TablePage'
+import { HomePage } from '@/pages/HomePage'
+import { KanaPage } from '@/pages/KanaPage'
 import { KanaDetailPage } from '@/pages/KanaDetailPage'
-import { WritingPage } from '@/pages/WritingPage'
 import { StatsPage } from '@/pages/StatsPage'
 import { SettingsPage } from '@/pages/SettingsPage'
 import { AboutPage } from '@/pages/AboutPage'
@@ -35,7 +35,8 @@ export function App() {
     <HashRouter>
       <Routes>
         <Route element={<AppLayout />}>
-          <Route index element={<Navigate to="/learn" replace />} />
+          <Route index element={<Navigate to="/home" replace />} />
+          <Route path="home" element={<HomePage />} />
           <Route path="learn" element={<LearnPage />} />
           <Route path="learn/quiz" element={<QuizPage />} />
           <Route
@@ -48,9 +49,8 @@ export function App() {
           />
           <Route path="learn/custom/new" element={<CustomGroupPage />} />
           <Route path="learn/custom/:groupId" element={<CustomGroupPage />} />
-          <Route path="table" element={<TablePage />} />
-          <Route path="table/:kanaId" element={<KanaDetailPage />} />
-          <Route path="writing" element={<WritingPage />} />
+          <Route path="kana" element={<KanaPage />} />
+          <Route path="kana/:kanaId" element={<KanaDetailPage />} />
           <Route
             path="writing/:kanaId"
             element={
@@ -59,7 +59,12 @@ export function App() {
               </Suspense>
             }
           />
-          <Route path="stats" element={<StatsPage />} />
+          <Route path="progress" element={<StatsPage />} />
+          {/* Anciennes adresses (favoris, raccourcis) : Tableau et Écriture fusionnent dans Kana. */}
+          <Route path="table" element={<Redirect to="/kana" />} />
+          <Route path="table/:kanaId" element={<KanaIdRedirect />} />
+          <Route path="writing" element={<Redirect to="/kana" extra="lens=ecriture" />} />
+          <Route path="stats" element={<Redirect to="/progress" />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="settings/about" element={<AboutPage />} />
           {ComponentsPage && (
@@ -72,9 +77,21 @@ export function App() {
               }
             />
           )}
-          <Route path="*" element={<Navigate to="/learn" replace />} />
+          <Route path="*" element={<Navigate to="/home" replace />} />
         </Route>
       </Routes>
     </HashRouter>
   )
+}
+
+/** Redirection qui garde les paramètres (`?script=katakana&heat=1`). */
+function Redirect({ to, extra }: { to: string; extra?: string }) {
+  const { search } = useLocation()
+  const params = [search.replace(/^\?/, ''), extra].filter(Boolean).join('&')
+  return <Navigate to={params ? `${to}?${params}` : to} replace />
+}
+
+function KanaIdRedirect() {
+  const { kanaId = '' } = useParams()
+  return <Navigate to={`/kana/${kanaId}`} replace />
 }

@@ -1,9 +1,11 @@
 import { useState, type ReactNode } from 'react'
+import { Button } from '@/components/Button'
+import { EmptyState } from '@/components/EmptyState'
+import { useStartDailySession } from '@/lib/useStartDailySession'
 import { Link } from 'react-router'
 import { HEAT_CLASSES, HeatmapLegend } from '@/components/HeatmapLegend'
 import { KANA_CELL_CLASS, KanaCellContent, KanaGrid } from '@/components/KanaGrid'
 import { PageHeader } from '@/components/PageHeader'
-import { ProfileSwitcher } from '@/components/ProfileSwitcher'
 import { ScriptToggle } from '@/components/ScriptToggle'
 import { getKana, type Script } from '@/data/kana'
 import { heatLevel } from '@/features/stats/heat'
@@ -19,15 +21,24 @@ export function StatsPage() {
   const stats = useProfileStats()
   const [script, setScript] = useState<Script>('hiragana')
 
+  const startDaily = useStartDailySession('/progress')
+
   return (
     <>
-      <PageHeader title="Stats" subtitle="Ta progression en un coup d'œil." />
-      <ProfileSwitcher />
+      <PageHeader title="Progrès" subtitle="Votre progression en un coup d'œil." />
 
       {stats && stats.summary.questions === 0 && (
-        <p className="rounded-md border border-dashed border-control px-6 py-12 text-center text-sm text-ink-muted">
-          Aucune réponse enregistrée pour ce profil. Lancez un quiz dans l’onglet <b>Apprendre</b> !
-        </p>
+        <EmptyState
+          icon="stats"
+          title="Vos progrès apparaîtront ici"
+          action={
+            <Button size="sm" fullWidth={false} onClick={startDaily}>
+              Session du jour
+            </Button>
+          }
+        >
+          Une première session suffit pour commencer à les suivre.
+        </EmptyState>
       )}
 
       {stats && stats.summary.questions > 0 && (
@@ -72,7 +83,7 @@ export function StatsPage() {
               script={script}
               renderCell={(kana) => (
                 <Link
-                  to={`/table/${kana.id}`}
+                  to={`/kana/${kana.id}`}
                   className={`${KANA_CELL_CLASS} ${HEAT_CLASSES[heatLevel(stats.perKana.get(kana.id))]}`}
                 >
                   <KanaCellContent kana={kana} />
@@ -149,7 +160,7 @@ function MissedList({ missed }: { missed: KanaStat[] }) {
         const errors = s.attempts - s.correct
         return (
           <li key={s.kanaId}>
-            <Link to={`/table/${kana.id}`} className="flex min-h-14 items-center gap-3">
+            <Link to={`/kana/${kana.id}`} className="flex min-h-14 items-center gap-3">
               <span className="w-12 text-center font-jp text-3xl">{kana.char}</span>
               <span className="flex-1">
                 <span className="block font-medium">{kana.romaji[0]}</span>

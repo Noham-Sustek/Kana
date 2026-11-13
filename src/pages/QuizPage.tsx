@@ -1,6 +1,6 @@
 import { Suspense, lazy, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Button } from '@/components/Button'
-import { Link, Navigate, useNavigate } from 'react-router'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router'
 import { Icon } from '@/components/Icon'
 import { getKana, groupGlyph } from '@/data/kana'
 import { generateQuestions } from '@/features/quiz/questions'
@@ -25,6 +25,12 @@ export function QuizPage() {
   if (!session) return <Navigate to="/learn" replace />
   if (session.finished) return <QuizSummary session={session} />
   return <QuizRunner session={session} />
+}
+
+/** Écran d'où la session a été lancée (Accueil ou S'entraîner), où revenir en la quittant. */
+function useQuizOrigin(): string {
+  const state: unknown = useLocation().state
+  return state && typeof state === 'object' && 'from' in state && typeof state.from === 'string' ? state.from : '/learn'
 }
 
 function QuizRunner({ session }: { session: SessionState }) {
@@ -79,9 +85,10 @@ function QuizRunner({ session }: { session: SessionState }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [question, settled, next, submit])
 
+  const origin = useQuizOrigin()
   const exit = () => {
     quit()
-    navigate('/learn', { replace: true })
+    navigate(origin, { replace: true })
   }
 
   return (
@@ -533,6 +540,7 @@ function QuizSummary({ session }: { session: SessionState }) {
   const settings = useQuizSettingsStore()
   const pool = useQuizPool()
   const navigate = useNavigate()
+  const origin = useQuizOrigin()
   const { correct, total } = score(session)
   const percent = total ? Math.round((correct / total) * 100) : 0
 
@@ -609,16 +617,16 @@ function QuizSummary({ session }: { session: SessionState }) {
         <Button onClick={restart}>
           Recommencer
         </Button>
-        <button
-          type="button"
+        <Button
+          variant="quiet"
+          fullWidth
           onClick={() => {
             quit()
-            navigate('/learn', { replace: true })
+            navigate(origin, { replace: true })
           }}
-          className="min-h-12 rounded-md text-sm font-medium text-ink-muted"
         >
-          Retour aux réglages
-        </button>
+          {origin === '/home' ? 'Retour à l’accueil' : 'Retour à S’entraîner'}
+        </Button>
       </div>
     </div>
   )

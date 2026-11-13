@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { BackupSettings } from '@/components/BackupSettings'
 import { Icon, type IconName } from '@/components/Icon'
 import { PageHeader } from '@/components/PageHeader'
@@ -14,6 +14,9 @@ const THEME_OPTIONS: { value: Theme; label: string; icon: IconName }[] = [
 ]
 
 export function SettingsPage() {
+  const navigate = useNavigate()
+  // Retour à l'écran d'où l'on vient (Réglages s'ouvre depuis l'en-tête de chaque onglet).
+  const back = () => ((window.history.state as { idx?: number } | null)?.idx ? navigate(-1) : navigate('/home'))
   const theme = useSettingsStore((s) => s.theme)
   const setTheme = useSettingsStore((s) => s.setTheme)
   const vibrations = useSettingsStore((s) => s.vibrations)
@@ -21,6 +24,14 @@ export function SettingsPage() {
 
   return (
     <>
+      <button
+        type="button"
+        onClick={back}
+        className="-ml-2 mb-2 flex min-h-11 items-center gap-1 px-2 text-sm font-medium text-ink-muted"
+      >
+        <Icon name="chevronLeft" className="size-5" />
+        Retour
+      </button>
       <PageHeader title="Réglages" />
 
       <div className="lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-4">

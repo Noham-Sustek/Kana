@@ -19,7 +19,7 @@ export function KanaDetailPage() {
 
   // replace : le bouton retour d'Android ramène toujours au tableau.
   const goTo = (target: Kana | undefined) => {
-    if (target) navigate(`/table/${target.id}`, { replace: true })
+    if (target) navigate(`/kana/${target.id}`, { replace: true })
   }
 
   // Retour d'historique quand on vient du tableau (conserve écriture et défilement),
@@ -27,7 +27,7 @@ export function KanaDetailPage() {
   const goBackToTable = (current: Kana) => {
     const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0
     if (idx > 0) navigate(-1)
-    else navigate(`/table?script=${current.script}`, { replace: true })
+    else navigate(`/kana?script=${current.script}`, { replace: true })
   }
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export function KanaDetailPage() {
     return () => window.removeEventListener('keydown', onKey)
   })
 
-  if (!kana) return <Navigate to="/table" replace />
+  if (!kana) return <Navigate to="/kana" replace />
 
   const group = getGroup(kana.groupId)!
   const counterpart = counterpartOf(kana)
@@ -66,7 +66,7 @@ export function KanaDetailPage() {
           className="-ml-2 flex min-h-11 items-center gap-1 px-2 text-sm font-medium text-ink-muted"
         >
           <Icon name="chevronLeft" className="size-5" />
-          Tableau
+          Kana
         </button>
         <span className="text-xs text-ink-muted">
           {index + 1} / {siblings.length}
@@ -97,7 +97,7 @@ export function KanaDetailPage() {
             </dt>
             <dd className="mt-1 font-medium">
               {counterpart ? (
-                <Link to={`/table/${counterpart.id}`} replace className="font-jp text-lg text-accent">
+                <Link to={`/kana/${counterpart.id}`} replace className="font-jp text-lg text-accent">
                   {counterpart.char}
                 </Link>
               ) : (

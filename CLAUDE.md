@@ -41,7 +41,7 @@ Tester sur le S24 : `npm run dev -- --host` puis ouvrir l'IP locale depuis le t�
 src/
   app/         App.tsx (routes), tabs.ts (définition des onglets)
   components/  composants UI partagés (AppLayout, BottomTabBar, Icon, PageHeader…)
-  pages/       une page par onglet : Learn, Table, Writing, Stats, Settings (+ Quiz, Chrono, détails…)
+  pages/       une page par onglet : Home, Learn (S'entraîner), Kana, Stats (Progrès) (+ Settings, Quiz, Chrono, détails…)
   stores/      stores Zustand (un fichier par domaine : settingsStore.ts, profileStore.ts…)
   db/          base Dexie (db.ts) — schéma versionné ; un fichier d'accès par domaine (answers, profiles, backup…)
   engine/      scheduler.ts : planificateur du mode auto (répétition espacée, pur)
@@ -87,6 +87,7 @@ Alias d'import : `@/` → `src/`. Toujours l'utiliser plutôt que des chemins re
   - **Profils** (Dexie v4) : toute donnée d'apprentissage porte un `profileId` et toute requête filtre dessus (index composés `[profileId+…]`). Profil actif = `profileStore` (localStorage `kana-profile`) ; `activeProfileId()` hors composants. Profil par défaut id 1 « Moi » (créé par `populate` ou par la migration v4).
   - **Sauvegarde** (`features/backup/`) : format JSON `kana-backup` versionné, validé par `parseBackup` ; l'import remplace tout. Nouvelle table ou nouveau champ → l'ajouter à l'export/import et à la validation ; nouvelle clé localStorage → `PREFERENCE_KEYS`.
 - **Logique métier** isolée dans `features/` en fonctions pures testables, séparée des composants. Les stores orchestrent, les composants affichent.
+- **Navigation** (`docs/design/navigation.md`) : 4 onglets (`app/tabs.ts`) — Accueil `/home` (Session du jour en un geste, `useStartDailySession`), S'entraîner `/learn`, Kana `/kana` (une grille, lentilles Lecture → fiche `/kana/:id` et Écriture → `/writing/:id`), Progrès `/progress`. Réglages (`/settings`) n'est plus un onglet : icône dans l'en-tête des onglets (`AppHeader`), avec le sceau du profil actif qui ouvre la feuille « Qui apprend ? » (`ProfileSheet`). Plein écran sans onglets : `/learn/quiz`, `/learn/reading`. ≥ 840 px : rail vertical à gauche. Anciennes adresses (`/table`, `/table/:id`, `/writing`, `/stats`) redirigées en gardant les paramètres. Le quiz revient à l'écran qui l'a lancé (`state.from` de la navigation, `/learn` par défaut).
 - **Mobile** : cibles tactiles ≥ 44 px, respecter `env(safe-area-inset-*)`, pas d'interaction au survol uniquement.
 - **Dépendances** : en ajouter le moins possible ; aucune qui charge des ressources distantes.
 - **Données kana** (`src/data/kana.ts`) : ids stables `h-<clé>` / `k-<clé>` (persistés en base, ne jamais les renommer). `romaji[0]` = forme Hepburn affichée, les suivants = variantes acceptées. Les groupes katakana sont dérivés des hiragana (seuls les étendus sont écrits en katakana). Homophones Hepburn assumés : じ/ぢ (ji), ず/づ (zu), ヲ/ウォ (wo) — un quiz romaji → kana doit en tenir compte.

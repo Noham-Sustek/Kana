@@ -29,7 +29,7 @@ export function WritingExercisePage() {
   const setLevel = useWritingSettingsStore((s) => s.setLevel)
   const kana = getKana(kanaId)
 
-  if (!kana || !isWritable(kana)) return <Navigate to="/writing" replace />
+  if (!kana || !isWritable(kana)) return <Navigate to="/kana?lens=ecriture" replace />
 
   const strokes = strokesOf(kana.char)!
   const siblings = kanaOfScript(kana.script).filter(isWritable)
@@ -45,7 +45,7 @@ export function WritingExercisePage() {
   const goBack = () => {
     const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0
     if (idx > 0) navigate(-1)
-    else navigate(`/writing?script=${kana.script}`, { replace: true })
+    else navigate(`/kana?lens=ecriture&script=${kana.script}`, { replace: true })
   }
 
   return (
