@@ -367,7 +367,7 @@ function ChoiceAnswers({ question, session, onPick }: ChoiceAnswersProps) {
           ? WRONG_CLASS
           : right
             ? RIGHT_CLASS
-            : 'border-hairline bg-paper-raised'
+            : 'border-control bg-paper-raised'
         return (
           <button
             key={choice.id}
@@ -462,7 +462,7 @@ function ComposeAnswer({ question, session, onSubmit }: ComposeAnswerProps) {
               type="button"
               onClick={() => pick(index)}
               disabled={settled || used}
-              className={`min-h-11 rounded-lg border-2 border-hairline bg-paper-raised px-3 font-jp text-xl enabled:active:scale-95 lg:text-2xl ${
+              className={`min-h-11 rounded-lg border-2 border-control bg-paper-raised px-3 font-jp text-xl enabled:active:scale-95 lg:text-2xl ${
                 used ? 'invisible' : settled ? 'opacity-50' : ''
               }`}
             >
@@ -591,13 +591,13 @@ function QuizSummary({ session }: { session: SessionState }) {
       )}
 
       {missed.size > 0 && (
-        <section className="rounded-md border border-hairline bg-paper-raised p-4">
+        <section className="rounded-md border border-hairline p-4">
           <h2 className="mb-3 text-sm font-semibold text-ink-muted">À revoir</h2>
           <ul className="flex flex-wrap gap-2">
             {[...missed.entries()].map(([key, q]) => (
               <li
                 key={key}
-                className="flex items-baseline gap-1.5 rounded-lg bg-paper px-2.5 py-1.5"
+                className="flex items-baseline gap-1.5 rounded-lg bg-paper-raised px-2.5 py-1.5"
               >
                 <span className="font-jp text-lg">{missedKey(q)}</span>
                 <span className="text-xs text-ink-muted">{missedReading(q)}</span>

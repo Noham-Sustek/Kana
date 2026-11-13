@@ -35,7 +35,7 @@ export function SettingsPage() {
                   className={`flex min-h-20 flex-col items-center justify-center gap-2 rounded-md border text-sm font-medium transition-colors ${
                     selected
                       ? 'border-accent bg-accent-tint text-accent'
-                      : 'border-hairline text-ink-muted'
+                      : 'border-control text-ink-muted'
                   }`}
                 >
                   <Icon name={opt.icon} />
@@ -56,7 +56,7 @@ export function SettingsPage() {
 
         <Link
           to="/settings/about"
-          className="flex min-h-14 items-center gap-3 rounded-md border border-hairline bg-paper-raised px-4 active:scale-[0.98]"
+          className="flex min-h-14 items-center gap-3 rounded-md border border-control bg-paper-raised px-4 active:scale-[0.98]"
         >
           <Icon name="info" className="size-5 text-ink-muted" />
           <span className="flex-1 font-medium">À propos et crédits</span>
@@ -69,7 +69,7 @@ export function SettingsPage() {
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="mb-4 rounded-md border border-hairline bg-paper-raised p-4">
+    <section className="mb-4 rounded-md border border-hairline p-4">
       <h2 className="mb-3 text-sm font-semibold text-ink-muted">{title}</h2>
       {children}
     </section>

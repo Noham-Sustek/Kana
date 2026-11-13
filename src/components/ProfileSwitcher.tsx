@@ -21,7 +21,7 @@ export function ProfileSwitcher() {
             className={`flex min-h-11 shrink-0 items-center rounded-full border px-4 text-sm font-medium transition-colors ${
               selected
                 ? 'border-accent bg-accent text-on-accent'
-                : 'border-hairline text-ink-muted'
+                : 'border-control text-ink-muted'
             }`}
           >
             {p.name}

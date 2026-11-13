@@ -4,7 +4,7 @@ import { BackupError, backupFileName, parseBackup, profileToActivate, type Backu
 import { useProfileStore } from '@/stores/profileStore'
 
 const BUTTON_CLASS =
-  'flex min-h-11 flex-1 items-center justify-center rounded-md border border-hairline px-3 text-sm font-medium active:scale-[0.98]'
+  'flex min-h-11 flex-1 items-center justify-center rounded-md border border-control px-3 text-sm font-medium active:scale-[0.98]'
 
 const dateFormat = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeStyle: 'short' })
 

@@ -10,7 +10,7 @@ export function SegmentedControl<T extends string | number>({ label, options, va
     <div
       role="radiogroup"
       aria-label={label}
-      className="grid gap-1 rounded-md bg-hairline p-1"
+      className="grid gap-[3px] rounded-md border-[1.5px] border-control bg-paper-raised p-[3px]"
       style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
     >
       {options.map((opt) => {
@@ -22,9 +22,9 @@ export function SegmentedControl<T extends string | number>({ label, options, va
             role="radio"
             aria-checked={selected}
             onClick={() => onChange(opt.value)}
-            className={`min-h-11 rounded-lg text-sm font-medium transition-colors ${
+            className={`min-h-11 rounded-sm text-sm font-semibold transition-colors ${
               selected
-                ? 'bg-paper-raised text-ink'
+                ? 'bg-ink text-paper'
                 : 'text-ink-muted'
             }`}
           >

@@ -85,13 +85,13 @@ export function KanaDetailPage() {
         )}
 
         <dl className="mt-8 grid w-full grid-cols-2 gap-2 text-sm">
-          <div className="rounded-md border border-hairline bg-paper-raised p-3">
+          <div className="rounded-md border border-hairline p-3">
             <dt className="text-xs text-ink-muted">Groupe</dt>
             <dd className="mt-1 font-medium">
               {GROUP_KIND_LABELS[group.kind]} · {group.label}
             </dd>
           </div>
-          <div className="rounded-md border border-hairline bg-paper-raised p-3">
+          <div className="rounded-md border border-hairline p-3">
             <dt className="text-xs text-ink-muted">
               {kana.script === 'hiragana' ? 'Katakana' : 'Hiragana'}
             </dt>

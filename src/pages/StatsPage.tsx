@@ -88,7 +88,7 @@ export function StatsPage() {
 
 function Tile({ label, value, detail }: { label: string; value: string; detail: string }) {
   return (
-    <div className="rounded-md border border-hairline bg-paper-raised p-4">
+    <div className="rounded-md border border-hairline p-4">
       <span className="block text-xs font-semibold text-ink-muted">{label}</span>
       <span className="mt-1 block text-2xl font-bold tabular-nums">{value}</span>
       <span className="block text-xs text-ink-muted">{detail}</span>
@@ -98,7 +98,7 @@ function Tile({ label, value, detail }: { label: string; value: string; detail: 
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="mt-4 rounded-md border border-hairline bg-paper-raised p-4">
+    <section className="mt-4 rounded-md border border-hairline p-4">
       <h2 className="mb-3 text-sm font-semibold text-ink-muted">{title}</h2>
       {children}
     </section>

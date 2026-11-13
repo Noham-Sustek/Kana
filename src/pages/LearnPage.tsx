@@ -134,7 +134,7 @@ export function LearnPage() {
         <div>
           <Link
             to="/learn/reading"
-            className="mb-4 flex min-h-16 items-center gap-3 rounded-md border border-hairline bg-paper-raised p-3"
+            className="mb-4 flex min-h-16 items-center gap-3 rounded-md border border-control bg-paper-raised p-3"
           >
             <span className="flex size-11 shrink-0 items-center justify-center rounded-md bg-accent-tint text-accent">
               <Icon name="timer" />
@@ -249,7 +249,7 @@ function PathPanel() {
               {overview.activeGroups.map((g) => (
                 <span
                   key={g.id}
-                  className="flex min-h-9 items-center gap-1 rounded-lg bg-paper px-2 text-sm"
+                  className="flex min-h-9 items-center gap-1 rounded-lg bg-paper-raised px-2 text-sm"
                 >
                   <span className="font-jp">{groupGlyph(g)}</span>
                   <span className="text-xs text-ink-muted">{g.label}</span>
@@ -326,7 +326,7 @@ function StageMastery({ perStage }: { perStage: { stage: StageId; mastered: numb
       </span>
       <ul className="grid grid-cols-3 gap-1.5">
         {perStage.map(({ stage, mastered, total }) => (
-          <li key={stage} className="rounded-lg bg-paper px-2 py-1.5">
+          <li key={stage} className="rounded-lg bg-paper-raised px-2 py-1.5">
             <span className="block text-xs text-ink-muted">{getStage(stage).title}</span>
             <span className="text-sm font-semibold tabular-nums">
               {mastered}/{total}
@@ -367,7 +367,7 @@ function ManualPanel() {
                 className={`flex min-h-20 flex-col items-start rounded-md border p-3 text-left transition-colors ${
                   selected
                     ? 'border-accent bg-accent-tint'
-                    : 'border-hairline'
+                    : 'border-control'
                 }`}
               >
                 <span
@@ -412,7 +412,7 @@ function ManualPanel() {
 
 function Card({ title, aside, children }: { title: string; aside?: ReactNode; children: ReactNode }) {
   return (
-    <section className="mb-4 rounded-md border border-hairline bg-paper-raised p-4">
+    <section className="mb-4 rounded-md border border-hairline p-4">
       <div className="mb-3 flex items-baseline justify-between">
         <h2 className="text-sm font-semibold text-ink-muted">{title}</h2>
         {aside && <span className="text-xs text-ink-muted">{aside}</span>}
@@ -468,7 +468,7 @@ function GroupPicker({ groups }: { groups: KanaGroup[] }) {
                     className={`flex min-h-11 items-center gap-1.5 rounded-lg border px-2.5 text-sm transition-colors ${
                       selected
                         ? 'border-accent bg-accent text-on-accent'
-                        : 'border-hairline text-ink-muted'
+                        : 'border-control text-ink-muted'
                     }`}
                   >
                     <span className="font-jp text-base">{groupGlyph(group)}</span>

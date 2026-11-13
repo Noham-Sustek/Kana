@@ -21,7 +21,7 @@ const INK_DARK = '#ede6d8'
 const ERROR_COLOR = '#c8321f'
 const FLASH_MS = 500
 const TOOL_BUTTON =
-  'flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-hairline bg-paper-raised text-sm font-medium active:scale-95'
+  'flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-control bg-paper-raised text-sm font-medium active:scale-95'
 /** Écart minimal entre deux points enregistrés (unités KanjiVG) : évite d'accumuler du bruit. */
 const MIN_POINT_GAP = 0.4
 

@@ -26,7 +26,7 @@ export function AboutPage() {
       </button>
       <PageHeader title="À propos" />
 
-      <section className="rounded-md border border-hairline bg-paper-raised p-4 text-sm leading-relaxed">
+      <section className="rounded-md border border-hairline p-4 text-sm leading-relaxed">
         <h2 className="mb-2 font-semibold">Kana</h2>
         <p className="text-ink-muted">
           Application personnelle pour apprendre les hiragana et katakana. Fonctionne entièrement hors ligne, sans compte,
@@ -34,7 +34,7 @@ export function AboutPage() {
         </p>
       </section>
 
-      <section className="mt-4 rounded-md border border-hairline bg-paper-raised p-4 text-sm leading-relaxed">
+      <section className="mt-4 rounded-md border border-hairline p-4 text-sm leading-relaxed">
         <h2 className="mb-2 font-semibold">Tracés des kana</h2>
         <p className="text-ink-muted">
           Les formes et l'ordre des traits proviennent de{' '}
@@ -58,7 +58,7 @@ export function AboutPage() {
         </p>
       </section>
 
-      <section className="mt-4 rounded-md border border-hairline bg-paper-raised p-4 text-sm leading-relaxed">
+      <section className="mt-4 rounded-md border border-hairline p-4 text-sm leading-relaxed">
         <h2 className="mb-2 font-semibold">Mots</h2>
         <p className="text-ink-muted">
           Une partie des mots et de leurs traductions provient du dictionnaire{' '}
@@ -86,7 +86,7 @@ export function AboutPage() {
         </p>
       </section>
 
-      <section className="mt-4 rounded-md border border-hairline bg-paper-raised p-4 text-sm leading-relaxed">
+      <section className="mt-4 rounded-md border border-hairline p-4 text-sm leading-relaxed">
         <h2 className="mb-2 font-semibold">Livre</h2>
         <p className="text-ink-muted">
           Les phrases du livre (lecture chronométrée, stages 8 et 9) viennent de <span className="font-jp">銀河鉄道の夜</span>{' '}
@@ -107,7 +107,7 @@ export function AboutPage() {
         </p>
       </section>
 
-      <section className="mt-4 rounded-md border border-hairline bg-paper-raised p-4 text-sm leading-relaxed">
+      <section className="mt-4 rounded-md border border-hairline p-4 text-sm leading-relaxed">
         <h2 className="mb-2 font-semibold">Polices</h2>
         <p className="text-ink-muted">
           Polices embarquées dans l’application, distribuées sous licence SIL Open Font License 1.1 :

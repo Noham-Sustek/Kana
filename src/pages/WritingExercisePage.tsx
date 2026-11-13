@@ -20,7 +20,7 @@ const LEVEL_OPTIONS: { value: WritingLevel; label: string }[] = [
 const PRIMARY_BUTTON =
   'flex min-h-12 items-center justify-center gap-2 rounded-md bg-accent px-4 font-semibold text-on-accent active:scale-95'
 const SECONDARY_BUTTON =
-  'flex min-h-12 items-center justify-center gap-2 rounded-md border border-hairline bg-paper-raised px-4 font-medium active:scale-95'
+  'flex min-h-12 items-center justify-center gap-2 rounded-md border border-control bg-paper-raised px-4 font-medium active:scale-95'
 
 export function WritingExercisePage() {
   const { kanaId = '' } = useParams()
@@ -153,7 +153,7 @@ function PracticeStep({ strokes, level, onNextLevel, onNextKana }: PracticeStepP
         <WritingPad key={attempt} strokes={strokes} mode={level === 2 ? 'trace' : 'free'} onComplete={setResult} />
       )}
       {result && (
-        <section className="mt-4 rounded-md border border-hairline bg-paper-raised p-4" style={{ animation: 'fade-in 0.2s' }}>
+        <section className="mt-4 rounded-md border border-hairline p-4" style={{ animation: 'fade-in 0.2s' }}>
           <p className="font-semibold">{resultText(result, strokes.length)}</p>
           <div className="mt-3 grid grid-cols-2 gap-3">
             <button

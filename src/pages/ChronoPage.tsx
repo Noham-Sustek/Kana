@@ -237,7 +237,7 @@ function ChronoRunner({ state, onChange, script, duration, onFinish, onQuit }: C
         {state.startedAt === null && ' · le chrono part à la première touche'}
       </p>
 
-      <div className="my-4 max-h-[45dvh] flex-1 overflow-y-auto rounded-md border border-hairline bg-paper-raised p-4 short:max-h-[30dvh]">
+      <div className="my-4 max-h-[45dvh] flex-1 overflow-y-auto rounded-md border border-hairline p-4 short:max-h-[30dvh]">
         <p className="font-jp text-lg leading-loose lg:text-xl">
           {[0, 1, 2].map((offset) => {
             const index = (state.sentence + offset) % TOTAL
@@ -419,7 +419,7 @@ function useWords(script: ChronoScript): (sentence: number) => string[] {
 }
 
 function Card({ children }: { children: ReactNode }) {
-  return <section className="mb-4 rounded-md border border-hairline bg-paper-raised p-4">{children}</section>
+  return <section className="mb-4 rounded-md border border-hairline p-4">{children}</section>
 }
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
@@ -433,7 +433,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 
 function Stat({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="rounded-lg bg-paper px-2 py-2">
+    <div className="rounded-lg bg-paper-raised px-2 py-2">
       <dt className="text-xs text-ink-muted">{label}</dt>
       <dd className="text-lg font-semibold tabular-nums">{value}</dd>
     </div>

@@ -50,7 +50,7 @@ export function ProfileSettings() {
           maxLength={MAX_NAME_LENGTH}
           placeholder="Nouveau profil"
           aria-label="Nom du nouveau profil"
-          className="min-h-11 min-w-0 flex-1 rounded-md border border-hairline bg-transparent px-3 text-base"
+          className="min-h-11 min-w-0 flex-1 rounded-md border border-control bg-transparent px-3 text-base"
         />
         <button
           type="submit"
@@ -94,7 +94,7 @@ function ProfileRow({ profile, active, deletable, onSelect, onDelete }: ProfileR
             onChange={(e) => setName(e.target.value)}
             maxLength={MAX_NAME_LENGTH}
             aria-label="Nom du profil"
-            className="min-h-11 min-w-0 flex-1 rounded-md border border-hairline bg-transparent px-3 text-base"
+            className="min-h-11 min-w-0 flex-1 rounded-md border border-control bg-transparent px-3 text-base"
           />
           <button
             type="submit"
@@ -118,7 +118,7 @@ function ProfileRow({ profile, active, deletable, onSelect, onDelete }: ProfileR
           <button
             type="button"
             onClick={() => setMode('view')}
-            className="min-h-11 flex-1 rounded-md border border-hairline font-medium"
+            className="min-h-11 flex-1 rounded-md border border-control font-medium"
           >
             Annuler
           </button>

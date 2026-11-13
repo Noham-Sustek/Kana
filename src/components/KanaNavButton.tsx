@@ -16,7 +16,7 @@ export function KanaNavButton({ target, direction, onClick }: KanaNavButtonProps
       onClick={onClick}
       disabled={!target}
       aria-label={isPrev ? 'Kana précédent' : 'Kana suivant'}
-      className={`flex min-h-14 items-center gap-2 rounded-md border border-hairline bg-paper-raised px-4 transition-transform active:scale-95 disabled:opacity-30 ${
+      className={`flex min-h-14 items-center gap-2 rounded-md border border-control bg-paper-raised px-4 transition-transform active:scale-95 disabled:opacity-30 ${
         isPrev ? 'justify-start' : 'flex-row-reverse justify-start'
       }`}
     >
