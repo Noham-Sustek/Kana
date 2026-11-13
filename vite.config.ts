@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   // Chemins relatifs : l'app fonctionne quel que soit le sous-chemin de déploiement.
   base: './',
   resolve: {
@@ -14,6 +14,8 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
+      // Application Android : fichiers déjà locaux, pas de service worker ni de manifeste.
+      disable: mode === 'android',
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg', 'apple-touch-icon.png'],
       manifest: {
@@ -56,4 +58,4 @@ export default defineConfig({
       },
     }),
   ],
-})
+}))

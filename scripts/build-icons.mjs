@@ -2,7 +2,7 @@
 // KanjiVG de « あ » (src/data/strokes.json) : aucune police requise, rendu identique
 // partout. Rasterisation maison (distance aux segments, anticrénelage) et encodage
 // PNG avec zlib : aucune dépendance. Usage : npm run icons
-import { readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { deflateSync } from 'node:zlib'
 
 const BG = [0x0f, 0x17, 0x2a] // slate-900, = theme_color du manifeste
@@ -86,11 +86,17 @@ function roundedRectCoverage(size, radius) {
   return cov
 }
 
-function render(size, { scale, radius }) {
+function render(size, { scale, radius, transparent = false }) {
   const bg = roundedRectCoverage(size, radius)
   const ink = glyphCoverage(size, scale)
   const rgba = Buffer.alloc(size * size * 4)
   for (let i = 0; i < size * size; i++) {
+    if (transparent) {
+      // Premier plan d'icône adaptative Android : glyphe seul, le fond est une couleur.
+      for (let c = 0; c < 3; c++) rgba[i * 4 + c] = INK[c]
+      rgba[i * 4 + 3] = Math.round(ink[i] * 255)
+      continue
+    }
     const g = ink[i] * (bg[i] > 0 ? 1 : 0)
     for (let c = 0; c < 3; c++) rgba[i * 4 + c] = Math.round(BG[c] * (1 - g) + INK[c] * g)
     rgba[i * 4 + 3] = Math.round(bg[i] * 255)
@@ -142,13 +148,14 @@ function encodePng(width, height, rgba) {
 
 // --- SVG (favicon) -----------------------------------------------------------
 
+const hex = (c) => '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('')
+
 function svg() {
   const size = 512
   const { k, map } = transform(size, 0.72)
   const lines = strokes
     .map((s) => `<polyline points="${s.map(map).map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ')}"/>`)
     .join('')
-  const hex = (c) => '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('')
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}">` +
     `<rect width="${size}" height="${size}" rx="96" fill="${hex(BG)}"/>` +
@@ -173,3 +180,32 @@ for (const [name, size, opts] of outputs) {
 }
 writeFileSync(new URL('public/icon.svg', root), svg())
 console.log('public/icon.svg')
+
+// Application Android (Capacitor) : icône classique et ronde par densité, icône adaptative
+// (premier plan 108 dp, glyphe dans la zone de sécurité de 66 dp) et sa couleur de fond.
+const res = new URL('android/app/src/main/res/', root)
+const DENSITIES = [
+  ['mdpi', 1],
+  ['hdpi', 1.5],
+  ['xhdpi', 2],
+  ['xxhdpi', 3],
+  ['xxxhdpi', 4],
+]
+for (const [density, factor] of DENSITIES) {
+  const icon = Math.round(48 * factor)
+  const fg = Math.round(108 * factor)
+  const dir = new URL(`mipmap-${density}/`, res)
+  mkdirSync(dir, { recursive: true })
+  writeFileSync(new URL('ic_launcher.png', dir), render(icon, { scale: 0.62, radius: Math.round(icon * 0.18) }))
+  writeFileSync(new URL('ic_launcher_round.png', dir), render(icon, { scale: 0.56, radius: icon / 2 }))
+  writeFileSync(new URL('ic_launcher_foreground.png', dir), render(fg, { scale: 0.42, radius: 0, transparent: true }))
+  console.log(`android mipmap-${density}`)
+}
+writeFileSync(
+  new URL('values/ic_launcher_background.xml', res),
+  `<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">${hex(BG)}</color>
+</resources>
+`,
+)

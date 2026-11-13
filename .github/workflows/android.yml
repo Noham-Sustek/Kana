@@ -1,0 +1,79 @@
+# APK Android (Capacitor) à chaque push sur main : tests, build web en mode android, Gradle.
+# Signé si les secrets KANA_KEYSTORE_BASE64 et KANA_KEYSTORE_PASSWORD existent ; l'APK est alors
+# publié dans la release « android » du dépôt (lien fixe à ouvrir depuis le téléphone).
+# Sans secrets : APK de debug, en artefact du workflow seulement.
+name: APK Android
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    env:
+      # Toujours croissant : Android refuse une mise à jour de numéro inférieur.
+      KANA_VERSION_CODE: ${{ github.run_number }}0
+      HAS_KEY: ${{ secrets.KANA_KEYSTORE_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      - run: npm ci
+      - run: npm test
+      - run: npm run build:android
+
+      - name: Keystore
+        if: env.HAS_KEY == 'true'
+        run: echo "${{ secrets.KANA_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/kana-release.jks"
+
+      - name: APK signé
+        if: env.HAS_KEY == 'true'
+        working-directory: android
+        env:
+          KANA_KEYSTORE: ${{ runner.temp }}/kana-release.jks
+          KANA_KEYSTORE_PASSWORD: ${{ secrets.KANA_KEYSTORE_PASSWORD }}
+        run: |
+          bash ./gradlew --no-daemon assembleRelease
+          cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/kana.apk"
+
+      - name: APK de debug
+        if: env.HAS_KEY != 'true'
+        working-directory: android
+        run: |
+          bash ./gradlew --no-daemon assembleDebug
+          cp app/build/outputs/apk/debug/app-debug.apk "$RUNNER_TEMP/kana.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kana-apk
+          path: ${{ runner.temp }}/kana.apk
+
+      - name: Release « android »
+        if: env.HAS_KEY == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="1.0.${KANA_VERSION_CODE}"
+          NOTES="Kana ${VERSION} — APK Android signé, construit depuis ${GITHUB_SHA::7}. Installer kana.apk sur le téléphone (autoriser l'installation depuis le navigateur ou Fichiers)."
+          if gh release view android > /dev/null 2>&1; then
+            gh release edit android --title "Kana ${VERSION} (Android)" --notes "$NOTES" --latest
+          else
+            gh release create android --title "Kana ${VERSION} (Android)" --notes "$NOTES" --latest
+          fi
+          gh release upload android "$RUNNER_TEMP/kana.apk" --clobber

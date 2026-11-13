@@ -1,7 +1,7 @@
 # Kana — PWA d'apprentissage des hiragana & katakana
 
 Application personnelle pour apprendre les kana japonais (hiragana + katakana).
-Cible principale : **Android, Samsung S24** (Chrome, installée en PWA).
+Cible principale : **Android, Samsung S24** : PWA installée depuis Chrome, ou application Android (APK Capacitor, `fr.kana.app`) construite à partir du même code.
 
 Principes non négociables :
 - **100 % hors ligne** : aucune requête réseau à l'exécution (pas de CDN, pas de Google Fonts, pas d'API). Tout asset (données, polices, tracés) est embarqué dans le build et précaché par le service worker.
@@ -16,6 +16,7 @@ Principes non négociables :
 | Build | Vite 8 |
 | Styles | Tailwind CSS v4 (`@tailwindcss/vite`, config CSS-first dans `src/index.css`) |
 | PWA | `vite-plugin-pwa` (generateSW, `registerType: 'autoUpdate'`) |
+| Android | Capacitor 8 (`capacitor.config.json`, projet `android/`) : le build web embarqué dans une WebView |
 | État | Zustand |
 | Persistance | IndexedDB via Dexie |
 | Routing | React Router 7 en `HashRouter` (zéro config serveur, compatible tout hébergeur statique) |
@@ -30,6 +31,7 @@ npm run typecheck  # tsc -b seul
 npm test           # tests Vitest (vitest run) ; npm run test:watch en continu
 npm run icons      # régénère les icônes PNG/SVG de public/ (scripts/build-icons.mjs)
 npm run words      # régénère src/data/dictWords.json depuis le dictionnaire Jiyomi (scripts/build-words.mjs)
+npm run build:android  # build web en mode android (sans service worker) + cap sync android
 npm run book       # régénère src/data/book.json (銀河鉄道の夜, Aozora Bunko) avec scripts/book-review.json
 ```
 
@@ -60,11 +62,16 @@ scripts/       build-icons.mjs : icônes PWA (192/512, maskable, apple-touch, ic
                build-book.mjs : télécharge 銀河鉄道の夜 (Aozora Bunko, fiche 456, cache scripts/.cache), lit les kanji
                (furigana, sinon kuromoji, dépendance de dev), découpe en mots et régénère src/data/book.json — `npm run book`
 public/        assets statiques (icônes générées)
+android/       projet Android Capacitor (généré par `cap add android`, puis ajusté : icônes, écran de démarrage,
+               signature, aucune permission). `app/src/main/assets/public` = copie du build, ignorée par git.
+scripts/build-apk.sh  APK (Linux / WSL) : signé si KANA_KEYSTORE + KANA_KEYSTORE_PASSWORD, sinon debug
 docs/design/   design system de la refonte UI (direction « Papier et encre ») : README.md (voix, vocabulaire, couleur,
                typographie), navigation.md, animations.md, tokens.json / tokens.css, components/bundle.css,
                components/*/README.md et preview.html (maquettes, à ouvrir dans un navigateur), fonts/ et licenses/ (OFL).
                Référence à lire avant tout travail d'UI ; hors du build.
-.github/       workflows/deploy.yml : tests + build + GitHub Pages à chaque push sur main
+.github/       workflows/deploy.yml : tests + build + GitHub Pages à chaque push sur main ;
+               workflows/android.yml : APK à chaque push sur main (signé avec les secrets KANA_KEYSTORE_BASE64 /
+               KANA_KEYSTORE_PASSWORD, publié dans la release « android » du dépôt ; sinon debug en artefact)
 ```
 
 Alias d'import : `@/` → `src/`. Toujours l'utiliser plutôt que des chemins relatifs `../`.
@@ -122,6 +129,7 @@ Alias d'import : `@/` → `src/`. Toujours l'utiliser plutôt que des chemins re
   - La page d'exercice est chargée en différé (`lazy`) pour sortir les tracés du bundle principal.
 - **Progrès** (`pages/ProgressPage.tsx`, `features/stats/progress.ts` : période 7 / 30 jours / tout, kana acquis par écriture et par famille, bulle d'activité) : série, réussite, temps moyen, activité 14 jours (barre touchée = détail, « Voir en tableau »), kana acquis, les plus ratés (« En faire une liste »), lecture et écriture.
 - **Stats** (`features/stats/`) : fonctions pures sur l'historique `answers` du profil (`now` injecté, jours locaux). Une question = un horodatage (`questionsOf`, le stage 6 écrit une ligne par kana). Heatmap = réussite sur les 10 dernières réponses du kana ; rampe d'une seule teinte (`heat-1`, `heat-2`, `heat-3`, `accent`, cf. `HEAT_CLASSES`), jamais rouge / vert.
+- **Application Android** (Capacitor) : `vite build --mode android` désactive `vite-plugin-pwa` (fichiers déjà locaux), `cap sync` les copie dans l'APK, servis par la WebView sans réseau. Le manifeste n'a **aucune permission** (pas même INTERNET) et la sauvegarde automatique Android est coupée (`allowBackup="false"`, `data_extraction_rules.xml`) : les données restent sur l'appareil. Données distinctes de celles de la PWA (autre origine) : passer par Exporter / Importer. Code natif seulement derrière `Capacitor.isNativePlatform()` : export dans Documents/Kana (`@capacitor/filesystem`) et partage (`@capacitor/share`) dans `lib/backupFile.ts`, style de la barre d'état suivant le thème (`SystemBars`, `useApplyTheme`). Plein écran bord à bord (`SystemBars.insetsHandling: native`) : les `env(safe-area-inset-*)` restent la seule source des marges. Icônes Android générées par `npm run icons`. `versionCode` = `KANA_VERSION_CODE` (CI : numéro de run × 10). Clé de signature hors du dépôt : la perdre empêche toute mise à jour par-dessus l'application installée.
 - **PWA** : compatible Android (Chrome) et iPhone (Safari, métas `apple-mobile-web-app-*`, hauteur en `dvh`). Boutons d’action (Commencer, Suivant) en `sticky bottom-0`, jamais en `fixed`. Tout le build est précaché (Workbox generateSW, cache-first), `navigateFallback` sur `index.html`. Vérifier qu'aucune URL distante n'est chargée et que l'app se recharge serveur coupé.
 - Tests Vitest à côté du code (`foo.test.ts`), pour toute logique pure.
 - Vérifier que `npm run build` et `npm test` passent avant chaque commit.

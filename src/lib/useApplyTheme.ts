@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core'
 import { useSettingsStore } from '@/stores/settingsStore'
 
 const DARK_QUERY = '(prefers-color-scheme: dark)'
@@ -15,6 +16,10 @@ export function useApplyTheme() {
       document
         .querySelector('meta[name="theme-color"]')
         ?.setAttribute('content', dark ? '#000000' : '#f5f0e6')
+      // Application Android : icônes de la barre d'état lisibles sur le fond du thème choisi.
+      if (Capacitor.isNativePlatform()) {
+        void SystemBars.setStyle({ style: dark ? SystemBarsStyle.Dark : SystemBarsStyle.Light })
+      }
     }
     apply()
     if (theme !== 'system') return

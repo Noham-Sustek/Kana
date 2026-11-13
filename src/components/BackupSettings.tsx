@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Button } from '@/components/Button'
 import { ImportBackupButton } from '@/components/ImportBackupButton'
 import { lastExportLine } from '@/features/backup/backup'
-import { downloadBackup, shareBackup } from '@/lib/backupFile'
+import { canShareBackup, downloadBackup, shareBackup } from '@/lib/backupFile'
 import { useSettingsStore } from '@/stores/settingsStore'
 
 /** Export de la progression en JSON et import (remplace tout) depuis un fichier. */
@@ -11,12 +11,11 @@ export function BackupSettings() {
   const [exportMessage, setExportMessage] = useState<string | null>(null)
 
   const download = async () => {
-    const name = await downloadBackup()
-    setExportMessage(`Fichier « ${name} » enregistré dans Téléchargements.`)
+    setExportMessage(await downloadBackup())
   }
 
   // Partage Android : envoi direct vers Drive, mail, Quick Share…
-  const canShare = typeof navigator.canShare === 'function'
+  const canShare = canShareBackup()
 
   return (
     <>
