@@ -12,6 +12,7 @@ import { getKana, groupGlyph } from '@/data/kana'
 import { loadProfileAnswers } from '@/db/answers'
 import { buildProgress } from '@/engine/scheduler'
 import { pathView } from '@/features/home/home'
+import { isSentenceStage } from '@/features/learn/learn'
 import { generateQuestions } from '@/features/quiz/questions'
 import { score, type SessionState } from '@/features/quiz/session'
 import { stagePresentation } from '@/features/quiz/stages'
@@ -29,7 +30,7 @@ import { useQuizPool } from '@/features/quiz/useQuizPool'
 import { computeStreak } from '@/features/stats/stats'
 import { jp, t, type Line } from '@/lib/segments'
 import { useQuizOrigin } from '@/lib/useQuizOrigin'
-import { effectiveSentenceFilter, useQuizSettingsStore } from '@/stores/quizSettingsStore'
+import { useQuizSettingsStore } from '@/stores/quizSettingsStore'
 import { useQuizSessionStore } from '@/stores/quizSessionStore'
 
 /** Fin de session : la ligne débloquée (s'il y a lieu), puis le récapitulatif. */
@@ -79,7 +80,14 @@ function Recap({ session }: { session: SessionState }) {
   const restart = () => {
     if (autoParams) return void startAuto(autoParams)
     start(
-      generateQuestions(settings.stage, pool, settings.questionCount, Math.random, effectiveSentenceFilter(settings)),
+      generateQuestions(
+        settings.stage,
+        pool,
+        settings.questionCount,
+        Math.random,
+        settings.sentenceFilter,
+        isSentenceStage(settings.stage) && settings.animeSentences,
+      ),
       { retry: settings.retry, timerSeconds: settings.timerSeconds, drawingCheck: settings.drawingCheck },
     )
   }

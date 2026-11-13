@@ -15,7 +15,6 @@ import {
 import { seededRng } from '@/features/quiz/random'
 import { toRomaji, tokenize } from '@/features/quiz/reading'
 import type { ChoiceQuestion, ComposeQuestion, StageId } from '@/features/quiz/types'
-import { effectiveSentenceFilter } from '@/stores/quizSettingsStore'
 
 const k = (id: string) => getKana(id)!
 const groupKana = (groupId: string) => KANA.filter((kana) => kana.groupId === groupId)
@@ -234,17 +233,13 @@ describe('phrases à composer (stage 9)', () => {
     expect(q.prompt.type === 'romajiSentence' && q.prompt.source).toContain('Dragon Ball')
   })
 
-  it('propose les répliques de Dragon Ball quels que soient les kana cochés', () => {
-    expect(sentencesForPool([], 'dragonball')).toHaveLength(ANIME_SENTENCES.length)
+  it('ajoute les répliques de Dragon Ball aux phrases, quels que soient les kana cochés', () => {
+    expect(sentencesForPool([], 'all', true)).toHaveLength(ANIME_SENTENCES.length)
     expect(sentencesForPool(FULL_HIRAGANA, 'all').some((s) => s.series)).toBe(false)
-    const questions = generateQuestions(9, [], 10, seededRng(2), 'dragonball') as ComposeQuestion[]
+    const both = sentencesForPool(FULL_HIRAGANA, 'hiragana', true)
+    expect(both.length).toBe(sentencesForPool(FULL_HIRAGANA, 'hiragana').length + ANIME_SENTENCES.length)
+    const questions = generateQuestions(9, [], 10, seededRng(2), 'all', true) as ComposeQuestion[]
     expect(questions).toHaveLength(10)
     expect(questions.every((q) => q.kind === 'compose' && q.stage === 9)).toBe(true)
-  })
-
-  it("n'applique le filtre Dragon Ball que si l'option est cochée", () => {
-    expect(effectiveSentenceFilter({ sentenceFilter: 'dragonball', animeSentences: true })).toBe('dragonball')
-    expect(effectiveSentenceFilter({ sentenceFilter: 'dragonball', animeSentences: false })).toBe('all')
-    expect(effectiveSentenceFilter({ sentenceFilter: 'katakana', animeSentences: false })).toBe('katakana')
   })
 })

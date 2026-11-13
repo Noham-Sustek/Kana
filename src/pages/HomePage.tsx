@@ -130,7 +130,7 @@ export function HomePage() {
           {cta.label}
         </Button>
         <Link
-          to="/learn"
+          to="/learn/libre"
           className="mt-1 flex min-h-11 items-center justify-center text-[14.5px] font-semibold text-accent"
         >
           Session libre

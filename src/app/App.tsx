@@ -3,6 +3,7 @@ import { HashRouter, Navigate, Route, Routes, useLocation, useParams } from 'rea
 import { AppLayout } from '@/components/AppLayout'
 import { useApplyTheme } from '@/lib/useApplyTheme'
 import { useEnsureActiveProfile } from '@/lib/useProfiles'
+import { FreeSessionPage } from '@/pages/FreeSessionPage'
 import { LearnPage } from '@/pages/LearnPage'
 import { QuizPage } from '@/pages/QuizPage'
 import { CustomGroupPage } from '@/pages/CustomGroupPage'
@@ -38,6 +39,7 @@ export function App() {
           <Route index element={<Navigate to="/home" replace />} />
           <Route path="home" element={<HomePage />} />
           <Route path="learn" element={<LearnPage />} />
+          <Route path="learn/libre" element={<FreeSessionPage />} />
           <Route path="learn/quiz" element={<QuizPage />} />
           <Route
             path="learn/reading"

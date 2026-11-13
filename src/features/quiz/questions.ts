@@ -2,7 +2,7 @@ import { ANIME_SENTENCES, ANIME_SERIES_LABELS } from '@/data/animeSentences'
 import { BOOK_QUIZ_SENTENCES, bookSource } from '@/data/book'
 import { CONFUSABLE_SETS } from '@/data/confusables'
 import { KANA, getGroup, kanaOfScript, type Kana } from '@/data/kana'
-import { SENTENCES, type AnimeSeries, type Sentence, type SentenceScript } from '@/data/sentences'
+import { SENTENCES, type Sentence, type SentenceScript } from '@/data/sentences'
 import { WORDS, type Word } from '@/data/words'
 import { drawCycling, shuffle, type Rng } from '@/features/quiz/random'
 import { kanaIdsOf, matchesReading, toRomaji, tokenize } from '@/features/quiz/reading'
@@ -93,25 +93,22 @@ export function wordsForPool(pool: readonly Kana[]): Word[] {
   return WORDS.filter((w) => kanaIdsOf(w.kana).every((id) => ids.has(id)))
 }
 
-/**
- * Filtre des phrases (stages 8 et 9) : une écriture, `all` = toutes les phrases
- * d'exemple, ou une série d'anime (option « Phrases d'anime »).
- */
-export type SentenceFilter = SentenceScript | 'all' | AnimeSeries
+/** Écriture des phrases (stages 8 et 9) : une écriture, ou `all` = toutes les phrases d'exemple. */
+export type SentenceFilter = SentenceScript | 'all'
 
 /** Phrases d'exemple et phrases courtes du livre, mêlées. */
 const READING_SENTENCES: readonly Sentence[] = [...SENTENCES, ...BOOK_QUIZ_SENTENCES]
 
 /**
- * Phrases dont tous les kana appartiennent à la sélection. Les répliques d'anime
- * mêlent toutes sortes de kana : elles sont proposées quelle que soit la sélection.
+ * Phrases dont tous les kana appartiennent à la sélection, plus les répliques d'anime
+ * si `anime` : elles mêlent toutes sortes de kana et sont proposées quelle que soit la sélection.
  */
-export function sentencesForPool(pool: readonly Kana[], filter: SentenceFilter = 'all'): Sentence[] {
-  if (filter === 'dragonball') return ANIME_SENTENCES.filter((s) => s.series === filter)
+export function sentencesForPool(pool: readonly Kana[], filter: SentenceFilter = 'all', anime = false): Sentence[] {
   const ids = new Set(pool.map((k) => k.id))
-  return READING_SENTENCES.filter(
+  const reading = READING_SENTENCES.filter(
     (s) => (filter === 'all' || s.script === filter) && kanaIdsOf(s.text).every((id) => ids.has(id)),
   )
+  return anime ? [...reading, ...ANIME_SENTENCES] : reading
 }
 
 /** Contexte affiché avec une réplique d'anime (série · scène) ou une phrase du livre. */
@@ -287,12 +284,13 @@ export function generateQuestions(
   count: number,
   rng: Rng = Math.random,
   sentenceFilter: SentenceFilter = 'all',
+  anime = false,
 ): Question[] {
   if (stage === 6) return drawCycling(wordsForPool(pool), count, rng).map(wordQuestion)
   if (stage === 7) return drawCycling(wordsForPool(pool), count, rng).map(wordDrawQuestion)
-  if (stage === 8) return drawCycling(sentencesForPool(pool, sentenceFilter), count, rng).map(sentenceQuestion)
+  if (stage === 8) return drawCycling(sentencesForPool(pool, sentenceFilter, anime), count, rng).map(sentenceQuestion)
   if (stage === 9) {
-    return drawCycling(sentencesForPool(pool, sentenceFilter), count, rng).map((s) => composeQuestion(s, rng))
+    return drawCycling(sentencesForPool(pool, sentenceFilter, anime), count, rng).map((s) => composeQuestion(s, rng))
   }
   return drawCycling(pool, count, rng).map((target) => kanaQuestion(stage, target, pool, rng))
 }

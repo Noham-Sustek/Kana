@@ -1,541 +1,131 @@
 import type { ReactNode } from 'react'
+import { useNavigate } from 'react-router'
+import { ActionCard } from '@/components/ActionCard'
 import { Button } from '@/components/Button'
-import { Link, useNavigate } from 'react-router'
-import { Icon } from '@/components/Icon'
-import { PageHeader } from '@/components/PageHeader'
-import { ScriptToggle } from '@/components/ScriptToggle'
-import { SegmentedControl } from '@/components/SegmentedControl'
-import { Switch } from '@/components/Switch'
-import { GROUP_KIND_LABELS, getKana, groupGlyph, groupsOfScript, type GroupKind, type KanaGroup } from '@/data/kana'
-import { generateQuestions, sentencesForPool, wordsForPool, type SentenceFilter } from '@/features/quiz/questions'
+import { EmptyState } from '@/components/EmptyState'
+import { KANA_GROUPS, getKana, groupGlyph } from '@/data/kana'
+import { bestChronoScore, freeSessionLine, reviewDetail } from '@/features/learn/learn'
+import { useLearnHub } from '@/features/learn/useLearnHub'
 import { AUTO_STAGES } from '@/features/quiz/auto'
-import { STAGES, getStage } from '@/features/quiz/stages'
-import type { DrawingCheck, StageId } from '@/features/quiz/types'
-import { useAutoOverview } from '@/features/quiz/useAutoOverview'
-import { useCustomGroups, useQuizPool } from '@/features/quiz/useQuizPool'
-import {
-  QUESTION_COUNTS,
-  TIMER_OPTIONS,
-  effectiveSentenceFilter,
-  useQuizSettingsStore,
-  type AutoSource,
-  type QuizMode,
-} from '@/stores/quizSettingsStore'
+import { useCustomGroups } from '@/features/quiz/useQuizPool'
+import { useChronoSettingsStore } from '@/stores/chronoSettingsStore'
+import { useProfileStore } from '@/stores/profileStore'
+import { useQuizSettingsStore } from '@/stores/quizSettingsStore'
 import { useQuizSessionStore } from '@/stores/quizSessionStore'
 
-const KIND_ORDER: GroupKind[] = ['gojuon', 'dakuten', 'handakuten', 'yoon', 'extended']
-
-const MODE_OPTIONS: { value: QuizMode; label: string }[] = [
-  { value: 'auto', label: 'Auto' },
-  { value: 'manual', label: 'Manuel' },
-]
-
-const SENTENCE_FILTER_OPTIONS: { value: SentenceFilter; label: string }[] = [
-  { value: 'all', label: 'Toutes' },
-  { value: 'hiragana', label: 'Hira' },
-  { value: 'katakana', label: 'Kata' },
-  { value: 'mixed', label: 'Mixte' },
-]
-
-/** Proposées en plus quand l'option « Phrases d'anime » est cochée. */
-const ANIME_FILTER_OPTIONS: { value: SentenceFilter; label: string }[] = [{ value: 'dragonball', label: 'Dragon Ball' }]
-
-const isSentenceStage = (stage: StageId) => stage === 8 || stage === 9
-
-const DRAWING_CHECK_OPTIONS: { value: DrawingCheck; label: string }[] = [
-  { value: 'auto', label: 'Automatique' },
-  { value: 'self', label: 'Par moi' },
-]
-
-const SOURCE_OPTIONS: { value: AutoSource; label: string }[] = [
-  { value: 'path', label: 'Parcours guidé' },
-  { value: 'selection', label: 'Mon choix' },
-]
-
+/** Onglet S'entraîner : des cartes qui mènent chacune à un exercice, puis les listes. */
 export function LearnPage() {
-  const settings = useQuizSettingsStore()
-  const startSession = useQuizSessionStore((s) => s.start)
-  const startAuto = useQuizSessionStore((s) => s.startAuto)
   const navigate = useNavigate()
-  const pool = useQuizPool()
-  const wordCount = wordsForPool(pool).length
-  const sentenceFilter = effectiveSentenceFilter(settings)
-  const sentenceCount = sentencesForPool(pool, sentenceFilter).length
-  const isAuto = settings.mode === 'auto'
-  const isSelection = isAuto && settings.autoSource === 'selection'
-  // Les répliques d'anime ne dépendent pas des kana cochés.
-  const needsPool = !(isSentenceStage(settings.stage) && sentenceFilter === 'dragonball')
+  const settings = useQuizSettingsStore()
+  const lists = useCustomGroups()
+  const hub = useLearnHub(settings.autoScript)
+  const profileId = useProfileStore((s) => s.profileId)
+  const record = useChronoSettingsStore((s) => bestChronoScore(s.best, profileId))
+  const startAuto = useQuizSessionStore((s) => s.startAuto)
 
-  const unavailableReason = isAuto
-    ? isSelection && pool.length === 0
-      ? 'Sélectionnez au moins un groupe.'
-      : null
-    : pool.length === 0 && needsPool
-      ? 'Sélectionnez au moins un groupe.'
-      : (settings.stage === 6 || settings.stage === 7) && wordCount === 0
-        ? 'Aucun mot ne s’écrit avec ces kana : ajoutez des groupes.'
-        : isSentenceStage(settings.stage) && sentenceCount === 0
-          ? 'Aucune phrase ne s’écrit avec ces kana : ajoutez des groupes ou changez d’écriture.'
-          : null
+  const groupCount = KANA_GROUPS.filter((g) => settings.groupIds.includes(g.id)).length
+  const listCount = lists.filter((l) => settings.customGroupIds.includes(l.id)).length
+  const due = hub?.review.due ?? []
 
-  const start = async () => {
-    const options = {
-      retry: settings.retry,
-      timerSeconds: settings.timerSeconds,
-      drawingCheck: settings.drawingCheck,
-    }
-    if (isAuto) {
-      await startAuto({
-        script: settings.autoScript,
-        kanaIds: isSelection ? pool.map((k) => k.id) : undefined,
-        stages: AUTO_STAGES,
-        questionCount: settings.questionCount,
-        options,
-      })
-    } else {
-      startSession(
-        generateQuestions(settings.stage, pool, settings.questionCount, Math.random, sentenceFilter),
-        options,
-      )
-    }
-    navigate('/learn/quiz')
+  const startReview = async () => {
+    if (due.length === 0) return
+    await startAuto({
+      script: getKana(due[0]!)!.script,
+      kanaIds: due,
+      stages: AUTO_STAGES,
+      questionCount: settings.questionCount,
+      options: { retry: settings.retry, timerSeconds: settings.timerSeconds, drawingCheck: settings.drawingCheck },
+    })
+    navigate('/learn/quiz', { state: { from: '/learn' } })
   }
 
-  const startBlock = (
-    <>
-      {unavailableReason && (
-        <p className="mb-2 rounded-lg bg-hairline/90 px-3 py-2 text-center text-xs text-ink-muted backdrop-blur">
-          {unavailableReason}
-        </p>
-      )}
-      <Button onClick={start} disabled={unavailableReason !== null}>
-        Commencer
-      </Button>
-    </>
-  )
+  // Écriture enchaînée : depuis la ligne en cours du parcours, kana après kana.
+  const focus = hub?.focus
+  const writingStart = focus?.kanaIds[0] ?? (settings.autoScript === 'katakana' ? 'k-a' : 'h-a')
 
   return (
-    <div>
-      <PageHeader
-        title="S’entraîner"
-        subtitle={
-          isAuto
-            ? 'Mode auto : les questions s’adaptent à votre progression.'
-            : "Mode manuel : choisissez l'exercice et les kana."
-        }
+    <div className="flex flex-col gap-2.5 pb-4">
+      <h1 className="sr-only">S’entraîner</h1>
+      <Overline first>Quiz</Overline>
+      <ActionCard
+        icon="target"
+        title="Session libre"
+        detail={freeSessionLine(settings.stage, groupCount, listCount, settings.questionCount)}
+        onClick={() => navigate('/learn/libre')}
+      />
+      <ActionCard
+        icon="replay"
+        title="Révision ciblée"
+        detail={hub ? reviewDetail(hub.review) : ' '}
+        disabled={due.length === 0}
+        onClick={startReview}
       />
 
-      {/* Grand écran : réglages à gauche, options et bouton dans une colonne fixe à droite. */}
-      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-6">
-        <div>
-          <Link
-            to="/learn/reading"
-            className="mb-4 flex min-h-16 items-center gap-3 rounded-md border border-control bg-paper-raised p-3"
+      <Overline>Lecture et écriture</Overline>
+      <ActionCard
+        icon="timer"
+        title="Lecture chronométrée"
+        detail={record === null ? 'Le roman, mot par mot, contre la montre' : `Record : ${record} kana par minute`}
+        onClick={() => navigate('/learn/reading')}
+      />
+      <ActionCard
+        icon="writing"
+        title="Écriture enchaînée"
+        detail={focus ? `Ligne ${groupGlyph(focus)}, kana après kana` : 'Tous les kana, trait par trait'}
+        onClick={() => navigate(`/writing/${writingStart}`)}
+      />
+
+      <Overline>Mes listes</Overline>
+      {lists.length === 0 ? (
+        <EmptyState
+          icon="plus"
+          title="Aucune liste pour l’instant"
+          action={
+            <Button size="sm" fullWidth={false} onClick={() => navigate('/learn/custom/new')}>
+              Créer une liste
+            </Button>
+          }
+        >
+          Regroupez les kana qui vous résistent pour les travailler ensemble. Un récapitulatif de session peut aussi en
+          créer une pour vous.
+        </EmptyState>
+      ) : (
+        <>
+          {lists.map((list) => (
+            <ActionCard
+              key={list.id}
+              icon="list"
+              title={list.name}
+              detail={`${list.kanaIds.length} kana · ${list.kanaIds
+                .slice(0, 8)
+                .map((id) => getKana(id)?.char)
+                .join(' ')}${list.kanaIds.length > 8 ? ' …' : ''}`}
+              onClick={() => navigate(`/learn/custom/${list.id}`)}
+            />
+          ))}
+          <Button
+            variant="text"
+            size="sm"
+            icon="plus"
+            iconPosition="start"
+            fullWidth={false}
+            className="self-start"
+            onClick={() => navigate('/learn/custom/new')}
           >
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-md bg-accent-tint text-accent">
-              <Icon name="timer" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-semibold">Lecture chronométrée</span>
-              <span className="block text-xs text-ink-muted">
-                Lisez un livre en romaji, le plus vite possible (1 à 5 min).
-              </span>
-            </span>
-            <Icon name="chevronRight" className="size-5 text-ink-muted" />
-          </Link>
-
-          <div className="mb-4">
-            <SegmentedControl label="Mode" options={MODE_OPTIONS} value={settings.mode} onChange={settings.setMode} />
-          </div>
-
-          {isAuto ? <AutoPanel /> : <ManualPanel />}
-        </div>
-
-        <div className="lg:sticky lg:top-0">
-          <Card title="Options">
-            <div className="space-y-4">
-              <Field label="Questions">
-                <SegmentedControl
-                  label="Nombre de questions"
-                  options={QUESTION_COUNTS.map((n) => ({ value: n, label: String(n) }))}
-                  value={settings.questionCount}
-                  onChange={settings.setQuestionCount}
-                />
-              </Field>
-              <Field label="Chrono par question">
-                <SegmentedControl
-                  label="Chrono par question"
-                  options={TIMER_OPTIONS.map((s) => ({ value: s, label: s === 0 ? 'Aucun' : `${s} s` }))}
-                  value={settings.timerSeconds}
-                  onChange={settings.setTimerSeconds}
-                />
-              </Field>
-              <Field label="Validation du dessin">
-                <SegmentedControl
-                  label="Validation du dessin"
-                  options={DRAWING_CHECK_OPTIONS}
-                  value={settings.drawingCheck}
-                  onChange={settings.setDrawingCheck}
-                />
-                <p className="mt-1.5 text-xs text-ink-muted">
-                  {settings.drawingCheck === 'auto'
-                    ? 'Stages 5 et 7 : chaque trait est vérifié (forme, sens, ordre).'
-                    : 'Stages 5 et 7 : dessinez librement, comparez au modèle et dites si c’est juste.'}
-                </p>
-              </Field>
-              <Switch
-                label="Réessayer après une erreur"
-                description="Sinon, la bonne réponse est affichée tout de suite."
-                checked={settings.retry}
-                onChange={settings.setRetry}
-              />
-              <Switch
-                label="Phrases d'anime"
-                description="Ajoute les répliques de Dragon Ball au choix des phrases (stages 8 et 9, mode manuel)."
-                checked={settings.animeSentences}
-                onChange={settings.setAnimeSentences}
-              />
-            </div>
-          </Card>
-
-          <div className="hidden lg:block">{startBlock}</div>
-        </div>
-      </div>
-
-      {/* Mobile : collé en bas de la zone qui défile, juste au-dessus des onglets (iPhone compris). */}
-      <div className="sticky -bottom-4 z-10 -mx-4 bg-paper px-4 pt-3 pb-5 lg:hidden">{startBlock}</div>
+            Nouvelle liste
+          </Button>
+        </>
+      )}
     </div>
   )
 }
 
-function AutoPanel() {
-  const source = useQuizSettingsStore((s) => s.autoSource)
-  const setSource = useQuizSettingsStore((s) => s.setAutoSource)
-
+function Overline({ children, first = false }: { children: ReactNode; first?: boolean }) {
   return (
-    <>
-      <div className="mb-4">
-        <SegmentedControl label="Kana révisés" options={SOURCE_OPTIONS} value={source} onChange={setSource} />
-      </div>
-      {source === 'path' ? <PathPanel /> : <SelectionPanel />}
-    </>
-  )
-}
-
-function PathPanel() {
-  const script = useQuizSettingsStore((s) => s.autoScript)
-  const setScript = useQuizSettingsStore((s) => s.setAutoScript)
-  const overview = useAutoOverview(script, AUTO_STAGES)
-
-  return (
-    <Card title="Progression">
-      <p className="mb-3 text-sm text-ink-muted">
-        On commence par la ligne あ. Quand 80 % des kana en cours sont reconnus vite et sans erreur, la ligne suivante
-        s’ajoute. Chaque kana bien connu passe ensuite aux exercices suivants (stages), et revient régulièrement en
-        révision.
-      </p>
-      <ScriptToggle value={script} onChange={setScript} />
-      {overview && (
-        <div className="mt-4 space-y-4">
-          <div>
-            <span className="mb-1.5 block text-xs font-semibold text-ink-muted">
-              Groupes en cours ({overview.activeGroups.length})
-            </span>
-            <div className="flex flex-wrap gap-1.5">
-              {overview.activeGroups.map((g) => (
-                <span
-                  key={g.id}
-                  className="flex min-h-9 items-center gap-1 rounded-lg bg-paper-raised px-2 text-sm"
-                >
-                  <span className="font-jp">{groupGlyph(g)}</span>
-                  <span className="text-xs text-ink-muted">{g.label}</span>
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {overview.nextGroup ? (
-            <div>
-              <div className="mb-1.5 flex items-baseline justify-between text-xs">
-                <span className="font-semibold text-ink-muted">
-                  Prochain groupe : <span className="font-jp">{groupGlyph(overview.nextGroup)}</span>{' '}
-                  {overview.nextGroup.label}
-                </span>
-                <span className="tabular-nums text-ink-muted">
-                  {Math.round(overview.ratio * 100)} % / {Math.round(overview.requiredRatio * 100)} %
-                </span>
-              </div>
-              <div className="h-2 overflow-hidden rounded-full bg-hairline">
-                <div
-                  className="h-full rounded-full bg-accent"
-                  style={{ width: `${Math.min(1, overview.ratio / overview.requiredRatio) * 100}%` }}
-                />
-              </div>
-            </div>
-          ) : (
-            <p className="text-sm text-ink-muted">Tous les groupes sont débloqués.</p>
-          )}
-
-          <StageMastery perStage={overview.perStage} />
-        </div>
-      )}
-    </Card>
-  )
-}
-
-function SelectionPanel() {
-  const settings = useQuizSettingsStore()
-  const pool = useQuizPool()
-  const overview = useAutoOverview(
-    settings.autoScript,
-    AUTO_STAGES,
-    pool.map((k) => k.id),
-  )
-
-  return (
-    <>
-      <Card title="Kana à réviser" aside={`${pool.length} kana`}>
-        <p className="mb-3 text-sm text-ink-muted">
-          Cochez ce que vous voulez réviser : les questions portent uniquement sur ces kana, en commençant par ceux que
-          vous connaissez le moins.
-        </p>
-        <ScriptToggle value={settings.pickerScript} onChange={settings.setPickerScript} />
-        <GroupPicker groups={groupsOfScript(settings.pickerScript)} />
-      </Card>
-
-      <CustomGroupsCard />
-
-      {overview && pool.length > 0 && (
-        <Card title="Maîtrise de la sélection">
-          <StageMastery perStage={overview.perStage} />
-        </Card>
-      )}
-    </>
-  )
-}
-
-function StageMastery({ perStage }: { perStage: { stage: StageId; mastered: number; total: number }[] }) {
-  return (
-    <div>
-      <span className="mb-1.5 block text-xs font-semibold text-ink-muted">
-        Kana maîtrisés par stage
-      </span>
-      <ul className="grid grid-cols-3 gap-1.5">
-        {perStage.map(({ stage, mastered, total }) => (
-          <li key={stage} className="rounded-lg bg-paper-raised px-2 py-1.5">
-            <span className="block text-xs text-ink-muted">{getStage(stage).title}</span>
-            <span className="text-sm font-semibold tabular-nums">
-              {mastered}/{total}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
-}
-
-function ManualPanel() {
-  const settings = useQuizSettingsStore()
-  const pool = useQuizPool()
-  const wordCount = wordsForPool(pool).length
-  const sentenceFilter = effectiveSentenceFilter(settings)
-  const sentenceCount = sentencesForPool(pool, sentenceFilter).length
-  const plural = (n: number, word: string) => `${n} ${word}${n > 1 ? 's' : ''} disponible${n > 1 ? 's' : ''}`
-
-  return (
-    <>
-      <Card title="Exercice">
-        <div className="grid grid-cols-2 gap-2">
-          {STAGES.map((stage) => {
-            const selected = settings.stage === stage.id
-            const note =
-              stage.id === 6 || stage.id === 7
-                ? plural(wordCount, 'mot')
-                : isSentenceStage(stage.id)
-                  ? plural(sentenceCount, 'phrase')
-                  : null
-            return (
-              <button
-                key={stage.id}
-                type="button"
-                aria-pressed={selected}
-                onClick={() => settings.setStage(stage.id)}
-                className={`flex min-h-20 flex-col items-start rounded-md border p-3 text-left transition-colors ${
-                  selected
-                    ? 'border-accent bg-accent-tint'
-                    : 'border-control'
-                }`}
-              >
-                <span
-                  className={`text-xs font-semibold ${selected ? 'text-accent' : 'text-ink-muted'}`}
-                >
-                  Stage {stage.id}
-                </span>
-                <span className="text-sm font-semibold">{stage.title}</span>
-                <span className="text-xs text-ink-muted">{stage.description}</span>
-                {note && <span className="mt-1 text-xs text-ink-muted">{note}</span>}
-              </button>
-            )
-          })}
-        </div>
-        {isSentenceStage(settings.stage) && (
-          <div className="mt-4">
-            <Field label="Phrases">
-              <SegmentedControl
-                label="Phrases"
-                options={
-                  settings.animeSentences
-                    ? [...SENTENCE_FILTER_OPTIONS, ...ANIME_FILTER_OPTIONS]
-                    : SENTENCE_FILTER_OPTIONS
-                }
-                value={sentenceFilter}
-                onChange={settings.setSentenceFilter}
-              />
-            </Field>
-          </div>
-        )}
-      </Card>
-
-      <Card title="Kana à travailler" aside={`${pool.length} kana`}>
-        <ScriptToggle value={settings.pickerScript} onChange={settings.setPickerScript} />
-        <GroupPicker groups={groupsOfScript(settings.pickerScript)} />
-      </Card>
-
-      <CustomGroupsCard />
-    </>
-  )
-}
-
-function Card({ title, aside, children }: { title: string; aside?: ReactNode; children: ReactNode }) {
-  return (
-    <section className="mb-4 rounded-md border border-hairline p-4">
-      <div className="mb-3 flex items-baseline justify-between">
-        <h2 className="text-sm font-semibold text-ink-muted">{title}</h2>
-        {aside && <span className="text-xs text-ink-muted">{aside}</span>}
-      </div>
+    <h2
+      className={`px-1 text-[11px] leading-[14px] font-bold tracking-[0.12em] text-ink-muted uppercase ${first ? 'mt-1' : 'mt-2'}`}
+    >
       {children}
-    </section>
-  )
-}
-
-function Field({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div>
-      <span className="mb-1.5 block text-sm font-medium">{label}</span>
-      {children}
-    </div>
-  )
-}
-
-function GroupPicker({ groups }: { groups: KanaGroup[] }) {
-  const selectedIds = useQuizSettingsStore((s) => s.groupIds)
-  const setGroupsSelected = useQuizSettingsStore((s) => s.setGroupsSelected)
-
-  return (
-    <div className="mt-3 space-y-4">
-      {KIND_ORDER.map((kind) => {
-        const kindGroups = groups.filter((g) => g.kind === kind)
-        if (kindGroups.length === 0) return null
-        const ids = kindGroups.map((g) => g.id)
-        const allSelected = ids.every((id) => selectedIds.includes(id))
-        return (
-          <div key={kind}>
-            <div className="mb-1.5 flex items-center justify-between">
-              <span className="text-xs font-semibold text-ink-muted">
-                {GROUP_KIND_LABELS[kind]}
-              </span>
-              <button
-                type="button"
-                onClick={() => setGroupsSelected(ids, !allSelected)}
-                className="min-h-8 px-2 text-xs font-medium text-accent"
-              >
-                {allSelected ? 'Aucun' : 'Tous'}
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {kindGroups.map((group) => {
-                const selected = selectedIds.includes(group.id)
-                return (
-                  <button
-                    key={group.id}
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() => setGroupsSelected([group.id], !selected)}
-                    className={`flex min-h-11 items-center gap-1.5 rounded-lg border px-2.5 text-sm transition-colors ${
-                      selected
-                        ? 'border-accent bg-accent text-on-accent'
-                        : 'border-control text-ink-muted'
-                    }`}
-                  >
-                    <span className="font-jp text-base">{groupGlyph(group)}</span>
-                    <span className="text-xs">{group.label}</span>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-function CustomGroupsCard() {
-  const customGroups = useCustomGroups()
-  const selectedIds = useQuizSettingsStore((s) => s.customGroupIds)
-  const toggle = useQuizSettingsStore((s) => s.toggleCustomGroup)
-
-  return (
-    <Card title="Mes listes">
-      {customGroups.length === 0 && (
-        <p className="mb-3 text-sm text-ink-muted">
-          Regroupez ici les kana qui vous posent problème.
-        </p>
-      )}
-      <ul className="mb-3 divide-y divide-hairline">
-        {customGroups.map((group) => {
-          const selected = selectedIds.includes(group.id)
-          return (
-            <li key={group.id} className="flex items-center gap-2">
-              <button
-                type="button"
-                role="checkbox"
-                aria-checked={selected}
-                onClick={() => toggle(group.id)}
-                className="flex min-h-12 flex-1 items-center gap-3 text-left"
-              >
-                <span
-                  className={`flex size-6 shrink-0 items-center justify-center rounded-md border-2 ${
-                    selected ? 'border-accent bg-accent text-on-accent' : 'border-control'
-                  }`}
-                >
-                  {selected && <Icon name="check" className="size-4" />}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium">{group.name}</span>
-                  <span className="block truncate font-jp text-xs text-ink-muted">
-                    {group.kanaIds.map((id) => getKana(id)?.char).join(' ')}
-                  </span>
-                </span>
-              </button>
-              <Link
-                to={`/learn/custom/${group.id}`}
-                aria-label={`Modifier ${group.name}`}
-                className="flex size-11 items-center justify-center text-ink-muted"
-              >
-                <Icon name="chevronRight" className="size-5" />
-              </Link>
-            </li>
-          )
-        })}
-      </ul>
-      <Link
-        to="/learn/custom/new"
-        className="flex min-h-11 items-center justify-center gap-2 rounded-md border border-dashed border-control text-sm font-medium text-ink-muted"
-      >
-        <Icon name="plus" className="size-4" />
-        Nouvelle liste
-      </Link>
-    </Card>
+    </h2>
   )
 }

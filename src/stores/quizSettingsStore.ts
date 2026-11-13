@@ -8,19 +8,17 @@ import type { DrawingCheck, StageId } from '@/features/quiz/types'
 export const QUESTION_COUNTS = [10, 20, 50] as const
 export const TIMER_OPTIONS = [0, 5, 10, 20] as const
 
-export type QuizMode = 'auto' | 'manual'
-/** Mode auto : parcours guidé (groupes débloqués au fil de la maîtrise) ou kana choisis. */
-export type AutoSource = 'path' | 'selection'
+/** Sélecteur de kana de la session libre : une écriture, ou les listes personnelles. */
+export type PickerTab = Script | 'lists'
 
 interface QuizSettingsState {
-  mode: QuizMode
-  /** Écriture du parcours en mode auto (chaque écriture a sa propre progression). */
+  /** Écriture du parcours (Session du jour : chaque écriture a sa propre progression). */
   autoScript: Script
-  autoSource: AutoSource
+  /** Session libre : exercice choisi. */
   stage: StageId
-  /** Phrases des stages 8 et 9 (mode manuel) : écriture, ou série d'anime. */
+  /** Écriture des phrases des stages 8 et 9 (session libre). */
   sentenceFilter: SentenceFilter
-  /** Option « Phrases d'anime » : propose les séries d'anime dans le filtre des phrases. */
+  /** Répliques de Dragon Ball ajoutées aux phrases des stages 8 et 9 (session libre). */
   animeSentences: boolean
   /** Groupes prédéfinis cochés (ids de KANA_GROUPS). */
   groupIds: string[]
@@ -31,12 +29,10 @@ interface QuizSettingsState {
   timerSeconds: number
   /** Validation des dessins (stages 5 et 7) : automatique ou par l'utilisateur. */
   drawingCheck: DrawingCheck
-  /** Écriture affichée dans le sélecteur de groupes. */
-  pickerScript: Script
+  /** Onglet du sélecteur de kana de la session libre. */
+  pickerScript: PickerTab
 
-  setMode: (mode: QuizMode) => void
   setAutoScript: (script: Script) => void
-  setAutoSource: (source: AutoSource) => void
   setStage: (stage: StageId) => void
   setSentenceFilter: (filter: SentenceFilter) => void
   setAnimeSentences: (enabled: boolean) => void
@@ -46,21 +42,13 @@ interface QuizSettingsState {
   setRetry: (retry: boolean) => void
   setTimerSeconds: (s: number) => void
   setDrawingCheck: (check: DrawingCheck) => void
-  setPickerScript: (script: Script) => void
-}
-
-/** Filtre des phrases réellement appliqué : une série d'anime n'est retenue que si l'option est active. */
-export function effectiveSentenceFilter(state: Pick<QuizSettingsState, 'sentenceFilter' | 'animeSentences'>): SentenceFilter {
-  const isAnime = state.sentenceFilter === 'dragonball'
-  return isAnime && !state.animeSentences ? 'all' : state.sentenceFilter
+  setPickerScript: (tab: PickerTab) => void
 }
 
 export const useQuizSettingsStore = create<QuizSettingsState>()(
   persist(
     (set) => ({
-      mode: 'auto',
       autoScript: 'hiragana',
-      autoSource: 'path',
       stage: 1,
       sentenceFilter: 'all',
       animeSentences: false,
@@ -72,9 +60,7 @@ export const useQuizSettingsStore = create<QuizSettingsState>()(
       drawingCheck: 'auto',
       pickerScript: 'hiragana',
 
-      setMode: (mode) => set({ mode }),
       setAutoScript: (autoScript) => set({ autoScript }),
-      setAutoSource: (autoSource) => set({ autoSource }),
       setStage: (stage) => set({ stage }),
       setSentenceFilter: (sentenceFilter) => set({ sentenceFilter }),
       setAnimeSentences: (animeSentences) => set({ animeSentences }),
@@ -96,10 +82,14 @@ export const useQuizSettingsStore = create<QuizSettingsState>()(
     }),
     {
       name: 'kana-quiz-settings',
-      version: 3,
+      version: 4,
       migrate: (persisted, version) => {
-        const state = persisted as { stage?: number }
-        if (state.stage) state.stage = migrateStage(state.stage, version) ?? 1
+        const state = persisted as { stage?: number; sentenceFilter?: string; mode?: unknown; autoSource?: unknown }
+        if (state.stage && version < 3) state.stage = migrateStage(state.stage, version) ?? 1
+        // v4 : Dragon Ball n'est plus un filtre exclusif mais un ajout (`animeSentences`) ; plus de mode auto / manuel.
+        if (state.sentenceFilter === 'dragonball') state.sentenceFilter = 'all'
+        delete state.mode
+        delete state.autoSource
         return state as QuizSettingsState
       },
     },

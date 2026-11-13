@@ -13,14 +13,15 @@ export function AppLayout() {
   const immersive = pathname.startsWith('/learn/quiz') || pathname.startsWith('/learn/reading')
   // Racine d'un onglet : en-tête profil / réglages, et largeur accrue sur grand écran.
   const tabRoot = TAB_PATHS.includes(pathname)
-  // Pages en min-h-full (accueil, quiz, détail d'un kana, exercice d'écriture, liste) :
+  // Pages en min-h-full (accueil, quiz, détail d'un kana, exercice d'écriture, liste, session libre) :
   // le conteneur doit avoir une hauteur fixée pour qu'elles occupent tout l'écran.
   const fill =
     immersive ||
     pathname === '/home' ||
     pathname.startsWith('/kana/') ||
     pathname.startsWith('/writing/') ||
-    pathname.startsWith('/learn/custom/')
+    pathname.startsWith('/learn/custom/') ||
+    pathname === '/learn/libre'
 
   return (
     <div className="flex h-full flex-col min-[840px]:flex-row">

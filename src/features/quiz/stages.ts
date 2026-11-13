@@ -35,6 +35,8 @@ export interface StagePresentation {
   /** Nom montré à l'utilisateur (vocabulaire du design system). */
   name: string
   family: StageFamily
+  /** Une ligne sous le nom, dans le choix de l'exercice. */
+  description: string
   /** Consigne au-dessus du sujet ; absente quand le sujet suffit (dessin). */
   ask?: string
   /** Le nom répète la consigne (« Quel son ? ») : la ligne de famille l'omet. */
@@ -43,15 +45,15 @@ export interface StagePresentation {
 
 // Noms et familles du design system (docs/design/README.md, Vocabulaire) ; les numéros ne changent pas.
 const PRESENTATION: Record<StageId, StagePresentation> = {
-  1: { name: 'Quel son ?', family: 'recognize', ask: 'Quel est ce son ?', nameInAsk: true },
-  2: { name: 'Quel kana ?', family: 'recognize', ask: 'Quel est ce kana ?', nameInAsk: true },
-  3: { name: 'Faux jumeaux', family: 'recognize', ask: 'Quel est ce son ?' },
-  4: { name: 'De mémoire', family: 'recognize', ask: 'Tapez la lecture' },
-  5: { name: 'Tracer un kana', family: 'write' },
-  6: { name: 'Lire un mot', family: 'read', ask: 'Tapez la lecture' },
-  7: { name: 'Tracer un mot', family: 'write' },
-  8: { name: 'Lire une phrase', family: 'read', ask: 'Tapez la lecture' },
-  9: { name: 'Composer une phrase', family: 'read', ask: 'Écrivez en kana' },
+  1: { name: 'Quel son ?', family: 'recognize', description: 'Un kana, quatre lectures', ask: 'Quel est ce son ?', nameInAsk: true },
+  2: { name: 'Quel kana ?', family: 'recognize', description: 'Une lecture, quatre kana', ask: 'Quel est ce kana ?', nameInAsk: true },
+  3: { name: 'Faux jumeaux', family: 'recognize', description: 'Huit lectures proches', ask: 'Quel est ce son ?' },
+  4: { name: 'De mémoire', family: 'recognize', description: 'Vous tapez la lecture', ask: 'Tapez la lecture' },
+  5: { name: 'Tracer un kana', family: 'write', description: 'Au doigt, trait par trait' },
+  6: { name: 'Lire un mot', family: 'read', description: 'Un mot en kana, vous tapez la lecture', ask: 'Tapez la lecture' },
+  7: { name: 'Tracer un mot', family: 'write', description: 'Une case par caractère' },
+  8: { name: 'Lire une phrase', family: 'read', description: 'Une phrase, vous tapez la lecture', ask: 'Tapez la lecture' },
+  9: { name: 'Composer une phrase', family: 'read', description: 'Des étiquettes en kana à mettre dans l’ordre', ask: 'Écrivez en kana' },
 }
 
 export function stagePresentation(id: StageId): StagePresentation {
