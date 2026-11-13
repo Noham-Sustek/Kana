@@ -2,20 +2,13 @@ import { CONFUSABLE_SETS } from '@/data/confusables'
 import { getKana, KANA, type Kana } from '@/data/kana'
 import type { AttemptStatus } from '@/features/quiz/session'
 import type { Question } from '@/features/quiz/types'
+import { jp, t, type Line, type Segment } from '@/lib/segments'
 
 // Contenu du panneau de retour d'une question (docs/design/components/Feedback) :
 // titre court et détail qui apporte quelque chose. Pur : le composant ne fait que l'afficher.
 // Pas de panneau pour une bonne réponse : la zone de réponse suffit (vert + coche).
 // La traduction d'un mot ou d'une phrase n'y figure pas non plus : elle s'affiche sous
 // le sujet, en récompense, une fois la réponse fixée (QuizPage).
-
-/** Morceau de texte ; `jp` = kana, à afficher en police japonaise. */
-export interface Segment {
-  text: string
-  jp?: boolean
-}
-
-export type Line = Segment[]
 
 export interface FeedbackContent {
   signal: 'wrong' | 'revealed'
@@ -31,9 +24,6 @@ export interface FeedbackInput {
   /** Résultat obtenu par « Afficher la réponse » ou chrono écoulé. */
   revealed: boolean
 }
-
-const t = (text: string): Segment => ({ text })
-const jp = (text: string): Segment => ({ text, jp: true })
 
 /** `null` quand il n'y a rien à dire : question en attente sans erreur, ou réussie. */
 export function feedbackFor({ question, status, wrongAnswers, revealed }: FeedbackInput): FeedbackContent | null {

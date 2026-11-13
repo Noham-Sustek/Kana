@@ -1,8 +1,9 @@
 import { useRef, useState, type ChangeEvent } from 'react'
 import { Button } from '@/components/Button'
 import { Dialog } from '@/components/Dialog'
-import { exportBackup, importBackup } from '@/db/backup'
-import { BackupError, backupFileName, parseBackup, profileToActivate, type Backup } from '@/features/backup/backup'
+import { importBackup } from '@/db/backup'
+import { BackupError, parseBackup, profileToActivate, type Backup } from '@/features/backup/backup'
+import { downloadBackup, shareBackup } from '@/lib/backupFile'
 import { useProfileStore } from '@/stores/profileStore'
 
 const dateFormat = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeStyle: 'short' })
@@ -19,33 +20,14 @@ export function BackupSettings() {
   const [state, setState] = useState<ImportState>({ step: 'idle' })
   const [exportMessage, setExportMessage] = useState<string | null>(null)
 
-  const buildFile = async () => {
-    const backup = await exportBackup()
-    return new File([JSON.stringify(backup)], backupFileName(backup.exportedAt), { type: 'application/json' })
-  }
-
   const download = async () => {
-    const file = await buildFile()
-    const url = URL.createObjectURL(file)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = file.name
-    a.click()
-    setTimeout(() => URL.revokeObjectURL(url), 10_000)
-    setExportMessage(`Fichier « ${file.name} » enregistré dans Téléchargements.`)
+    const name = await downloadBackup()
+    setExportMessage(`Fichier « ${name} » enregistré dans Téléchargements.`)
   }
 
   // Partage Android : envoi direct vers Drive, mail, Quick Share…
   const canShare = typeof navigator.canShare === 'function'
-  const share = async () => {
-    const file = await buildFile()
-    if (!navigator.canShare({ files: [file] })) return download()
-    try {
-      await navigator.share({ files: [file], title: 'Sauvegarde Kana' })
-    } catch (err) {
-      if ((err as DOMException).name !== 'AbortError') throw err
-    }
-  }
+  const share = shareBackup
 
   const onFile = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]

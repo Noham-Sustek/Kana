@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { getKana, kanaOfScript } from '@/data/kana'
 import { WORDS } from '@/data/words'
-import { confusableLine, feedbackFor, type Line } from '@/features/quiz/feedback'
+import { confusableLine, feedbackFor } from '@/features/quiz/feedback'
+import { lineText as text } from '@/lib/segments'
 import { kanaQuestion, wordQuestion } from '@/features/quiz/questions'
 import { seededRng } from '@/features/quiz/random'
 import type { ChoiceQuestion } from '@/features/quiz/types'
 
-const text = (line: Line) => line.map((s) => s.text).join('')
 const nu = getKana('h-nu')!
 const pool = kanaOfScript('hiragana')
 

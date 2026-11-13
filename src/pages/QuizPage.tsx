@@ -1,4 +1,4 @@
-import { Fragment, Suspense, lazy, useEffect, useRef, useState, type FormEvent } from 'react'
+import { Suspense, lazy, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router'
 import { Button } from '@/components/Button'
 import { Choice, type ChoiceState } from '@/components/Choice'
@@ -6,12 +6,13 @@ import { Dialog } from '@/components/Dialog'
 import { Feedback } from '@/components/Feedback'
 import { Icon } from '@/components/Icon'
 import { IconButton } from '@/components/IconButton'
+import { SegmentText } from '@/components/SegmentText'
 import { SessionProgress, type TickState } from '@/components/SessionProgress'
 import { TextField, type FieldState } from '@/components/TextField'
 import { TimerBar } from '@/components/TimerBar'
 import { WordTile, type WordTileState } from '@/components/WordTile'
 import { getKana, groupGlyph } from '@/data/kana'
-import { feedbackFor, type FeedbackContent, type Line } from '@/features/quiz/feedback'
+import { feedbackFor, type FeedbackContent } from '@/features/quiz/feedback'
 import { generateQuestions } from '@/features/quiz/questions'
 import { currentQuestion, score, type SessionState } from '@/features/quiz/session'
 import { FAMILIES, stageKindLabel, stagePresentation } from '@/features/quiz/stages'
@@ -247,26 +248,14 @@ function QuestionHeading({ stage, compact }: { stage: StageId; compact: boolean 
 
 function FeedbackPanel({ content, className }: { content: FeedbackContent; className?: string }) {
   return (
-    <Feedback signal={content.signal} title={<Segments line={content.title} />} className={className}>
+    <Feedback signal={content.signal} title={<SegmentText line={content.title} />} className={className}>
       {content.detail.length > 0 &&
         content.detail.map((line, i) => (
           <p key={i}>
-            <Segments line={line} />
+            <SegmentText line={line} />
           </p>
         ))}
     </Feedback>
-  )
-}
-
-function Segments({ line }: { line: Line }) {
-  return line.map((s, i) =>
-    s.jp ? (
-      <span key={i} className="font-jp text-[1.1em]">
-        {s.text}
-      </span>
-    ) : (
-      <Fragment key={i}>{s.text}</Fragment>
-    ),
   )
 }
 
