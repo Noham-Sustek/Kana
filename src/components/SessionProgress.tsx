@@ -2,6 +2,8 @@ export type TickState = 'todo' | 'current' | 'done' | 'missed'
 
 interface SessionProgressProps {
   ticks: readonly TickState[]
+  /** Compteur « 4 / 12 » à droite (masqué dans le récapitulatif). */
+  showCount?: boolean
   className?: string
 }
 
@@ -14,7 +16,7 @@ const TICK: Record<TickState, string> = {
 }
 
 /** Barre de session : un segment par question, suivie du compteur « 4 / 12 ». */
-export function SessionProgress({ ticks, className = '' }: SessionProgressProps) {
+export function SessionProgress({ ticks, showCount = true, className = '' }: SessionProgressProps) {
   // Position de la question en cours (« 4 / 12 ») ; une fois tout répondu, le nombre de réponses.
   const current = ticks.indexOf('current')
   const answered = current >= 0 ? current + 1 : ticks.filter((t) => t === 'done' || t === 'missed').length
@@ -25,9 +27,11 @@ export function SessionProgress({ ticks, className = '' }: SessionProgressProps)
           <i key={i} className={`h-[5px] flex-1 rounded-[1px] transition-colors duration-200 ${TICK[t]}`} />
         ))}
       </div>
-      <span className="text-[12.5px] leading-4 font-semibold text-ink-muted tabular-nums">
-        {answered} / {ticks.length}
-      </span>
+      {showCount && (
+        <span className="text-[12.5px] leading-4 font-semibold text-ink-muted tabular-nums">
+          {answered} / {ticks.length}
+        </span>
+      )}
     </div>
   )
 }

@@ -162,6 +162,18 @@ export function isMastered(card: CardState | undefined): boolean {
   return card !== undefined && card.mastery >= MASTERY_THRESHOLD
 }
 
+/** Intervalle de révision à partir duquel une carte maîtrisée est « Solide ». */
+export const SOLID_INTERVAL_MS = 7 * DAY
+
+/** Niveau de maîtrise d'une carte (kana, stage) : 0 Nouveau, 1 En cours, 2 Acquis, 3 Solide. */
+export type MasteryLevel = 0 | 1 | 2 | 3
+
+export function masteryLevel(card: CardState | undefined): MasteryLevel {
+  if (!card || card.answers === 0) return 0
+  if (!isMastered(card)) return 1
+  return card.intervalMs >= SOLID_INTERVAL_MS ? 3 : 2
+}
+
 /**
  * Stage en cours d'apprentissage pour un kana : le premier des `stages` (dans
  * l'ordre donné) qui n'est pas maîtrisé ; `null` si tous le sont.

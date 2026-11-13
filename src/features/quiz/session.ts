@@ -12,6 +12,8 @@ export interface Outcome {
   correct: boolean
   responseMs: number
   revealed: boolean
+  /** Réponse fausse donnée au premier essai (récapitulatif « Vous avez répondu… »). */
+  given?: string
 }
 
 export interface SessionState {
@@ -26,6 +28,9 @@ export interface SessionState {
   questionStartedAt: number
   outcomes: (Outcome | undefined)[]
   finished: boolean
+  startedAt: number
+  /** Fin de la dernière question (récapitulatif : durée). */
+  finishedAt: number | null
 }
 
 export interface Transition {
@@ -50,6 +55,8 @@ export function startSession(
     questionStartedAt: now,
     outcomes: questions.map(() => undefined),
     finished: questions.length === 0,
+    startedAt: now,
+    finishedAt: questions.length === 0 ? now : null,
   }
 }
 
@@ -75,6 +82,7 @@ export function submitAnswer(state: SessionState, answer: string, now: number): 
     correct,
     responseMs: now - state.questionStartedAt,
     revealed: false,
+    ...(correct ? {} : { given: answer }),
   })
 
   if (correct) return { state: { ...settled, status: 'correct' }, outcome }
@@ -114,13 +122,15 @@ export function revealAnswer(state: SessionState, now: number): Transition {
 export function nextQuestion(state: SessionState, now: number): SessionState {
   if (state.status === 'pending') return state
   const index = state.index + 1
+  const finished = index >= state.questions.length
   return {
     ...state,
     index,
     status: 'pending',
     wrongAnswers: [],
     questionStartedAt: now,
-    finished: index >= state.questions.length,
+    finished,
+    finishedAt: finished ? now : null,
   }
 }
 

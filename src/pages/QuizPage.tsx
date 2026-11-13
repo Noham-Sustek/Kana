@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useRef, useState, type FormEvent } from 'react'
-import { Link, Navigate, useLocation, useNavigate } from 'react-router'
+import { Navigate, useNavigate } from 'react-router'
 import { Button } from '@/components/Button'
 import { Choice, type ChoiceState } from '@/components/Choice'
 import { Dialog } from '@/components/Dialog'
@@ -11,14 +11,13 @@ import { SessionProgress, type TickState } from '@/components/SessionProgress'
 import { TextField, type FieldState } from '@/components/TextField'
 import { TimerBar } from '@/components/TimerBar'
 import { WordTile, type WordTileState } from '@/components/WordTile'
-import { getKana, groupGlyph } from '@/data/kana'
+import { groupGlyph } from '@/data/kana'
 import { feedbackFor, type FeedbackContent } from '@/features/quiz/feedback'
-import { generateQuestions } from '@/features/quiz/questions'
-import { currentQuestion, score, type SessionState } from '@/features/quiz/session'
+import { currentQuestion, type SessionState } from '@/features/quiz/session'
 import { FAMILIES, stageKindLabel, stagePresentation } from '@/features/quiz/stages'
 import type { ChoiceQuestion, ComposeQuestion, InputQuestion, Question, StageId } from '@/features/quiz/types'
-import { useQuizPool } from '@/features/quiz/useQuizPool'
-import { effectiveSentenceFilter, useQuizSettingsStore } from '@/stores/quizSettingsStore'
+import { useQuizOrigin } from '@/lib/useQuizOrigin'
+import { QuizSummary } from '@/pages/QuizSummary'
 import { useQuizSessionStore } from '@/stores/quizSessionStore'
 
 const AUTO_ADVANCE_MS = 700
@@ -31,12 +30,6 @@ export function QuizPage() {
   if (!session) return <Navigate to="/learn" replace />
   if (session.finished) return <QuizSummary session={session} />
   return <QuizRunner session={session} />
-}
-
-/** Écran d'où la session a été lancée (Accueil ou S'entraîner), où revenir en la quittant. */
-function useQuizOrigin(): string {
-  const state: unknown = useLocation().state
-  return state && typeof state === 'object' && 'from' in state && typeof state.from === 'string' ? state.from : '/learn'
 }
 
 /** Un segment par question : juste, raté (entaillé), en cours, à venir. */
@@ -586,115 +579,4 @@ function InputAnswer({ question, session, onSubmit, onNext }: InputAnswerProps) 
       />
     </form>
   )
-}
-
-function QuizSummary({ session }: { session: SessionState }) {
-  const { start, startAuto, quit, autoParams, unlockedThisSession } = useQuizSessionStore()
-  const settings = useQuizSettingsStore()
-  const pool = useQuizPool()
-  const navigate = useNavigate()
-  const origin = useQuizOrigin()
-  const { correct, total } = score(session)
-  const percent = total ? Math.round((correct / total) * 100) : 0
-
-  // Questions ratées, sans doublon.
-  const missed = new Map<string, Question>()
-  session.questions.forEach((q, i) => {
-    if (!session.outcomes[i]?.correct) missed.set(missedKey(q), q)
-  })
-  const missedKanaIds = [...new Set([...missed.values()].flatMap((q) => q.kanaIds))]
-
-  const restart = () => {
-    if (autoParams) return void startAuto(autoParams)
-    start(
-      generateQuestions(settings.stage, pool, settings.questionCount, Math.random, effectiveSentenceFilter(settings)),
-      {
-        retry: settings.retry,
-        timerSeconds: settings.timerSeconds,
-        drawingCheck: settings.drawingCheck,
-      },
-    )
-  }
-
-  return (
-    <div className="flex min-h-full flex-col">
-      <div className="py-8 text-center">
-        <p className="text-sm text-ink-muted">
-          {autoParams ? 'Session auto terminée' : `Stage ${session.questions[0]?.stage} terminé`}
-        </p>
-        <p className="mt-2 text-6xl font-bold tabular-nums">
-          {correct}
-          <span className="text-3xl text-ink-muted">/{total}</span>
-        </p>
-        <p className="mt-1 text-sm text-ink-muted">{percent} % du premier coup</p>
-      </div>
-
-      {unlockedThisSession.length > 0 && (
-        <section className="mb-4 rounded-md border border-gold bg-paper-raised p-4 text-gold">
-          <h2 className="text-sm font-semibold">Nouveaux groupes débloqués</h2>
-          <p className="mt-1 text-lg">
-            {unlockedThisSession.map((g) => (
-              <span key={g.id} className="mr-3">
-                <span className="font-jp">{groupGlyph(g)}</span> {g.label}
-              </span>
-            ))}
-          </p>
-        </section>
-      )}
-
-      {missed.size > 0 && (
-        <section className="rounded-md border border-hairline p-4">
-          <h2 className="mb-3 text-sm font-semibold text-ink-muted">À revoir</h2>
-          <ul className="flex flex-wrap gap-2">
-            {[...missed.entries()].map(([key, q]) => (
-              <li
-                key={key}
-                className="flex items-baseline gap-1.5 rounded-lg bg-paper-raised px-2.5 py-1.5"
-              >
-                <span className="font-jp text-lg">{missedKey(q)}</span>
-                <span className="text-xs text-ink-muted">{missedReading(q)}</span>
-              </li>
-            ))}
-          </ul>
-          <Link
-            to={`/learn/custom/new?kana=${missedKanaIds.join(',')}`}
-            className="mt-3 flex min-h-11 items-center justify-center gap-2 rounded-md border border-dashed border-control text-sm font-medium text-ink-muted"
-          >
-            <Icon name="plus" className="size-4" />
-            Créer une liste avec ces kana
-          </Link>
-        </section>
-      )}
-
-      <div className="mt-auto grid gap-2 pt-6">
-        <Button onClick={restart}>
-          Recommencer
-        </Button>
-        <Button
-          variant="quiet"
-          fullWidth
-          onClick={() => {
-            quit()
-            navigate(origin, { replace: true })
-          }}
-        >
-          {origin === '/home' ? 'Retour à l’accueil' : 'Retour à S’entraîner'}
-        </Button>
-      </div>
-    </div>
-  )
-}
-
-/** Texte en kana d'une question, pour la liste « À revoir ». */
-function missedKey(q: Question): string {
-  if (q.kind === 'input' || q.kind === 'compose') return q.reading
-  if (q.kind === 'draw') return q.target
-  return getKana(q.kanaIds[0]!)!.char
-}
-
-function missedReading(q: Question): string {
-  if (q.kind === 'input') return q.expected
-  if (q.kind === 'draw' && q.prompt.type === 'draw') return q.prompt.text
-  if (q.kind === 'compose') return q.prompt.text
-  return getKana(q.kanaIds[0]!)!.romaji[0]!
 }
