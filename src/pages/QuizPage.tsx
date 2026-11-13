@@ -144,7 +144,7 @@ function QuizRunner({ session }: { session: SessionState }) {
       <div
         className={`flex flex-col items-center justify-center ${isDrawing ? 'py-3' : 'min-h-0 flex-1 py-5 short:py-2'}`}
       >
-        <PromptView key={session.index} question={question} />
+        <PromptView key={session.index} question={question} done={settled || awaitingVerdict} />
       </div>
 
       {question.kind === 'choice' && <ChoiceAnswers question={question} session={session} onPick={submit} />}
@@ -318,7 +318,11 @@ function KanaCase({ children, size }: { children: string; size: 'lg' | 'md' }) {
   )
 }
 
-function PromptView({ question }: { question: Question }) {
+/**
+ * Sujet de la question. La traduction (kanji, sens, provenance) n'apparaît qu'une fois
+ * la réponse fixée, sous le texte : c'est la récompense de la question terminée.
+ */
+function PromptView({ question, done }: { question: Question; done: boolean }) {
   const { prompt } = question
   switch (prompt.type) {
     case 'kana':
@@ -331,34 +335,40 @@ function PromptView({ question }: { question: Question }) {
       )
     case 'word':
       return (
-        <p className={`text-center font-jp leading-tight tracking-[0.04em] break-keep ${wordSizeClass(prompt.text)}`}>
-          {prompt.text}
-        </p>
+        <div className="text-center">
+          <p className={`font-jp leading-tight tracking-[0.04em] break-keep ${wordSizeClass(prompt.text)}`}>
+            {prompt.text}
+          </p>
+          {/* Hauteur réservée : le mot ne saute pas quand la traduction arrive. */}
+          <p className="mt-3 min-h-6 text-[15px] leading-6 text-ink-muted short:mt-1 lg:text-base">
+            {done && <Meaning kanji={prompt.kanji} meaning={prompt.meaning} />}
+          </p>
+        </div>
       )
     case 'sentence':
       return (
-        // Un bloc par mot : le japonais se couperait sinon au milieu d'un mot.
-        <p
-          className={`flex flex-wrap justify-center gap-x-[0.4em] px-1 font-jp leading-relaxed short:leading-snug ${sentenceSizeClass(prompt.text)}`}
-        >
-          {prompt.text.split(' ').map((word, i) => (
-            <span key={i}>{word}</span>
-          ))}
-        </p>
+        <div className="text-center">
+          {/* Un bloc par mot : le japonais se couperait sinon au milieu d'un mot. */}
+          <p
+            className={`flex flex-wrap justify-center gap-x-[0.4em] px-1 font-jp leading-relaxed short:leading-snug ${sentenceSizeClass(prompt.text)}`}
+          >
+            {prompt.text.split(' ').map((word, i) => (
+              <span key={i}>{word}</span>
+            ))}
+          </p>
+          {done && <SentenceReward meaning={prompt.meaning} source={prompt.source} original={prompt.original} />}
+        </div>
       )
     case 'romajiSentence':
       return (
         <div className="text-center">
           <p className={`font-serif leading-snug font-medium ${romajiSentenceSizeClass(prompt.text)}`}>{prompt.text}</p>
-          {/* La traduction guide le choix des étiquettes. */}
-          <p className="mt-2 text-[13.5px] leading-[19px] text-ink-muted">
-            {/* Certaines traductions (répliques) ont déjà leurs guillemets. */}
-            {prompt.meaning.startsWith('«') ? prompt.meaning : `« ${prompt.meaning} »`}
-          </p>
+          {done && <SentenceReward meaning={prompt.meaning} source={prompt.source} original={prompt.original} />}
         </div>
       )
     case 'draw': {
       const count = question.kind === 'draw' ? question.chars.length : 1
+      const kanji = question.kind === 'draw' ? question.kanji : undefined
       return (
         <div className="text-center">
           <p className={`font-serif leading-none font-medium tracking-wide break-all ${romajiSizeClass(prompt.text)}`}>
@@ -369,13 +379,43 @@ function PromptView({ question }: { question: Question }) {
             {count > 1 && ` · ${count} caractères`}
             {prompt.note && ` · ${prompt.note}`}
           </p>
-          {/[āīūēō]/.test(prompt.text) && (
+          {done && prompt.meaning && (
+            <p className="mt-1.5 text-[15px] leading-6">
+              <Meaning kanji={kanji} meaning={prompt.meaning} />
+            </p>
+          )}
+          {!done && /[āīūēō]/.test(prompt.text) && (
             <p className="mt-1 text-xs text-ink-muted">ā, ī, ū, ē, ō : voyelle longue (ー)</p>
           )}
         </div>
       )
     }
   }
+}
+
+function Meaning({ kanji, meaning }: { kanji?: string; meaning: string }) {
+  return (
+    <span className="inline-block animate-rise">
+      {kanji && (
+        <>
+          <span className="font-jp text-lg text-ink lg:text-2xl">{kanji}</span>
+          {' · '}
+        </>
+      )}
+      {meaning}
+    </span>
+  )
+}
+
+/** Traduction d'une phrase, puis provenance et réplique d'origine (livre, anime). */
+function SentenceReward({ meaning, source, original }: { meaning: string; source?: string; original?: string }) {
+  return (
+    <div className="animate-rise">
+      <p className="mt-3 text-[15px] leading-[21px] text-ink-muted short:mt-1 lg:text-base">{meaning}</p>
+      {source && <p className="mt-2 text-xs font-medium text-ink-muted">{source}</p>}
+      {original && <p className="mt-2 font-jp text-base lg:text-lg">{original}</p>}
+    </div>
+  )
 }
 
 // Tailles choisies pour tenir sur une ligne à ~350 px de large (mots jusqu'à 10 kana),
