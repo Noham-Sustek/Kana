@@ -34,3 +34,9 @@ export function shouldShowHint(state: WritingState): boolean {
 export function totalMistakes(state: WritingState): number {
   return state.mistakes.reduce((a, b) => a + b, 0)
 }
+
+/** Retire le dernier trait validé (bouton Annuler) ; ses erreurs restent comptées. */
+export function undoStroke(state: WritingState): WritingState {
+  if (state.done === 0) return state
+  return { ...state, done: state.done - 1, last: null }
+}

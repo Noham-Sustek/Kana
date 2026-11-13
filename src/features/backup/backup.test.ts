@@ -39,6 +39,9 @@ function sample() {
     ],
     customGroups: [{ id: 2, profileId: 1, name: 'Difficiles', kanaIds: ['h-nu', 'h-me'], createdAt: 3 }],
     autoStates: [{ profileId: 1, script: 'hiragana', unlockedGroups: 3 }],
+    writingResults: [
+      { id: 1, profileId: 1, kanaId: 'h-nu', level: 3, success: true, mistakes: 1, hinted: false, revealed: false, at: 7 },
+    ],
     preferences: { 'kana-settings': '{"state":{"theme":"dark"}}', inconnu: 'x' },
   }
 }
@@ -49,6 +52,7 @@ describe('parseBackup', () => {
     expect(parsed.answers).toHaveLength(2)
     expect(parsed.customGroups[0]?.kanaIds).toEqual(['h-nu', 'h-me'])
     expect(parsed.autoStates[0]?.unlockedGroups).toBe(3)
+    expect(parsed.writingResults[0]?.kanaId).toBe('h-nu')
     expect(parsed.preferences).toEqual({ 'kana-settings': '{"state":{"theme":"dark"}}' })
   })
 
@@ -81,6 +85,14 @@ describe('parseBackup', () => {
     expect(parseBackup(v2).answers.map((a) => [a.id, a.stage])).toEqual([[4, 8]])
     // Version courante : prise telle quelle.
     expect(parseBackup(sample()).answers.map((a) => a.stage)).toEqual([1, 6])
+  })
+
+  it('accepte une sauvegarde v3, sans résultats d’écriture', () => {
+    const { writingResults: _w, ...v3 } = { ...sample(), version: 3 }
+    expect(parseBackup(v3).writingResults).toEqual([])
+    const bad = sample()
+    bad.writingResults[0]!.level = 1 as 3
+    expect(() => parseBackup(bad)).toThrow(/écriture, élément 1/)
   })
 
   it('refuse des données rattachées à un profil absent', () => {

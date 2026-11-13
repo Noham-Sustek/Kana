@@ -1,5 +1,5 @@
-import { CONFUSABLE_SETS } from '@/data/confusables'
-import { getKana, KANA, type Kana } from '@/data/kana'
+import { confusablesOf } from '@/features/kana/detail'
+import { getKana, type Kana } from '@/data/kana'
 import type { AttemptStatus } from '@/features/quiz/session'
 import type { Question } from '@/features/quiz/types'
 import { jp, t, type Line, type Segment } from '@/lib/segments'
@@ -98,14 +98,7 @@ function pickedLine(question: Question, pickedId: string): Line {
 
 /** « À ne pas confondre avec め (me) et ね (ne). » d'après les familles de caractères proches. */
 export function confusableLine(kana: Kana): Line | null {
-  const others: Kana[] = []
-  for (const set of CONFUSABLE_SETS) {
-    if (!set.includes(kana.char)) continue
-    for (const char of set) {
-      const other = KANA.find((k) => k.char === char && k.script === kana.script)
-      if (other && other.id !== kana.id && !others.includes(other)) others.push(other)
-    }
-  }
+  const others = confusablesOf(kana)
   const shown = others.slice(0, 3)
   if (shown.length === 0) return null
   const line: Line = [t('À ne pas confondre avec ')]

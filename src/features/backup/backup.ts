@@ -1,4 +1,4 @@
-import type { AnswerRecord, AutoState, CustomGroup, Profile } from '@/db/db'
+import type { AnswerRecord, AutoState, CustomGroup, Profile, WritingResult } from '@/db/db'
 import { migrateStage } from '@/features/quiz/stages'
 import type { StageId } from '@/features/quiz/types'
 
@@ -7,7 +7,7 @@ import type { StageId } from '@/features/quiz/types'
 // des anciennes versions dans parseBackup.
 
 export const BACKUP_FORMAT = 'kana-backup'
-export const BACKUP_VERSION = 3
+export const BACKUP_VERSION = 4
 
 /** Préférences d'interface (localStorage) incluses dans la sauvegarde. */
 export const PREFERENCE_KEYS = [
@@ -26,6 +26,8 @@ export interface Backup {
   answers: AnswerRecord[]
   customGroups: CustomGroup[]
   autoStates: AutoState[]
+  /** Exercice d'écriture (v4 ; vide pour une sauvegarde plus ancienne). */
+  writingResults: WritingResult[]
   /** Valeurs brutes du localStorage, par clé de PREFERENCE_KEYS. */
   preferences: Record<string, string>
 }
@@ -68,6 +70,17 @@ const isCustomGroup = (r: Rec) =>
 const isAutoState = (r: Rec) =>
   isInt(r.profileId) && (r.script === 'hiragana' || r.script === 'katakana') && isInt(r.unlockedGroups)
 
+const isWritingResult = (r: Rec) =>
+  isInt(r.id) &&
+  isInt(r.profileId) &&
+  isStr(r.kanaId) &&
+  (r.level === 2 || r.level === 3) &&
+  isBool(r.success) &&
+  isInt(r.mistakes) &&
+  isBool(r.hinted) &&
+  isBool(r.revealed) &&
+  isNum(r.at)
+
 /** Vérifie et normalise une sauvegarde lue depuis un fichier. */
 export function parseBackup(input: unknown): Backup {
   if (!isRecord(input) || input.format !== BACKUP_FORMAT) {
@@ -80,7 +93,7 @@ export function parseBackup(input: unknown): Backup {
 
   // v1, v2 : ancienne numérotation des stages ; les réponses du stage audio sont abandonnées.
   const version = data.version
-  if (version < BACKUP_VERSION && Array.isArray(data.answers)) {
+  if (version < 3 && Array.isArray(data.answers)) {
     data = {
       ...data,
       answers: data.answers.flatMap((a: unknown) => {
@@ -90,6 +103,9 @@ export function parseBackup(input: unknown): Backup {
       }),
     }
   }
+
+  // Avant v4 : pas encore de résultats d'écriture.
+  if (version < 4) data = { ...data, writingResults: [] }
 
   const profiles = list<Profile>(data, 'profiles', 'profils', isProfile)
   if (profiles.length === 0) throw new BackupError('Sauvegarde corrompue : aucun profil.')
@@ -112,6 +128,7 @@ export function parseBackup(input: unknown): Backup {
     answers: list<AnswerRecord>(data, 'answers', 'réponses', (r) => isAnswer(r) && owned(r)),
     customGroups: list<CustomGroup>(data, 'customGroups', 'listes', (r) => isCustomGroup(r) && owned(r)),
     autoStates: list<AutoState>(data, 'autoStates', 'mode auto', (r) => isAutoState(r) && owned(r)),
+    writingResults: list<WritingResult>(data, 'writingResults', 'écriture', (r) => isWritingResult(r) && owned(r)),
     preferences,
   }
 }

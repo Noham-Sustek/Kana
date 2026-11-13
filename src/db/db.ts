@@ -36,6 +36,22 @@ export interface AutoState {
   unlockedGroups: number
 }
 
+/** Un tracé terminé dans l'exercice d'écriture (niveaux 2 · calque et 3 · de mémoire). */
+export interface WritingResult {
+  id: number
+  profileId: number
+  kanaId: string
+  level: 2 | 3
+  /** Terminé sans afficher le modèle ni (de mémoire) d'indice. */
+  success: boolean
+  /** Traits refusés avant d'être justes. */
+  mistakes: number
+  hinted: boolean
+  revealed: boolean
+  /** Horodatage (ms epoch). */
+  at: number
+}
+
 /** Profil local : chaque profil a sa propre progression. */
 export interface Profile {
   id: number
@@ -54,6 +70,7 @@ export const db = new Dexie('kana') as Dexie & {
   customGroups: EntityTable<CustomGroup, 'id'>
   autoStates: Table<AutoState, [number, Script]>
   profiles: EntityTable<Profile, 'id'>
+  writingResults: EntityTable<WritingResult, 'id'>
 }
 
 db.version(1).stores({})
@@ -105,6 +122,10 @@ db.version(7)
       a.stage = renumberStageV2(a.stage) ?? a.stage
     })
   })
+// v8 : résultats de l'exercice d'écriture (lentille Écriture de la grille).
+db.version(8).stores({
+  writingResults: '++id, [profileId+kanaId], [profileId+at]',
+})
 
 db.on('populate', (tx) => {
   tx.table('profiles').add({ id: DEFAULT_PROFILE_ID, name: DEFAULT_PROFILE_NAME, createdAt: Date.now() })

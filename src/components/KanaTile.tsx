@@ -23,7 +23,8 @@ interface KanaTileProps {
   className?: string
 }
 
-const HEAT: Record<HeatLevel, string> = {
+/** Teinte d'une case selon la réussite (lentille Lecture), reprise par la légende. */
+export const HEAT_TILE: Record<HeatLevel, string> = {
   0: 'border-dashed border-control text-ink-muted',
   1: 'border-control bg-heat-1',
   2: 'border-heat-2 bg-heat-2',
@@ -47,7 +48,7 @@ export function KanaTile({
 }: KanaTileProps) {
   let look = 'border-control bg-paper-raised text-ink'
   let style: CSSProperties | undefined
-  if (heat !== undefined) look = HEAT[heat]
+  if (heat !== undefined) look = HEAT_TILE[heat]
   else if (variant === 'done') look = 'border-accent bg-accent text-on-accent'
   else if (variant === 'locked') look = 'border-dashed border-hairline text-ink-muted'
   else if (variant === 'current') {

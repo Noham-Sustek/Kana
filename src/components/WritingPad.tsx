@@ -7,6 +7,7 @@ import { distance, toSvgPoints, type Point } from '@/features/writing/geometry'
 import {
   applyVerdict,
   createWritingState,
+  undoStroke,
   isComplete,
   shouldShowHint,
   totalMistakes,
@@ -21,8 +22,10 @@ const INK_LIGHT = '#1e1b17'
 const INK_DARK = '#ede6d8'
 const ERROR_COLOR = '#c8321f'
 const FLASH_MS = 500
+// Outils sous la zone : icône au-dessus du libellé ; l'action du niveau porte un contour.
 const TOOL_BUTTON =
-  'flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-control bg-paper-raised text-sm font-medium active:scale-95'
+  'flex min-h-[52px] min-w-[68px] flex-col items-center justify-center gap-0.5 rounded-md px-2 text-[12px] leading-[14px] font-semibold text-ink active:brightness-90 disabled:opacity-40'
+const MAIN_TOOL = 'border-[1.5px] border-control bg-paper-raised'
 /** Écart minimal entre deux points enregistrés (unités KanjiVG) : évite d'accumuler du bruit. */
 const MIN_POINT_GAP = 0.4
 
@@ -34,6 +37,10 @@ export interface WritingResult {
   revealed: boolean
   /** Vrai si un indice a été affiché (demandé, ou automatique après des erreurs). */
   hinted: boolean
+  /** Traits refusés, par trait du modèle (vide sans validation). */
+  strokeMistakes: number[]
+  /** Traits validés (tous quand le kana est terminé ; moins après « Comparer »). */
+  done: number
 }
 
 interface WritingPadProps {
@@ -162,7 +169,14 @@ export function WritingPad({ strokes, mode, onComplete, showCompare = true, vali
       setFlash(session.done)
       haptic('strokeOk')
       if (isComplete(nextState)) {
-        onComplete({ mistakes: totalMistakes(nextState), drawn: nextDrawn, revealed: false, hinted: hinted.current })
+        onComplete({
+          mistakes: totalMistakes(nextState),
+          drawn: nextDrawn,
+          revealed: false,
+          hinted: hinted.current,
+          strokeMistakes: nextState.mistakes,
+          done: nextState.done,
+        })
       }
     } else {
       setErrorStroke(points)
@@ -197,20 +211,28 @@ export function WritingPad({ strokes, mode, onComplete, showCompare = true, vali
       drawn: errorStroke ? [...drawn, errorStroke] : drawn,
       revealed: true,
       hinted: hinted.current,
+      strokeMistakes: session.mistakes,
+      done: session.done,
     })
 
-  const undo = () => setDrawn(drawn.slice(0, -1))
-  const finish = () => onComplete({ mistakes: 0, drawn, revealed: false, hinted: false })
+  const undo = () => {
+    setDrawn(drawn.slice(0, -1))
+    if (validate) {
+      setSession(undoStroke(session))
+      setErrorStroke(null)
+    }
+  }
+  const finish = () => onComplete({ mistakes: 0, drawn, revealed: false, hinted: false, strokeMistakes: [], done: drawn.length })
 
-  const feedback = validate
+  const feedback: PadFeedback = validate
     ? feedbackOf(session)
-    : { text: 'Dessinez librement, puis validez.', className: 'text-ink-muted' }
+    : { text: `Dessinez librement, puis touchez Terminé · ${drawn.length} trait${drawn.length > 1 ? 's' : ''}`, className: 'text-ink-muted' }
   // Traits validés : ceux du modèle (calque) ou ceux réellement dessinés (libre).
   const doneStrokes = mode === 'trace' ? strokes.slice(0, session.done) : drawn
 
   return (
     <div>
-      <div className="relative aspect-square w-full overflow-hidden rounded-md border border-hairline bg-paper-raised">
+      <div className="relative aspect-square w-full overflow-hidden rounded-sm border-[1.5px] border-ink bg-paper-raised">
         <svg
           viewBox={`0 0 ${STROKE_VIEWBOX} ${STROKE_VIEWBOX}`}
           className="pointer-events-none absolute inset-0 size-full"
@@ -241,13 +263,13 @@ export function WritingPad({ strokes, mode, onComplete, showCompare = true, vali
                 points={toSvgPoints(next)}
                 pathLength={1}
                 strokeDasharray="1 1"
-                className="stroke-sky-500/70"
+                className="stroke-accent"
                 style={{ animation: 'stroke-draw 1.4s ease-in-out infinite' }}
               />
             )}
           </g>
           {next && (mode === 'trace' || showHint) && (
-            <circle cx={next[0]![0]} cy={next[0]![1]} r={2.6} className="fill-sky-500" />
+            <circle cx={next[0]![0]} cy={next[0]![1]} r={2.6} className="fill-accent" />
           )}
         </svg>
         <canvas
@@ -262,95 +284,75 @@ export function WritingPad({ strokes, mode, onComplete, showCompare = true, vali
         />
       </div>
 
-      <div className="mt-3 flex min-h-11 items-center justify-between gap-3">
-        <p aria-live="polite" className={`text-sm font-medium ${feedback.className}`}>
-          {feedback.text}
-        </p>
-        <span className="shrink-0 text-xs text-ink-muted">
-          {validate
-            ? `${Math.min(session.done + 1, strokes.length)} / ${strokes.length}`
-            : `${drawn.length} trait${drawn.length > 1 ? 's' : ''}`}
-        </span>
-      </div>
+      <p aria-live="polite" className={`mt-2.5 flex min-h-5 items-center justify-center gap-1 text-center text-[12.5px] leading-4 font-semibold ${feedback.className}`}>
+        {feedback.ok && <Icon name="check" strokeWidth={3} className="size-3.5 shrink-0" />}
+        {feedback.text}
+      </p>
 
-      {!validate && (
-        <div className="mt-1 grid grid-cols-3 gap-2">
-          <button
-            type="button"
-            onClick={reset}
-            disabled={drawn.length === 0}
-            className={`${TOOL_BUTTON} disabled:opacity-40`}
-          >
-            <Icon name="replay" className="size-5" />
-            Effacer
-          </button>
-          <button
-            type="button"
-            onClick={undo}
-            disabled={drawn.length === 0}
-            className={`${TOOL_BUTTON} disabled:opacity-40`}
-          >
-            <Icon name="undo" className="size-5" />
-            Annuler
-          </button>
-          <button
-            type="button"
-            onClick={finish}
-            disabled={drawn.length === 0}
-            className={`${TOOL_BUTTON} disabled:opacity-40`}
-          >
-            <Icon name="check" className="size-5" />
-            Terminé
-          </button>
-        </div>
-      )}
-
-      {validate && !complete && (
-        <div className={`mt-1 grid gap-2 ${mode === 'free' && showCompare ? 'grid-cols-3' : 'grid-cols-2'}`}>
-          <button type="button" onClick={reset} className={TOOL_BUTTON}>
-            <Icon name="replay" className="size-5" />
-            {mode === 'free' ? 'Effacer' : 'Recommencer'}
-          </button>
-          <button
-            type="button"
-            onClick={() => setHintFor(session.done)}
-            disabled={showHint}
-            className={`${TOOL_BUTTON} disabled:opacity-40`}
-          >
+      <div className="mt-1.5 flex justify-center gap-2">
+        {(!validate || !complete) && (
+          <>
+            <button type="button" onClick={reset} disabled={drawn.length === 0 && !errorStroke} className={TOOL_BUTTON}>
+              <Icon name="replay" className="size-5" />
+              Effacer
+            </button>
+            <button type="button" onClick={undo} disabled={drawn.length === 0} className={TOOL_BUTTON}>
+              <Icon name="undo" className="size-5" />
+              Annuler
+            </button>
+          </>
+        )}
+        {validate && !complete && (
+          <button type="button" onClick={() => setHintFor(session.done)} disabled={showHint} className={TOOL_BUTTON}>
             <Icon name="lightbulb" className="size-5" />
             Indice
           </button>
-          {mode === 'free' && showCompare && (
-            <button type="button" onClick={compare} className={TOOL_BUTTON}>
-              <Icon name="eye" className="size-5" />
-              Comparer
-            </button>
-          )}
-        </div>
-      )}
+        )}
+        {validate && !complete && mode === 'free' && showCompare && (
+          <button type="button" onClick={compare} className={`${TOOL_BUTTON} ${MAIN_TOOL}`}>
+            <Icon name="eye" className="size-5" />
+            Comparer
+          </button>
+        )}
+        {!validate && (
+          <button type="button" onClick={finish} disabled={drawn.length === 0} className={`${TOOL_BUTTON} ${MAIN_TOOL}`}>
+            <Icon name="check" className="size-5" />
+            Terminé
+          </button>
+        )}
+      </div>
     </div>
   )
 }
 
-function feedbackOf(session: WritingState): { text: string; className: string } {
+interface PadFeedback {
+  text: string
+  className: string
+  ok?: boolean
+}
+
+function feedbackOf(session: WritingState): PadFeedback {
   const last = session.last
   const neutral = 'text-ink-muted'
-  if (isComplete(session)) return { text: 'Kana terminé !', className: 'text-correct-ink' }
-  if (!last) return { text: 'Tracez le premier trait.', className: neutral }
-  if (last.ok) return { text: 'Bien ! Trait suivant.', className: 'text-correct-ink' }
+  const total = session.strokeCount
+  if (isComplete(session)) return { text: 'Kana terminé', className: 'text-correct-ink', ok: true }
+  if (!last) {
+    return { text: session.done === 0 ? `Tracez le premier trait · ${total} au total` : `Trait ${session.done + 1} sur ${total}`, className: neutral }
+  }
+  if (last.ok) return { text: `Trait ${session.done} : forme, sens, position`, className: 'text-correct-ink', ok: true }
   const error = 'text-error-ink'
   switch (last.fault) {
     case 'order':
       return {
-        text: `Mauvais ordre : c'est le trait ${(last.matchedIndex ?? 0) + 1}. Tracez d'abord le trait ${session.done + 1}.`,
+        text: `Ce n’est pas encore ce trait : tracez d’abord le trait ${session.done + 1}`,
         className: error,
       }
     case 'direction':
-      return { text: 'Bon trait, mais dans le mauvais sens.', className: error }
+      return { text: 'Sens inversé', className: error }
     case 'position':
-      return { text: 'Bonne forme, mais mal placée.', className: error }
+      return { text: 'Bonne forme, mal placée', className: error }
     case 'shape':
-      return { text: 'Forme incorrecte, réessayez.', className: error }
+      return { text: 'Forme à reprendre', className: error }
   }
 }
 
