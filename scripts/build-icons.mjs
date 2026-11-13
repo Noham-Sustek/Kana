@@ -114,8 +114,8 @@ write(
 
 // ── Application Android (Capacitor) ──
 // Icône adaptative : premier plan 108 dp dont seuls ~72 dp sont visibles et 66 dp toujours sûrs ;
-// la case (diagonale) tient dans ce cercle. Fond = couleur unie. Variantes « night » : icône et
-// écran de démarrage sombres quand le téléphone est en thème sombre.
+// la case (diagonale) tient dans ce cercle. Fond = couleur unie. Icône claire dans les deux thèmes ;
+// seul le fond de l'écran de démarrage passe au noir en thème sombre (values-night).
 const res = 'android/app/src/main/res/'
 const FG_SCALE = (0.43 * 108) / 62
 const foreground = (t) => svg(`<g transform="translate(54 54) scale(${FG_SCALE}) translate(-50 -50)">${mark(t)}</g>`, '0 0 108 108')
@@ -128,8 +128,9 @@ const DENSITIES = { mdpi: 1, hdpi: 1.5, xhdpi: 2, xxhdpi: 3, xxxhdpi: 4 }
 for (const [density, f] of Object.entries(DENSITIES)) {
   const legacy = Math.round(48 * f)
   const fg = Math.round(108 * f)
-  for (const theme of ['light', 'dark']) {
-    const dir = `${res}mipmap-${theme === 'dark' ? 'night-' : ''}${density}/`
+  {
+    const theme = 'light'
+    const dir = `${res}mipmap-${density}/`
     const t = THEMES[theme]
     write(`${dir}ic_launcher.png`, png(icon(theme), legacy))
     write(
@@ -143,6 +144,6 @@ for (const [density, f] of Object.entries(DENSITIES)) {
 for (const theme of ['light', 'dark']) {
   write(
     `${res}values${theme === 'dark' ? '-night' : ''}/ic_launcher_background.xml`,
-    `<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">${THEMES[theme].ground}</color>\n    <color name="kana_paper">${PAPER[theme]}</color>\n</resources>\n`,
+    `<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">${THEMES.light.ground}</color>\n    <color name="kana_paper">${PAPER[theme]}</color>\n</resources>\n`,
   )
 }
