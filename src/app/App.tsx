@@ -21,6 +21,11 @@ const WritingExercisePage = lazy(() =>
 // Chunk séparé : la lecture chronométrée n'est chargée qu'à l'ouverture.
 const ChronoPage = lazy(() => import('@/pages/ChronoPage').then((m) => ({ default: m.ChronoPage })))
 
+// Galerie du design system : serveur de dev uniquement (absente du build).
+const ComponentsPage = import.meta.env.DEV
+  ? lazy(() => import('@/pages/ComponentsPage').then((m) => ({ default: m.ComponentsPage })))
+  : null
+
 export function App() {
   useApplyTheme()
   useEnsureActiveProfile()
@@ -57,6 +62,16 @@ export function App() {
           <Route path="stats" element={<StatsPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="settings/about" element={<AboutPage />} />
+          {ComponentsPage && (
+            <Route
+              path="dev/composants"
+              element={
+                <Suspense>
+                  <ComponentsPage />
+                </Suspense>
+              }
+            />
+          )}
           <Route path="*" element={<Navigate to="/learn" replace />} />
         </Route>
       </Routes>

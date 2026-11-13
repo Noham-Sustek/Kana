@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { Icon } from '@/components/Icon'
 import { KanaGuideLines } from '@/components/KanaGuideLines'
+import { haptic } from '@/lib/haptic'
 import { STROKE_VIEWBOX } from '@/data/strokes'
 import { distance, toSvgPoints, type Point } from '@/features/writing/geometry'
 import {
@@ -159,12 +160,13 @@ export function WritingPad({ strokes, mode, onComplete, showCompare = true, vali
       const nextDrawn = [...drawn, points]
       setDrawn(nextDrawn)
       setFlash(session.done)
+      haptic('strokeOk')
       if (isComplete(nextState)) {
         onComplete({ mistakes: totalMistakes(nextState), drawn: nextDrawn, revealed: false, hinted: hinted.current })
       }
     } else {
       setErrorStroke(points)
-      navigator.vibrate?.(40)
+      haptic('wrong')
     }
   }
 

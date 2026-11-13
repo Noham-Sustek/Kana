@@ -1,9 +1,13 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
+import { Button } from '@/components/Button'
+import { Dialog } from '@/components/Dialog'
 import { Icon } from '@/components/Icon'
+import { IconButton } from '@/components/IconButton'
 import { KANA_CELL_CLASS, KanaCellContent, KanaGrid } from '@/components/KanaGrid'
 import { ScriptToggle } from '@/components/ScriptToggle'
+import { TextField } from '@/components/TextField'
 import { KANA, getKana, type Script } from '@/data/kana'
 import { db, type CustomGroup } from '@/db/db'
 import { deleteCustomGroup, saveCustomGroup } from '@/db/customGroups'
@@ -33,6 +37,7 @@ function CustomGroupForm({ existing }: { existing: CustomGroup | null }) {
 
   const initialIds = existing?.kanaIds ?? (params.get('kana')?.split(',').filter((k) => getKana(k)) ?? [])
   const [name, setName] = useState(existing?.name ?? '')
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [kanaIds, setKanaIds] = useState<string[]>(initialIds)
   const [script, setScript] = useState<Script>(
     initialIds[0] && getKana(initialIds[0])?.script === 'katakana' ? 'katakana' : 'hiragana',
@@ -54,14 +59,14 @@ function CustomGroupForm({ existing }: { existing: CustomGroup | null }) {
   }
 
   const remove = async () => {
-    if (!existing || !window.confirm(`Supprimer la liste « ${existing.name} » ?`)) return
+    if (!existing) return
     await deleteCustomGroup(existing.id)
     if (selectedCustomIds.includes(existing.id)) toggleCustomGroup(existing.id)
     navigate('/learn', { replace: true })
   }
 
   return (
-    <div className="pb-20">
+    <div className="flex min-h-full flex-col">
       <header className="mb-4 flex items-center justify-between">
         <button
           type="button"
@@ -72,14 +77,7 @@ function CustomGroupForm({ existing }: { existing: CustomGroup | null }) {
           Apprendre
         </button>
         {existing && (
-          <button
-            type="button"
-            onClick={remove}
-            aria-label="Supprimer la liste"
-            className="flex size-11 items-center justify-center text-error-ink"
-          >
-            <Icon name="trash" className="size-5" />
-          </button>
+          <IconButton icon="trash" label="Supprimer la liste" onClick={() => setConfirmDelete(true)} />
         )}
       </header>
 
@@ -87,12 +85,12 @@ function CustomGroupForm({ existing }: { existing: CustomGroup | null }) {
 
       <label className="mb-4 block">
         <span className="mb-1.5 block text-sm font-medium">Nom</span>
-        <input
+        <TextField
+          variant="ui"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Ex. : kana difficiles"
           maxLength={40}
-          className="min-h-12 w-full rounded-md border border-control bg-paper-raised px-3 outline-none focus:ring-2 focus:ring-accent/40"
         />
       </label>
 
@@ -117,16 +115,25 @@ function CustomGroupForm({ existing }: { existing: CustomGroup | null }) {
         }}
       />
 
-      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-10 mx-auto max-w-lg px-4 pb-3">
-        <button
-          type="button"
-          onClick={save}
-          disabled={!canSave}
-          className="min-h-12 w-full rounded-md bg-accent font-semibold text-on-accent active:scale-[0.98] disabled:opacity-40"
-        >
+      <div className="sticky -bottom-4 z-10 -mx-4 mt-auto bg-paper px-4 pt-3 pb-5">
+        <Button onClick={save} disabled={!canSave}>
           Enregistrer ({kanaIds.length} kana)
-        </button>
+        </Button>
       </div>
+
+      {existing && (
+        <Dialog
+          open={confirmDelete}
+          title="Supprimer la liste ?"
+          safeLabel="Annuler"
+          onSafe={() => setConfirmDelete(false)}
+          riskyLabel="Supprimer"
+          onRisky={remove}
+          irreversible
+        >
+          « {existing.name} » sera supprimée. Les kana et leur progression ne changent pas.
+        </Dialog>
+      )}
     </div>
   )
 }

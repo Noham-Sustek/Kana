@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Button } from '@/components/Button'
 import { Link, useNavigate } from 'react-router'
 import { Icon } from '@/components/Icon'
 import { PageHeader } from '@/components/PageHeader'
@@ -107,14 +108,9 @@ export function LearnPage() {
           {unavailableReason}
         </p>
       )}
-      <button
-        type="button"
-        onClick={start}
-        disabled={unavailableReason !== null}
-        className="min-h-12 w-full rounded-md bg-accent font-semibold text-on-accent transition-transform active:scale-[0.98] disabled:opacity-40"
-      >
+      <Button onClick={start} disabled={unavailableReason !== null}>
         Commencer
-      </button>
+      </Button>
     </>
   )
 
@@ -207,7 +203,7 @@ export function LearnPage() {
       </div>
 
       {/* Mobile : collé en bas de la zone qui défile, juste au-dessus des onglets (iPhone compris). */}
-      <div className="sticky bottom-0 z-10 pt-3 lg:hidden">{startBlock}</div>
+      <div className="sticky -bottom-4 z-10 -mx-4 bg-paper px-4 pt-3 pb-5 lg:hidden">{startBlock}</div>
     </div>
   )
 }

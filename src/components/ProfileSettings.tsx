@@ -1,5 +1,8 @@
 import { useState, type FormEvent } from 'react'
+import { Dialog } from '@/components/Dialog'
 import { Icon } from '@/components/Icon'
+import { IconButton } from '@/components/IconButton'
+import { TextField } from '@/components/TextField'
 import { createProfile, deleteProfile, renameProfile } from '@/db/profiles'
 import type { Profile } from '@/db/db'
 import { useProfiles } from '@/lib/useProfiles'
@@ -44,13 +47,14 @@ export function ProfileSettings() {
         ))}
       </ul>
       <form onSubmit={add} className="mt-3 flex gap-2">
-        <input
+        <TextField
+          variant="ui"
+          className="min-w-0 flex-1"
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           maxLength={MAX_NAME_LENGTH}
           placeholder="Nouveau profil"
           aria-label="Nom du nouveau profil"
-          className="min-h-11 min-w-0 flex-1 rounded-md border border-control bg-transparent px-3 text-base"
         />
         <button
           type="submit"
@@ -88,13 +92,14 @@ function ProfileRow({ profile, active, deletable, onSelect, onDelete }: ProfileR
     return (
       <li className="py-2">
         <form onSubmit={saveName} className="flex gap-2">
-          <input
+          <TextField
+            variant="ui"
+            className="min-w-0 flex-1"
             autoFocus
             value={name}
             onChange={(e) => setName(e.target.value)}
             maxLength={MAX_NAME_LENGTH}
             aria-label="Nom du profil"
-            className="min-h-11 min-w-0 flex-1 rounded-md border border-control bg-transparent px-3 text-base"
           />
           <button
             type="submit"
@@ -104,32 +109,6 @@ function ProfileRow({ profile, active, deletable, onSelect, onDelete }: ProfileR
             <Icon name="check" className="size-5" />
           </button>
         </form>
-      </li>
-    )
-  }
-
-  if (mode === 'delete') {
-    return (
-      <li className="py-2 text-sm">
-        <p>
-          Supprimer <b>{profile.name}</b> et toute sa progression ?
-        </p>
-        <div className="mt-2 flex gap-2">
-          <button
-            type="button"
-            onClick={() => setMode('view')}
-            className="min-h-11 flex-1 rounded-md border border-control font-medium"
-          >
-            Annuler
-          </button>
-          <button
-            type="button"
-            onClick={onDelete}
-            className="min-h-11 flex-1 rounded-md bg-error font-semibold text-on-signal"
-          >
-            Supprimer
-          </button>
-        </div>
       </li>
     )
   }
@@ -152,27 +131,28 @@ function ProfileRow({ profile, active, deletable, onSelect, onDelete }: ProfileR
         </span>
         <span className={`truncate ${active ? 'font-semibold' : ''}`}>{profile.name}</span>
       </button>
-      <button
-        type="button"
+      <IconButton
+        icon="writing"
+        label={`Renommer ${profile.name}`}
         onClick={() => {
           setName(profile.name)
           setMode('rename')
         }}
-        aria-label={`Renommer ${profile.name}`}
-        className="flex size-11 items-center justify-center text-ink-muted"
-      >
-        <Icon name="writing" className="size-4" />
-      </button>
+      />
       {deletable && (
-        <button
-          type="button"
-          onClick={() => setMode('delete')}
-          aria-label={`Supprimer ${profile.name}`}
-          className="flex size-11 items-center justify-center text-ink-muted"
-        >
-          <Icon name="trash" className="size-4" />
-        </button>
+        <IconButton icon="trash" label={`Supprimer ${profile.name}`} onClick={() => setMode('delete')} />
       )}
+      <Dialog
+        open={mode === 'delete'}
+        title={`Supprimer « ${profile.name} » ?`}
+        safeLabel="Annuler"
+        onSafe={() => setMode('view')}
+        riskyLabel="Supprimer"
+        onRisky={onDelete}
+        irreversible
+      >
+        Toute sa progression, ses listes et ses statistiques seront effacées de cet appareil.
+      </Dialog>
     </li>
   )
 }

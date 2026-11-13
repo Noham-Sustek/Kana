@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useRef, useState, type FormEvent } from 'react'
+import { Button } from '@/components/Button'
 import { Link, Navigate, useNavigate } from 'react-router'
 import { Icon } from '@/components/Icon'
 import { getKana, groupGlyph } from '@/data/kana'
@@ -189,23 +190,13 @@ function QuizRunner({ session }: { session: SessionState }) {
             </button>
           </div>
         ) : settled ? (
-          <button
-            type="button"
-            onClick={next}
-            // Neutre : l'accent rose se confondrait avec le rouge des erreurs.
-            className="min-h-12 w-full rounded-md bg-ink font-semibold text-paper active:scale-[0.98]"
-          >
+          <Button variant="ink" icon="arrow" onClick={next}>
             {session.index + 1 >= session.plannedCount ? 'Voir le résultat' : 'Suivant'}
-          </button>
+          </Button>
         ) : (
-          <button
-            type="button"
-            onClick={reveal}
-            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-md text-sm font-medium text-ink-muted"
-          >
-            <Icon name="eye" className="size-4" />
+          <Button variant="quiet" fullWidth icon="eye" iconPosition="start" onClick={reveal}>
             Afficher la réponse
-          </button>
+          </Button>
         )}
       </div>
     </div>
@@ -615,13 +606,9 @@ function QuizSummary({ session }: { session: SessionState }) {
       )}
 
       <div className="mt-auto grid gap-2 pt-6">
-        <button
-          type="button"
-          onClick={restart}
-          className="min-h-12 rounded-md bg-accent font-semibold text-on-accent active:scale-[0.98]"
-        >
+        <Button onClick={restart}>
           Recommencer
-        </button>
+        </Button>
         <button
           type="button"
           onClick={() => {

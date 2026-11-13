@@ -5,7 +5,10 @@ export type Theme = 'light' | 'dark' | 'system'
 
 interface SettingsState {
   theme: Theme
+  /** Retour haptique (Android ; sans effet sur iPhone). */
+  vibrations: boolean
   setTheme: (theme: Theme) => void
+  setVibrations: (vibrations: boolean) => void
 }
 
 // Préférences d'interface : persistées en localStorage (lecture synchrone, utilisée
@@ -15,7 +18,9 @@ export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
       theme: 'system',
+      vibrations: true,
       setTheme: (theme) => set({ theme }),
+      setVibrations: (vibrations) => set({ vibrations }),
     }),
     { name: 'kana-settings', version: 1 },
   ),

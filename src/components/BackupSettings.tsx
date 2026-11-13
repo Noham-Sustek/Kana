@@ -1,10 +1,9 @@
 import { useRef, useState, type ChangeEvent } from 'react'
+import { Button } from '@/components/Button'
+import { Dialog } from '@/components/Dialog'
 import { exportBackup, importBackup } from '@/db/backup'
 import { BackupError, backupFileName, parseBackup, profileToActivate, type Backup } from '@/features/backup/backup'
 import { useProfileStore } from '@/stores/profileStore'
-
-const BUTTON_CLASS =
-  'flex min-h-11 flex-1 items-center justify-center rounded-md border border-control px-3 text-sm font-medium active:scale-[0.98]'
 
 const dateFormat = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeStyle: 'short' })
 
@@ -86,17 +85,24 @@ export function BackupSettings() {
       </p>
 
       <div className="mt-3 flex gap-2">
-        <button type="button" onClick={download} className={BUTTON_CLASS}>
+        <Button variant="line" size="sm" className="flex-1 px-2" icon="download" iconPosition="start" onClick={download}>
           Exporter
-        </button>
+        </Button>
         {canShare && (
-          <button type="button" onClick={share} className={BUTTON_CLASS}>
+          <Button variant="line" size="sm" className="flex-1 px-2" onClick={share}>
             Partager…
-          </button>
+          </Button>
         )}
-        <button type="button" onClick={() => fileRef.current?.click()} className={BUTTON_CLASS}>
+        <Button
+          variant="line"
+          size="sm"
+          className="flex-1 px-2"
+          icon="upload"
+          iconPosition="start"
+          onClick={() => fileRef.current?.click()}
+        >
           Importer
-        </button>
+        </Button>
         <input ref={fileRef} type="file" accept="application/json,.json" onChange={onFile} className="hidden" />
       </div>
 
@@ -104,35 +110,26 @@ export function BackupSettings() {
 
       {state.step === 'error' && <p className="mt-3 text-sm font-medium text-error-ink">{state.message}</p>}
 
-      {(state.step === 'confirm' || state.step === 'busy') && (
-        <div className="mt-3 rounded-md border-2 border-error p-3 text-sm">
-          {state.step === 'confirm' && (
-            <>
-              <p>
-                Sauvegarde du <b>{dateFormat.format(state.backup.exportedAt)}</b> :{' '}
-                {state.backup.profiles.length} profil{state.backup.profiles.length > 1 ? 's' : ''},{' '}
-                {state.backup.answers.length} réponse{state.backup.answers.length > 1 ? 's' : ''}.
-              </p>
-              <p className="mt-1 font-semibold text-error-ink">
-                Toutes les données actuelles de cet appareil seront remplacées.
-              </p>
-              <div className="mt-3 flex gap-2">
-                <button type="button" onClick={() => setState({ step: 'idle' })} className={BUTTON_CLASS}>
-                  Annuler
-                </button>
-                <button
-                  type="button"
-                  onClick={() => confirmImport(state.backup)}
-                  className="flex min-h-11 flex-1 items-center justify-center rounded-md bg-error px-3 text-sm font-semibold text-on-signal active:scale-[0.98]"
-                >
-                  Remplacer
-                </button>
-              </div>
-            </>
-          )}
-          {state.step === 'busy' && <p>Import en cours…</p>}
-        </div>
-      )}
+      {state.step === 'busy' && <p className="mt-3 text-sm text-ink-muted">Import en cours…</p>}
+
+      <Dialog
+        open={state.step === 'confirm'}
+        title="Remplacer toutes les données ?"
+        safeLabel="Annuler"
+        onSafe={() => setState({ step: 'idle' })}
+        riskyLabel="Remplacer"
+        onRisky={() => state.step === 'confirm' && confirmImport(state.backup)}
+        irreversible
+      >
+        {state.step === 'confirm' && (
+          <>
+            Sauvegarde du {dateFormat.format(state.backup.exportedAt)} : {state.backup.profiles.length} profil
+            {state.backup.profiles.length > 1 ? 's' : ''}, {state.backup.answers.length} réponse
+            {state.backup.answers.length > 1 ? 's' : ''}. Toutes les données actuelles de cet appareil seront
+            remplacées.
+          </>
+        )}
+      </Dialog>
     </>
   )
 }

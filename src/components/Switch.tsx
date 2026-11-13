@@ -1,3 +1,5 @@
+import { Icon } from '@/components/Icon'
+
 interface SwitchProps {
   label: string
   description?: string
@@ -5,6 +7,7 @@ interface SwitchProps {
   onChange: (checked: boolean) => void
 }
 
+/** Réglage oui / non à effet immédiat ; toute la ligne est la cible. */
 export function Switch({ label, description, checked, onChange }: SwitchProps) {
   return (
     <button
@@ -12,22 +15,24 @@ export function Switch({ label, description, checked, onChange }: SwitchProps) {
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className="flex min-h-11 w-full items-center justify-between gap-4 text-left"
+      className="flex min-h-14 w-full items-center justify-between gap-4 text-left"
     >
       <span>
-        <span className="block text-sm font-medium">{label}</span>
-        {description && <span className="block text-xs text-ink-muted">{description}</span>}
+        <span className="block font-semibold">{label}</span>
+        {description && <span className="block text-[13px] leading-[18px] text-ink-muted">{description}</span>}
       </span>
       <span
-        className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
-          checked ? 'bg-accent' : 'bg-control'
+        className={`relative h-8 w-[52px] shrink-0 rounded-full border-[1.5px] transition-colors ${
+          checked ? 'border-accent bg-accent' : 'border-control bg-paper-raised'
         }`}
       >
         <span
-          className={`absolute top-1 left-1 size-5 rounded-full bg-paper-raised transition-transform ${
-            checked ? 'translate-x-5' : ''
+          className={`absolute top-[3px] left-[3px] grid size-[23px] place-items-center rounded-full text-accent transition-transform duration-200 ${
+            checked ? 'translate-x-5 bg-on-accent' : 'bg-control'
           }`}
-        />
+        >
+          {checked && <Icon name="check" strokeWidth={3} className="size-3.5" />}
+        </span>
       </span>
     </button>
   )

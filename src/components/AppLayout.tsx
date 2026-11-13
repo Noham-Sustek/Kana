@@ -14,7 +14,11 @@ export function AppLayout() {
   const wide = WIDE_PATHS.includes(pathname)
   // Pages en min-h-full (quiz, détail d'un kana, exercice d'écriture) : le conteneur doit
   // avoir une hauteur fixée pour qu'elles occupent tout l'écran.
-  const fill = immersive || pathname.startsWith('/table/') || pathname.startsWith('/writing/')
+  const fill =
+    immersive ||
+    pathname.startsWith('/table/') ||
+    pathname.startsWith('/writing/') ||
+    pathname.startsWith('/learn/custom/')
 
   return (
     <div className="flex h-full flex-col">

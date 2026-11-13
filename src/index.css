@@ -161,3 +161,102 @@ body {
     transform: scaleX(0);
   }
 }
+
+/* Mouvement « Papier et encre » (docs/design/animations.md) : classes animate-pop,
+   animate-shake, animate-rise, animate-badge-in, animate-unlock, animate-sheet-in,
+   animate-dialog-in. Avec mouvement réduit, tout devient un fondu de 100 ms. */
+@theme {
+  --animate-pop: k-pop 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-shake: k-shake 240ms ease-out;
+  --animate-rise: k-rise 160ms ease-out both;
+  --animate-badge-in: k-badge-in 200ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-unlock: k-unlock 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-sheet-in: k-sheet-in 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-dialog-in: k-dialog-in 160ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes k-pop {
+  40% {
+    transform: scale(1.04);
+  }
+}
+@keyframes k-shake {
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(5px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(2px);
+  }
+}
+@keyframes k-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes k-badge-in {
+  from {
+    transform: scale(0);
+  }
+  70% {
+    transform: scale(1.15);
+  }
+}
+@keyframes k-unlock {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+@keyframes k-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes k-dialog-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+/* Chrono de question : pointillés sous 3 s (TimerBar). */
+@keyframes k-timer-dash {
+  to {
+    background: repeating-linear-gradient(to right, var(--k-ink) 0 6px, transparent 6px 10px);
+  }
+}
+@keyframes k-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pop,
+  .animate-shake,
+  .animate-rise,
+  .animate-badge-in,
+  .animate-unlock,
+  .animate-sheet-in,
+  .animate-dialog-in {
+    animation: k-fade 100ms linear both;
+  }
+}
+
+/* Fenêtres natives (<dialog>) : voile aux couleurs du thème, défilement bloqué derrière. */
+dialog::backdrop {
+  background: var(--k-scrim);
+}
+html:has(dialog[open]) {
+  overflow: hidden;
+}

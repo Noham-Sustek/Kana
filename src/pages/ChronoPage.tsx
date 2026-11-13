@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { Button } from '@/components/Button'
 import { Link, useNavigate } from 'react-router'
 import { Icon } from '@/components/Icon'
 import { SegmentedControl } from '@/components/SegmentedControl'
@@ -135,13 +136,9 @@ export function ChronoPage() {
       </Card>
 
       <div className="sticky bottom-0 z-10 mt-auto pt-3">
-        <button
-          type="button"
-          onClick={start}
-          className="min-h-12 w-full rounded-md bg-accent font-semibold text-on-accent transition-transform active:scale-[0.98]"
-        >
+        <Button onClick={start}>
           Commencer
-        </button>
+        </Button>
       </div>
     </div>
   )
@@ -384,20 +381,12 @@ function ChronoSummary({ state, script, result, record, onRestart, onSettings }:
       )}
 
       <div className="sticky bottom-0 z-10 mt-auto grid grid-cols-2 gap-2 pt-3">
-        <button
-          type="button"
-          onClick={onSettings}
-          className="min-h-12 rounded-md border-2 border-control bg-paper-raised font-semibold active:scale-[0.98]"
-        >
+        <Button variant="line" onClick={onSettings}>
           Réglages
-        </button>
-        <button
-          type="button"
-          onClick={onRestart}
-          className="min-h-12 rounded-md bg-accent font-semibold text-on-accent active:scale-[0.98]"
-        >
+        </Button>
+        <Button onClick={onRestart}>
           Recommencer
-        </button>
+        </Button>
       </div>
     </div>
   )

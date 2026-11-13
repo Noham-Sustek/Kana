@@ -4,6 +4,7 @@ import { BackupSettings } from '@/components/BackupSettings'
 import { Icon, type IconName } from '@/components/Icon'
 import { PageHeader } from '@/components/PageHeader'
 import { ProfileSettings } from '@/components/ProfileSettings'
+import { Switch } from '@/components/Switch'
 import { useSettingsStore, type Theme } from '@/stores/settingsStore'
 
 const THEME_OPTIONS: { value: Theme; label: string; icon: IconName }[] = [
@@ -15,13 +16,15 @@ const THEME_OPTIONS: { value: Theme; label: string; icon: IconName }[] = [
 export function SettingsPage() {
   const theme = useSettingsStore((s) => s.theme)
   const setTheme = useSettingsStore((s) => s.setTheme)
+  const vibrations = useSettingsStore((s) => s.vibrations)
+  const setVibrations = useSettingsStore((s) => s.setVibrations)
 
   return (
     <>
       <PageHeader title="Réglages" />
 
       <div className="lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-4">
-        <Section title="Thème">
+        <Section title="Apparence">
           <div role="radiogroup" aria-label="Thème" className="grid grid-cols-3 gap-2">
             {THEME_OPTIONS.map((opt) => {
               const selected = theme === opt.value
@@ -43,6 +46,14 @@ export function SettingsPage() {
                 </button>
               )
             })}
+          </div>
+          <div className="mt-2">
+            <Switch
+              label="Vibrations"
+              description="Une vibration brève à chaque réponse (Android)."
+              checked={vibrations}
+              onChange={setVibrations}
+            />
           </div>
         </Section>
 
