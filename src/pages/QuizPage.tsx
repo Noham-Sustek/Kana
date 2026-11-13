@@ -16,8 +16,8 @@ const AUTO_ADVANCE_MS = 700
 const QuizDrawing = lazy(() => import('@/components/QuizDrawing').then((m) => ({ default: m.QuizDrawing })))
 
 // Couleurs de correction volontairement identiques en clair et en sombre.
-const WRONG_CLASS = 'border-red-600 bg-red-600 text-white'
-const RIGHT_CLASS = 'border-emerald-600 bg-emerald-600 text-white'
+const WRONG_CLASS = 'border-error bg-error text-on-signal'
+const RIGHT_CLASS = 'border-correct bg-correct text-on-signal'
 
 export function QuizPage() {
   const session = useQuizSessionStore((s) => s.session)
@@ -90,17 +90,17 @@ function QuizRunner({ session }: { session: SessionState }) {
           type="button"
           onClick={exit}
           aria-label="Quitter le quiz"
-          className="-ml-2 flex size-11 items-center justify-center text-slate-500 dark:text-slate-400"
+          className="-ml-2 flex size-11 items-center justify-center text-ink-muted"
         >
           <Icon name="close" />
         </button>
-        <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+        <div className="h-2 flex-1 overflow-hidden rounded-full bg-hairline">
           <div
-            className="h-full rounded-full bg-accent-500 transition-[width]"
+            className="h-full rounded-full bg-accent transition-[width]"
             style={{ width: `${(session.index / session.plannedCount) * 100}%` }}
           />
         </div>
-        <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400">
+        <span className="text-xs tabular-nums text-ink-muted">
           {session.index + 1}/{session.plannedCount}
         </span>
       </header>
@@ -109,7 +109,7 @@ function QuizRunner({ session }: { session: SessionState }) {
         {options.timerSeconds > 0 && status === 'pending' && (
           <div
             key={session.index}
-            className="h-full origin-left rounded-full bg-amber-500"
+            className="h-full origin-left rounded-full bg-ink"
             style={{ animation: `timer-shrink ${options.timerSeconds}s linear forwards` }}
           />
         )}
@@ -117,7 +117,7 @@ function QuizRunner({ session }: { session: SessionState }) {
 
       <UnlockBanner />
 
-      <p className="mt-3 text-center text-xs font-medium text-slate-400 short:mt-1 dark:text-slate-500">
+      <p className="mt-3 text-center text-xs font-medium text-ink-muted short:mt-1">
         {isAuto && 'Auto · '}Stage {question.stage} · {getStage(question.stage).description}
       </p>
 
@@ -147,9 +147,9 @@ function QuizRunner({ session }: { session: SessionState }) {
             </div>
           </Suspense>
           {awaitingVerdict && (
-            <p className="mt-3 text-center text-sm font-medium text-slate-600 dark:text-slate-300">
+            <p className="mt-3 text-center text-sm font-medium text-ink-muted">
               Votre tracé correspond-il au modèle ?{' '}
-              <span className="font-jp text-base text-slate-900 dark:text-slate-100">
+              <span className="font-jp text-base text-ink">
                 {question.target}
                 {question.kanji && ` · ${question.kanji}`}
               </span>
@@ -157,10 +157,10 @@ function QuizRunner({ session }: { session: SessionState }) {
           )}
           {settled && (
             <p
-              className={`mt-3 text-center text-sm font-medium ${status === 'correct' ? 'text-emerald-600' : 'text-red-600'}`}
+              className={`mt-3 text-center text-sm font-medium ${status === 'correct' ? 'text-correct-ink' : 'text-error-ink'}`}
             >
               {status === 'correct' ? 'Parfait, sans erreur !' : 'À revoir : comparez avec le modèle.'}{' '}
-              <span className="font-jp text-base text-slate-900 dark:text-slate-100">
+              <span className="font-jp text-base text-ink">
                 {question.target}
                 {question.kanji && ` · ${question.kanji}`}
               </span>
@@ -170,20 +170,20 @@ function QuizRunner({ session }: { session: SessionState }) {
       )}
 
       {/* Collé en bas : une longue phrase ou beaucoup d’étiquettes ne doivent pas le pousser hors de l’écran. */}
-      <div className="sticky bottom-0 z-10 -mx-4 mt-2 bg-slate-50 px-4 pt-2 pb-1 short:mt-0 short:pt-1 dark:bg-slate-950">
+      <div className="sticky bottom-0 z-10 -mx-4 mt-2 bg-paper px-4 pt-2 pb-1 short:mt-0 short:pt-1">
         {awaitingVerdict ? (
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
               onClick={() => judge(false)}
-              className={`min-h-12 rounded-xl border-2 font-semibold active:scale-[0.98] ${WRONG_CLASS}`}
+              className={`min-h-12 rounded-md border-2 font-semibold active:scale-[0.98] ${WRONG_CLASS}`}
             >
               À revoir
             </button>
             <button
               type="button"
               onClick={() => judge(true)}
-              className={`min-h-12 rounded-xl border-2 font-semibold active:scale-[0.98] ${RIGHT_CLASS}`}
+              className={`min-h-12 rounded-md border-2 font-semibold active:scale-[0.98] ${RIGHT_CLASS}`}
             >
               C’est juste
             </button>
@@ -193,7 +193,7 @@ function QuizRunner({ session }: { session: SessionState }) {
             type="button"
             onClick={next}
             // Neutre : l'accent rose se confondrait avec le rouge des erreurs.
-            className="min-h-12 w-full rounded-xl bg-slate-900 font-semibold text-white active:scale-[0.98] dark:bg-slate-100 dark:text-slate-900"
+            className="min-h-12 w-full rounded-md bg-ink font-semibold text-paper active:scale-[0.98]"
           >
             {session.index + 1 >= session.plannedCount ? 'Voir le résultat' : 'Suivant'}
           </button>
@@ -201,7 +201,7 @@ function QuizRunner({ session }: { session: SessionState }) {
           <button
             type="button"
             onClick={reveal}
-            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-medium text-slate-500 dark:text-slate-400"
+            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-md text-sm font-medium text-ink-muted"
           >
             <Icon name="eye" className="size-4" />
             Afficher la réponse
@@ -233,7 +233,7 @@ function UnlockBanner() {
   return (
     <p
       role="status"
-      className="mt-3 rounded-xl bg-amber-100 px-3 py-2 text-center text-sm font-medium text-amber-900 dark:bg-amber-500/20 dark:text-amber-200"
+      className="mt-3 rounded-md border border-gold bg-paper-raised px-3 py-2 text-center text-sm font-medium text-gold"
     >
       Nouveau groupe débloqué : <span className="font-jp">{groupGlyph(group)}</span> {group.label}
     </p>
@@ -252,12 +252,12 @@ function PromptView({ question, settled }: { question: Question; settled: boolea
         <div className="text-center">
           <p className={`font-jp leading-tight break-keep ${wordSizeClass(prompt.text)}`}>{prompt.text}</p>
           {/* Kanji et traduction révélés après la réponse ; hauteur réservée pour éviter un saut. */}
-          <p className="mt-3 min-h-6 text-sm text-slate-500 short:mt-1 lg:text-base dark:text-slate-400">
+          <p className="mt-3 min-h-6 text-sm text-ink-muted short:mt-1 lg:text-base">
             {settled && (
               <span style={{ animation: 'fade-in 0.2s' }}>
                 {prompt.kanji && (
                   <>
-                    <span className="font-jp text-base text-slate-900 lg:text-2xl dark:text-slate-100">
+                    <span className="font-jp text-base text-ink lg:text-2xl">
                       {prompt.kanji}
                     </span>
                     {' · '}
@@ -288,14 +288,14 @@ function PromptView({ question, settled }: { question: Question; settled: boolea
           {/* Traduction, provenance et réplique d'origine seulement après la réponse : la phrase seule d'abord. */}
           {settled && (
             <div style={{ animation: 'fade-in 0.2s' }}>
-              <p className="mt-3 text-sm text-slate-500 short:mt-1 lg:text-base dark:text-slate-400">
+              <p className="mt-3 text-sm text-ink-muted short:mt-1 lg:text-base">
                 {prompt.meaning}
               </p>
               {prompt.source && (
-                <p className="mt-2 text-xs font-medium text-amber-700 dark:text-amber-400">{prompt.source}</p>
+                <p className="mt-2 text-xs font-medium text-ink-muted">{prompt.source}</p>
               )}
               {prompt.original && (
-                <p className="mt-2 font-jp text-base text-slate-700 lg:text-lg dark:text-slate-200">
+                <p className="mt-2 font-jp text-base text-ink lg:text-lg">
                   {prompt.original}
                 </p>
               )}
@@ -307,13 +307,13 @@ function PromptView({ question, settled }: { question: Question; settled: boolea
       return (
         <div className="text-center">
           <p className={`font-semibold tracking-wide break-all ${romajiSizeClass(prompt.text)}`}>{prompt.text}</p>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-sm text-ink-muted">
             En {prompt.script}
             {prompt.note && ` · ${prompt.note}`}
             {prompt.meaning && ` · ${prompt.meaning}`}
           </p>
           {/[āīūēō]/.test(prompt.text) && (
-            <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">ā, ī, ū, ē, ō : voyelle longue (ー)</p>
+            <p className="mt-1 text-xs text-ink-muted">ā, ī, ū, ē, ō : voyelle longue (ー)</p>
           )}
         </div>
       )
@@ -367,14 +367,14 @@ function ChoiceAnswers({ question, session, onPick }: ChoiceAnswersProps) {
           ? WRONG_CLASS
           : right
             ? RIGHT_CLASS
-            : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900'
+            : 'border-hairline bg-paper-raised'
         return (
           <button
             key={choice.id}
             type="button"
             disabled={settled || wrong}
             onClick={() => onPick(choice.id)}
-            className={`rounded-xl border-2 font-medium transition-transform enabled:active:scale-95 ${stateClass} ${
+            className={`rounded-md border-2 font-medium transition-transform enabled:active:scale-95 ${stateClass} ${
               question.choices.length > 4 ? 'min-h-14 lg:min-h-16' : 'min-h-16 lg:min-h-20'
             } ${isKana ? 'font-jp text-3xl lg:text-4xl' : 'text-xl lg:text-2xl'} ${settled && !wrong && !right ? 'opacity-50' : ''}`}
           >
@@ -418,13 +418,13 @@ function ComposeAnswer({ question, session, onSubmit }: ComposeAnswerProps) {
       ? RIGHT_CLASS
       : showWrong
         ? WRONG_CLASS
-        : 'border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900'
+        : 'border-control bg-paper-raised'
 
   return (
     <div>
       <div
         aria-label="Votre phrase"
-        className="flex min-h-16 flex-wrap content-start gap-1.5 rounded-xl border-2 border-dashed border-slate-300 p-2 dark:border-slate-700"
+        className="flex min-h-16 flex-wrap content-start gap-1.5 rounded-md border-2 border-dashed border-control p-2"
       >
         {picked.map((tileIndex, position) => (
           <button
@@ -442,11 +442,11 @@ function ComposeAnswer({ question, session, onSubmit }: ComposeAnswerProps) {
       <p className="mt-2 min-h-5 text-center text-sm lg:text-base">
         {status === 'failed' && (
           <span>
-            Réponse : <strong className="font-jp text-emerald-700 dark:text-emerald-400">{question.reading}</strong>
+            Réponse : <strong className="font-jp text-correct-ink">{question.reading}</strong>
           </span>
         )}
         {status === 'pending' && showWrong && (
-          <span className="text-red-600 dark:text-red-400">
+          <span className="text-error-ink">
             Pas tout à fait : touchez une étiquette pour la retirer.
           </span>
         )}
@@ -462,7 +462,7 @@ function ComposeAnswer({ question, session, onSubmit }: ComposeAnswerProps) {
               type="button"
               onClick={() => pick(index)}
               disabled={settled || used}
-              className={`min-h-11 rounded-lg border-2 border-slate-200 bg-white px-3 font-jp text-xl shadow-sm enabled:active:scale-95 lg:text-2xl dark:border-slate-700 dark:bg-slate-900 ${
+              className={`min-h-11 rounded-lg border-2 border-hairline bg-paper-raised px-3 font-jp text-xl enabled:active:scale-95 lg:text-2xl ${
                 used ? 'invisible' : settled ? 'opacity-50' : ''
               }`}
             >
@@ -502,7 +502,7 @@ function InputAnswer({ question, session, onSubmit, onNext }: InputAnswerProps) 
       ? RIGHT_CLASS
       : showWrong
         ? WRONG_CLASS
-        : 'border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900'
+        : 'border-control bg-paper-raised'
 
   return (
     <form onSubmit={handleSubmit}>
@@ -519,18 +519,18 @@ function InputAnswer({ question, session, onSubmit, onNext }: InputAnswerProps) 
         enterKeyHint={status === 'pending' ? 'done' : 'next'}
         placeholder={status === 'pending' ? 'romaji' : ''}
         aria-label="Votre réponse en romaji"
-        className={`min-h-14 w-full rounded-xl border-2 px-4 short:min-h-12 text-center outline-none ${
+        className={`min-h-14 w-full rounded-md border-2 px-4 short:min-h-12 text-center outline-none ${
           question.stage === 8 ? 'text-lg lg:text-xl' : 'text-2xl lg:text-3xl'
-        } lg:min-h-16 placeholder:text-slate-400 focus:ring-2 focus:ring-accent-500/40 ${stateClass}`}
+        } lg:min-h-16 placeholder:text-ink-muted focus:ring-2 focus:ring-accent/40 ${stateClass}`}
       />
       <p className="mt-2 min-h-5 text-center text-sm short:mt-1 lg:text-base">
         {status === 'failed' && (
           <span>
-            Réponse : <strong className="text-emerald-700 dark:text-emerald-400">{question.expected}</strong>
+            Réponse : <strong className="text-correct-ink">{question.expected}</strong>
           </span>
         )}
         {status === 'pending' && lastWrong !== undefined && (
-          <span className="text-red-600 dark:text-red-400">Pas tout à fait, réessayez.</span>
+          <span className="text-error-ink">Pas tout à fait, réessayez.</span>
         )}
       </p>
     </form>
@@ -567,18 +567,18 @@ function QuizSummary({ session }: { session: SessionState }) {
   return (
     <div className="flex min-h-full flex-col">
       <div className="py-8 text-center">
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+        <p className="text-sm text-ink-muted">
           {autoParams ? 'Session auto terminée' : `Stage ${session.questions[0]?.stage} terminé`}
         </p>
         <p className="mt-2 text-6xl font-bold tabular-nums">
           {correct}
-          <span className="text-3xl text-slate-400">/{total}</span>
+          <span className="text-3xl text-ink-muted">/{total}</span>
         </p>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{percent} % du premier coup</p>
+        <p className="mt-1 text-sm text-ink-muted">{percent} % du premier coup</p>
       </div>
 
       {unlockedThisSession.length > 0 && (
-        <section className="mb-4 rounded-2xl bg-amber-100 p-4 text-amber-900 dark:bg-amber-500/20 dark:text-amber-200">
+        <section className="mb-4 rounded-md border border-gold bg-paper-raised p-4 text-gold">
           <h2 className="text-sm font-semibold">Nouveaux groupes débloqués</h2>
           <p className="mt-1 text-lg">
             {unlockedThisSession.map((g) => (
@@ -591,22 +591,22 @@ function QuizSummary({ session }: { session: SessionState }) {
       )}
 
       {missed.size > 0 && (
-        <section className="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-900">
-          <h2 className="mb-3 text-sm font-semibold text-slate-500 dark:text-slate-400">À revoir</h2>
+        <section className="rounded-md border border-hairline bg-paper-raised p-4">
+          <h2 className="mb-3 text-sm font-semibold text-ink-muted">À revoir</h2>
           <ul className="flex flex-wrap gap-2">
             {[...missed.entries()].map(([key, q]) => (
               <li
                 key={key}
-                className="flex items-baseline gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1.5 dark:bg-slate-800"
+                className="flex items-baseline gap-1.5 rounded-lg bg-paper px-2.5 py-1.5"
               >
                 <span className="font-jp text-lg">{missedKey(q)}</span>
-                <span className="text-xs text-slate-500 dark:text-slate-400">{missedReading(q)}</span>
+                <span className="text-xs text-ink-muted">{missedReading(q)}</span>
               </li>
             ))}
           </ul>
           <Link
             to={`/learn/custom/new?kana=${missedKanaIds.join(',')}`}
-            className="mt-3 flex min-h-11 items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 text-sm font-medium text-slate-600 dark:border-slate-700 dark:text-slate-300"
+            className="mt-3 flex min-h-11 items-center justify-center gap-2 rounded-md border border-dashed border-control text-sm font-medium text-ink-muted"
           >
             <Icon name="plus" className="size-4" />
             Créer une liste avec ces kana
@@ -618,7 +618,7 @@ function QuizSummary({ session }: { session: SessionState }) {
         <button
           type="button"
           onClick={restart}
-          className="min-h-12 rounded-xl bg-accent-600 font-semibold text-white active:scale-[0.98]"
+          className="min-h-12 rounded-md bg-accent font-semibold text-on-accent active:scale-[0.98]"
         >
           Recommencer
         </button>
@@ -628,7 +628,7 @@ function QuizSummary({ session }: { session: SessionState }) {
             quit()
             navigate('/learn', { replace: true })
           }}
-          className="min-h-12 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300"
+          className="min-h-12 rounded-md text-sm font-medium text-ink-muted"
         >
           Retour aux réglages
         </button>

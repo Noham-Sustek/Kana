@@ -14,7 +14,7 @@ export function useApplyTheme() {
       document.documentElement.classList.toggle('dark', dark)
       document
         .querySelector('meta[name="theme-color"]')
-        ?.setAttribute('content', dark ? '#0f172a' : '#f8fafc')
+        ?.setAttribute('content', dark ? '#000000' : '#f5f0e6')
     }
     apply()
     if (theme !== 'system') return

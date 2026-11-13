@@ -85,14 +85,14 @@ export function ChronoPage() {
         <Link
           to="/learn"
           aria-label="Retour"
-          className="-ml-2 flex size-11 items-center justify-center text-slate-500 dark:text-slate-400"
+          className="-ml-2 flex size-11 items-center justify-center text-ink-muted"
         >
           <Icon name="chevronLeft" />
         </Link>
         <h1 className="text-xl font-bold tracking-tight">Lecture chronométrée</h1>
       </header>
 
-      <p className="mb-4 text-sm text-slate-600 dark:text-slate-300">
+      <p className="mb-4 text-sm text-ink-muted">
         Le livre défile à partir d’un paragraphe tiré au sort. Tapez chaque mot en romaji puis espace : juste, on passe
         au suivant ; faux, on le retape. Le chrono part à la première touche.
       </p>
@@ -114,13 +114,13 @@ export function ChronoPage() {
               value={settings.script}
               onChange={settings.setScript}
             />
-            <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+            <p className="mt-1.5 text-xs text-ink-muted">
               {settings.script === 'hiragana'
                 ? 'Kanji réécrits en hiragana, noms et mots étrangers en katakana comme dans le livre.'
                 : 'Tout le texte en katakana.'}
             </p>
           </Field>
-          <p className="text-sm text-slate-600 dark:text-slate-300">
+          <p className="text-sm text-ink-muted">
             Record :{' '}
             <strong className="tabular-nums">{best !== undefined ? `${best} kana/min` : 'aucun pour l’instant'}</strong>
           </p>
@@ -128,7 +128,7 @@ export function ChronoPage() {
       </Card>
 
       <Card>
-        <p className="text-sm text-slate-600 dark:text-slate-300">
+        <p className="text-sm text-ink-muted">
           Texte : <span className="font-jp">{BOOK_ORIGINAL_TITLE}</span> (<em>{BOOK_TITLE}</em>) de {BOOK_AUTHOR},{' '}
           {BOOK_SENTENCES.length} phrases ; leur traduction est donnée dans le récapitulatif.
         </p>
@@ -138,7 +138,7 @@ export function ChronoPage() {
         <button
           type="button"
           onClick={start}
-          className="min-h-12 w-full rounded-xl bg-accent-600 font-semibold text-white shadow-lg transition-transform active:scale-[0.98]"
+          className="min-h-12 w-full rounded-md bg-accent font-semibold text-on-accent transition-transform active:scale-[0.98]"
         >
           Commencer
         </button>
@@ -217,27 +217,27 @@ function ChronoRunner({ state, onChange, script, duration, onFinish, onQuit }: C
           type="button"
           onClick={onQuit}
           aria-label="Quitter la lecture"
-          className="-ml-2 flex size-11 items-center justify-center text-slate-500 dark:text-slate-400"
+          className="-ml-2 flex size-11 items-center justify-center text-ink-muted"
         >
           <Icon name="close" />
         </button>
-        <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
-          <div className="h-full rounded-full bg-amber-500" style={{ width: `${(remaining / duration) * 100}%` }} />
+        <div className="h-2 flex-1 overflow-hidden rounded-full bg-hairline">
+          <div className="h-full rounded-full bg-ink" style={{ width: `${(remaining / duration) * 100}%` }} />
         </div>
-        <span className="flex items-center gap-1 text-sm font-semibold tabular-nums text-slate-600 dark:text-slate-300">
+        <span className="flex items-center gap-1 text-sm font-semibold tabular-nums text-ink-muted">
           <Icon name="timer" className="size-4" />
           {minutes}:{String(seconds).padStart(2, '0')}
         </span>
       </header>
 
-      <p className="mt-2 text-center text-xs text-slate-500 dark:text-slate-400">
+      <p className="mt-2 text-center text-xs text-ink-muted">
         <span className="tabular-nums">{state.correctWords}</span> mots ·{' '}
         <span className="tabular-nums">{state.correctKana}</span> kana ·{' '}
         <span className="tabular-nums">{state.errors}</span> erreurs
         {state.startedAt === null && ' · le chrono part à la première touche'}
       </p>
 
-      <div className="my-4 max-h-[45dvh] flex-1 overflow-y-auto rounded-2xl bg-white p-4 shadow-sm short:max-h-[30dvh] dark:bg-slate-900">
+      <div className="my-4 max-h-[45dvh] flex-1 overflow-y-auto rounded-md border border-hairline bg-paper-raised p-4 short:max-h-[30dvh]">
         <p className="font-jp text-lg leading-loose lg:text-xl">
           {[0, 1, 2].map((offset) => {
             const index = (state.sentence + offset) % TOTAL
@@ -254,13 +254,13 @@ function ChronoRunner({ state, onChange, script, duration, onFinish, onQuit }: C
                           current
                             ? `rounded-md px-1 text-2xl font-semibold lg:text-3xl ${
                                 showWrong
-                                  ? 'bg-red-600 text-white'
-                                  : 'bg-accent-50 text-accent-600 dark:bg-accent-500/15 dark:text-accent-500'
+                                  ? 'bg-error text-on-signal'
+                                  : 'bg-accent-tint text-accent'
                               }`
                             : done
-                              ? 'text-emerald-600'
+                              ? 'text-correct-ink'
                               : offset > 0
-                                ? 'text-slate-400 dark:text-slate-500'
+                                ? 'text-ink-muted'
                                 : ''
                         }
                       >
@@ -276,7 +276,7 @@ function ChronoRunner({ state, onChange, script, duration, onFinish, onQuit }: C
         </p>
       </div>
 
-      <div className="sticky bottom-0 z-10 -mx-4 mt-auto bg-slate-50 px-4 pt-2 pb-1 dark:bg-slate-950">
+      <div className="sticky bottom-0 z-10 -mx-4 mt-auto bg-paper px-4 pt-2 pb-1">
         <input
           ref={inputRef}
           value={value}
@@ -290,26 +290,26 @@ function ChronoRunner({ state, onChange, script, duration, onFinish, onQuit }: C
           enterKeyHint="next"
           placeholder="romaji puis espace"
           aria-label="Mot en cours, en romaji"
-          className={`min-h-14 w-full rounded-xl border-2 px-4 text-center text-2xl outline-none placeholder:text-base placeholder:text-slate-400 focus:ring-2 focus:ring-accent-500/40 ${
+          className={`min-h-14 w-full rounded-md border-2 px-4 text-center text-2xl outline-none placeholder:text-base placeholder:text-ink-muted focus:ring-2 focus:ring-accent/40 ${
             showWrong
-              ? 'border-red-600 bg-red-600 text-white'
-              : 'border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900'
+              ? 'border-error bg-error text-on-signal'
+              : 'border-control bg-paper-raised'
           }`}
         />
         <div className="mt-1 flex min-h-11 items-center justify-between gap-2 text-sm">
           <span className="min-w-0 truncate">
-            {showWrong && <span className="text-red-600 dark:text-red-400">Pas tout à fait, retapez le mot.</span>}
+            {showWrong && <span className="text-error-ink">Pas tout à fait, retapez le mot.</span>}
             {!showWrong && skipped && (
-              <span className="text-slate-500 dark:text-slate-400">
+              <span className="text-ink-muted">
                 <span className="font-jp">{skipped.word}</span> se lit{' '}
-                <strong className="text-emerald-700 dark:text-emerald-400">{skipped.romaji}</strong>
+                <strong className="text-correct-ink">{skipped.romaji}</strong>
               </span>
             )}
           </span>
           <button
             type="button"
             onClick={skip}
-            className="flex min-h-11 shrink-0 items-center px-2 font-medium text-slate-500 dark:text-slate-400"
+            className="flex min-h-11 shrink-0 items-center px-2 font-medium text-ink-muted"
           >
             Passer le mot
           </button>
@@ -341,7 +341,7 @@ function ChronoSummary({ state, script, result, record, onRestart, onSettings }:
           type="button"
           onClick={() => navigate('/learn')}
           aria-label="Retour"
-          className="-ml-2 flex size-11 items-center justify-center text-slate-500 dark:text-slate-400"
+          className="-ml-2 flex size-11 items-center justify-center text-ink-muted"
         >
           <Icon name="chevronLeft" />
         </button>
@@ -351,8 +351,8 @@ function ChronoSummary({ state, script, result, record, onRestart, onSettings }:
       <Card>
         <div className="text-center">
           <p className="text-5xl font-bold tabular-nums">{result.kanaPerMinute}</p>
-          <p className="text-sm text-slate-500 dark:text-slate-400">kana par minute</p>
-          {record && <p className="mt-2 text-sm font-semibold text-amber-600 dark:text-amber-500">Nouveau record !</p>}
+          <p className="text-sm text-ink-muted">kana par minute</p>
+          {record && <p className="mt-2 text-sm font-semibold text-gold">Nouveau record !</p>}
         </div>
         <dl className="mt-4 grid grid-cols-2 gap-2 text-center">
           <Stat label="Mots justes" value={result.correctWords} />
@@ -364,20 +364,20 @@ function ChronoSummary({ state, script, result, record, onRestart, onSettings }:
 
       {read.length > 0 && (
         <Card>
-          <h2 className="mb-3 text-sm font-semibold text-slate-500 dark:text-slate-400">Texte lu</h2>
+          <h2 className="mb-3 text-sm font-semibold text-ink-muted">Texte lu</h2>
           <ul className="space-y-3">
             {read.map((index, i) => {
               const sentence = BOOK_SENTENCES[index]!
               return (
                 <li key={i}>
                   <p className="font-jp">{words(index).join(' ')}</p>
-                  <p className="font-jp text-sm text-slate-500 dark:text-slate-400">{sentence.original}</p>
+                  <p className="font-jp text-sm text-ink-muted">{sentence.original}</p>
                   <p className="text-sm">{sentence.meaning}</p>
                 </li>
               )
             })}
           </ul>
-          <p className="mt-3 text-xs text-amber-700 dark:text-amber-500">
+          <p className="mt-3 text-xs text-ink-muted">
             {bookSource(BOOK_SENTENCES[read[0]!]!.chapter)}
           </p>
         </Card>
@@ -387,14 +387,14 @@ function ChronoSummary({ state, script, result, record, onRestart, onSettings }:
         <button
           type="button"
           onClick={onSettings}
-          className="min-h-12 rounded-xl border-2 border-slate-300 bg-white font-semibold active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900"
+          className="min-h-12 rounded-md border-2 border-control bg-paper-raised font-semibold active:scale-[0.98]"
         >
           Réglages
         </button>
         <button
           type="button"
           onClick={onRestart}
-          className="min-h-12 rounded-xl bg-accent-600 font-semibold text-white shadow-lg active:scale-[0.98]"
+          className="min-h-12 rounded-md bg-accent font-semibold text-on-accent active:scale-[0.98]"
         >
           Recommencer
         </button>
@@ -419,7 +419,7 @@ function useWords(script: ChronoScript): (sentence: number) => string[] {
 }
 
 function Card({ children }: { children: ReactNode }) {
-  return <section className="mb-4 rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-900">{children}</section>
+  return <section className="mb-4 rounded-md border border-hairline bg-paper-raised p-4">{children}</section>
 }
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
@@ -433,8 +433,8 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 
 function Stat({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="rounded-lg bg-slate-100 px-2 py-2 dark:bg-slate-800">
-      <dt className="text-xs text-slate-500 dark:text-slate-400">{label}</dt>
+    <div className="rounded-lg bg-paper px-2 py-2">
+      <dt className="text-xs text-ink-muted">{label}</dt>
       <dd className="text-lg font-semibold tabular-nums">{value}</dd>
     </div>
   )

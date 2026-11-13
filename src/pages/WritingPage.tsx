@@ -22,7 +22,7 @@ export function WritingPage() {
         script={script}
         kinds={WRITABLE_KINDS}
         renderCell={(kana) => (
-          <Link to={`/writing/${kana.id}`} className={`${KANA_CELL_CLASS} bg-white dark:bg-slate-900`}>
+          <Link to={`/writing/${kana.id}`} className={`${KANA_CELL_CLASS} bg-paper-raised`}>
             <KanaCellContent kana={kana} />
           </Link>
         )}

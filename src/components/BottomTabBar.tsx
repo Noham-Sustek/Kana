@@ -6,7 +6,7 @@ export function BottomTabBar() {
   return (
     <nav
       aria-label="Navigation principale"
-      className="border-t border-slate-200 bg-white/90 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-slate-800 dark:bg-slate-900/90"
+      className="border-t border-hairline bg-paper-raised/90 pb-[env(safe-area-inset-bottom)] backdrop-blur"
     >
       <ul className="mx-auto grid max-w-lg grid-cols-5">
         {TABS.map((tab) => (
@@ -16,8 +16,8 @@ export function BottomTabBar() {
               className={({ isActive }) =>
                 `flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors ${
                   isActive
-                    ? 'text-accent-600 dark:text-accent-500'
-                    : 'text-slate-500 active:text-slate-900 dark:text-slate-400 dark:active:text-slate-100'
+                    ? 'text-accent'
+                    : 'text-ink-muted active:text-ink'
                 }`
               }
             >

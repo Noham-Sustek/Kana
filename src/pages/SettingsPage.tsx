@@ -32,10 +32,10 @@ export function SettingsPage() {
                   role="radio"
                   aria-checked={selected}
                   onClick={() => setTheme(opt.value)}
-                  className={`flex min-h-20 flex-col items-center justify-center gap-2 rounded-xl border text-sm font-medium transition-colors ${
+                  className={`flex min-h-20 flex-col items-center justify-center gap-2 rounded-md border text-sm font-medium transition-colors ${
                     selected
-                      ? 'border-accent-500 bg-accent-50 text-accent-600 dark:bg-accent-500/15 dark:text-accent-500'
-                      : 'border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300'
+                      ? 'border-accent bg-accent-tint text-accent'
+                      : 'border-hairline text-ink-muted'
                   }`}
                 >
                   <Icon name={opt.icon} />
@@ -56,11 +56,11 @@ export function SettingsPage() {
 
         <Link
           to="/settings/about"
-          className="flex min-h-14 items-center gap-3 rounded-2xl bg-white px-4 shadow-sm active:scale-[0.98] dark:bg-slate-900"
+          className="flex min-h-14 items-center gap-3 rounded-md border border-hairline bg-paper-raised px-4 active:scale-[0.98]"
         >
-          <Icon name="info" className="size-5 text-slate-500 dark:text-slate-400" />
+          <Icon name="info" className="size-5 text-ink-muted" />
           <span className="flex-1 font-medium">À propos et crédits</span>
-          <Icon name="chevronRight" className="size-5 text-slate-400 dark:text-slate-500" />
+          <Icon name="chevronRight" className="size-5 text-ink-muted" />
         </Link>
       </div>
     </>
@@ -69,8 +69,8 @@ export function SettingsPage() {
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="mb-4 rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-900">
-      <h2 className="mb-3 text-sm font-semibold text-slate-500 dark:text-slate-400">{title}</h2>
+    <section className="mb-4 rounded-md border border-hairline bg-paper-raised p-4">
+      <h2 className="mb-3 text-sm font-semibold text-ink-muted">{title}</h2>
       {children}
     </section>
   )

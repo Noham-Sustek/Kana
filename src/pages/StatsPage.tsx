@@ -25,7 +25,7 @@ export function StatsPage() {
       <ProfileSwitcher />
 
       {stats && stats.summary.questions === 0 && (
-        <p className="rounded-2xl border border-dashed border-slate-300 px-6 py-12 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+        <p className="rounded-md border border-dashed border-control px-6 py-12 text-center text-sm text-ink-muted">
           Aucune réponse enregistrée pour ce profil. Lancez un quiz dans l’onglet <b>Apprendre</b> !
         </p>
       )}
@@ -88,18 +88,18 @@ export function StatsPage() {
 
 function Tile({ label, value, detail }: { label: string; value: string; detail: string }) {
   return (
-    <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-900">
-      <span className="block text-xs font-semibold text-slate-500 dark:text-slate-400">{label}</span>
+    <div className="rounded-md border border-hairline bg-paper-raised p-4">
+      <span className="block text-xs font-semibold text-ink-muted">{label}</span>
       <span className="mt-1 block text-2xl font-bold tabular-nums">{value}</span>
-      <span className="block text-xs text-slate-500 dark:text-slate-400">{detail}</span>
+      <span className="block text-xs text-ink-muted">{detail}</span>
     </div>
   )
 }
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="mt-4 rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-900">
-      <h2 className="mb-3 text-sm font-semibold text-slate-500 dark:text-slate-400">{title}</h2>
+    <section className="mt-4 rounded-md border border-hairline bg-paper-raised p-4">
+      <h2 className="mb-3 text-sm font-semibold text-ink-muted">{title}</h2>
       {children}
     </section>
   )
@@ -114,16 +114,16 @@ function ActivityChart({ days }: { days: DayActivity[] }) {
           <div key={d.day} className="flex h-full flex-1 flex-col justify-end">
             {d.questions > 0 ? (
               <div className="flex flex-col overflow-hidden rounded-sm" style={{ height: `${(d.questions / max) * 100}%` }}>
-                <div className="bg-red-600" style={{ flexGrow: d.questions - d.correct }} />
-                <div className="bg-emerald-600" style={{ flexGrow: d.correct }} />
+                <div className="bg-error" style={{ flexGrow: d.questions - d.correct }} />
+                <div className="bg-correct" style={{ flexGrow: d.correct }} />
               </div>
             ) : (
-              <div className="h-0.5 rounded-sm bg-slate-200 dark:bg-slate-800" />
+              <div className="h-0.5 rounded-sm bg-hairline" />
             )}
           </div>
         ))}
       </div>
-      <div className="mt-1 flex justify-between text-xs text-slate-400 dark:text-slate-500">
+      <div className="mt-1 flex justify-between text-xs text-ink-muted">
         <span>{shortDay(days[0]?.day)}</span>
         <span>Aujourd’hui</span>
       </div>
@@ -139,10 +139,10 @@ function shortDay(day: string | undefined): string {
 
 function MissedList({ missed }: { missed: KanaStat[] }) {
   if (missed.length === 0) {
-    return <p className="text-sm text-slate-500 dark:text-slate-400">Rien à signaler : continuez comme ça !</p>
+    return <p className="text-sm text-ink-muted">Rien à signaler : continuez comme ça !</p>
   }
   return (
-    <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+    <ul className="divide-y divide-hairline">
       {missed.map((s) => {
         const kana = getKana(s.kanaId)
         if (!kana) return null
@@ -153,11 +153,11 @@ function MissedList({ missed }: { missed: KanaStat[] }) {
               <span className="w-12 text-center font-jp text-3xl">{kana.char}</span>
               <span className="flex-1">
                 <span className="block font-medium">{kana.romaji[0]}</span>
-                <span className="block text-xs text-slate-500 dark:text-slate-400">
+                <span className="block text-xs text-ink-muted">
                   {errors} erreur{errors > 1 ? 's' : ''} sur {s.attempts} réponses
                 </span>
               </span>
-              <span className="text-sm font-semibold tabular-nums text-red-600">{percent.format(s.recentRate)}</span>
+              <span className="text-sm font-semibold tabular-nums text-error-ink">{percent.format(s.recentRate)}</span>
             </Link>
           </li>
         )

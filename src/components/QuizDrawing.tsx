@@ -73,13 +73,13 @@ export function QuizDrawing({ question, settled, onDone, selfCheck, onDrawn }: Q
           {chars.map((c, i) => (
             <div
               key={i}
-              className={`max-w-14 min-w-0 flex-1 rounded-xl ${
-                i === index && !pendingNext ? 'ring-2 ring-accent-500' : ''
+              className={`max-w-14 min-w-0 flex-1 rounded-md ${
+                i === index && !pendingNext ? 'ring-2 ring-accent' : ''
               }`}
             >
               <StrokeCell
                 strokes={results[i]?.drawn ?? []}
-                className="stroke-slate-900 dark:stroke-slate-100"
+                className="stroke-ink"
                 caption={i === index && isSmallKana(c) ? 'petit' : undefined}
               />
             </div>

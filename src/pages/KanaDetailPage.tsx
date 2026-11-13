@@ -63,12 +63,12 @@ export function KanaDetailPage() {
         <button
           type="button"
           onClick={() => goBackToTable(kana)}
-          className="-ml-2 flex min-h-11 items-center gap-1 px-2 text-sm font-medium text-slate-600 dark:text-slate-300"
+          className="-ml-2 flex min-h-11 items-center gap-1 px-2 text-sm font-medium text-ink-muted"
         >
           <Icon name="chevronLeft" className="size-5" />
           Tableau
         </button>
-        <span className="text-xs text-slate-400 dark:text-slate-500">
+        <span className="text-xs text-ink-muted">
           {index + 1} / {siblings.length}
         </span>
       </header>
@@ -79,25 +79,25 @@ export function KanaDetailPage() {
           {primary}
         </span>
         {variants.length > 0 && (
-          <span className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+          <span className="mt-2 text-sm text-ink-muted">
             Aussi accepté : {variants.join(', ')}
           </span>
         )}
 
         <dl className="mt-8 grid w-full grid-cols-2 gap-2 text-sm">
-          <div className="rounded-xl bg-white p-3 shadow-sm dark:bg-slate-900">
-            <dt className="text-xs text-slate-500 dark:text-slate-400">Groupe</dt>
+          <div className="rounded-md border border-hairline bg-paper-raised p-3">
+            <dt className="text-xs text-ink-muted">Groupe</dt>
             <dd className="mt-1 font-medium">
               {GROUP_KIND_LABELS[group.kind]} · {group.label}
             </dd>
           </div>
-          <div className="rounded-xl bg-white p-3 shadow-sm dark:bg-slate-900">
-            <dt className="text-xs text-slate-500 dark:text-slate-400">
+          <div className="rounded-md border border-hairline bg-paper-raised p-3">
+            <dt className="text-xs text-ink-muted">
               {kana.script === 'hiragana' ? 'Katakana' : 'Hiragana'}
             </dt>
             <dd className="mt-1 font-medium">
               {counterpart ? (
-                <Link to={`/table/${counterpart.id}`} replace className="font-jp text-lg text-accent-600 dark:text-accent-500">
+                <Link to={`/table/${counterpart.id}`} replace className="font-jp text-lg text-accent">
                   {counterpart.char}
                 </Link>
               ) : (

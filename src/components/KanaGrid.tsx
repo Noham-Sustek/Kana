@@ -48,13 +48,13 @@ function KanaSection({ kind, groups, renderCell }: KanaSectionProps) {
 
   return (
     <section className="mt-6 break-inside-avoid">
-      <h2 className="mb-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
+      <h2 className="mb-2 text-sm font-semibold text-ink-muted">
         {GROUP_KIND_LABELS[kind]}
       </h2>
       <div className={`grid ${gridCols} gap-1.5`}>
         <span />
         {columns.map((col) => (
-          <span key={col} className="text-center text-xs text-slate-400 dark:text-slate-500">
+          <span key={col} className="text-center text-xs text-ink-muted">
             {col}
           </span>
         ))}
@@ -62,7 +62,7 @@ function KanaSection({ kind, groups, renderCell }: KanaSectionProps) {
           group.rows.map((row, rowIndex) => [
             <span
               key={`${group.id}-${rowIndex}-label`}
-              className="self-center text-xs text-slate-400 dark:text-slate-500"
+              className="self-center text-xs text-ink-muted"
             >
               {rowIndex === 0 ? group.label : ''}
             </span>,
@@ -91,4 +91,4 @@ export function KanaCellContent({ kana }: { kana: Kana }) {
 }
 
 export const KANA_CELL_CLASS =
-  'flex aspect-square w-full min-h-11 flex-col items-center justify-center rounded-xl shadow-sm transition-transform active:scale-95'
+  'flex aspect-square w-full min-h-11 flex-col items-center justify-center rounded-sm border border-hairline transition-transform active:scale-95'

@@ -17,7 +17,7 @@ export function WritingComparison({ drawn, model }: WritingComparisonProps) {
     <div className="grid grid-cols-2 gap-3">
       <Panel label="Votre tracé">
         {drawn.map((points, i) => (
-          <polyline key={i} points={toSvgPoints(points)} className="stroke-slate-900 dark:stroke-slate-100" />
+          <polyline key={i} points={toSvgPoints(points)} className="stroke-ink" />
         ))}
       </Panel>
       <Panel
@@ -41,7 +41,7 @@ export function WritingComparison({ drawn, model }: WritingComparisonProps) {
         })}
       >
         {model.map((points, i) => (
-          <polyline key={i} points={toSvgPoints(points)} className="stroke-emerald-600" />
+          <polyline key={i} points={toSvgPoints(points)} className="stroke-correct" />
         ))}
       </Panel>
     </div>
@@ -53,7 +53,7 @@ function Panel({ label, children, overlay }: { label: string; children: ReactNod
     <figure>
       <svg
         viewBox={`0 0 ${STROKE_VIEWBOX} ${STROKE_VIEWBOX}`}
-        className="aspect-square w-full rounded-2xl bg-white shadow-sm dark:bg-slate-900"
+        className="aspect-square w-full rounded-md border border-hairline bg-paper-raised"
         role="img"
         aria-label={label}
       >
@@ -63,7 +63,7 @@ function Panel({ label, children, overlay }: { label: string; children: ReactNod
         </g>
         {overlay}
       </svg>
-      <figcaption className="mt-1.5 text-center text-xs font-medium text-slate-500 dark:text-slate-400">
+      <figcaption className="mt-1.5 text-center text-xs font-medium text-ink-muted">
         {label}
       </figcaption>
     </figure>

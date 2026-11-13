@@ -26,14 +26,14 @@ export function StrokeOrderAnimation({ strokes }: StrokeOrderAnimationProps) {
   return (
     <svg
       viewBox={`0 0 ${STROKE_VIEWBOX} ${STROKE_VIEWBOX}`}
-      className="aspect-square w-full rounded-2xl bg-white shadow-sm dark:bg-slate-900"
+      className="aspect-square w-full rounded-md border border-hairline bg-paper-raised"
       role="img"
       aria-label={`Ordre des traits : ${strokes.length} trait${strokes.length > 1 ? 's' : ''}`}
     >
       <KanaGuideLines />
       <g fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth={4.5}>
         {strokes.map((points, i) => (
-          <polyline key={`ghost-${i}`} points={toSvgPoints(points)} className="stroke-slate-200 dark:stroke-slate-800" />
+          <polyline key={`ghost-${i}`} points={toSvgPoints(points)} className="stroke-hairline" />
         ))}
         {timeline.map(({ points, start, duration }, i) => (
           <polyline
@@ -41,7 +41,7 @@ export function StrokeOrderAnimation({ strokes }: StrokeOrderAnimationProps) {
             points={toSvgPoints(points)}
             pathLength={1}
             strokeDasharray="1 1"
-            className="stroke-slate-900 dark:stroke-slate-100"
+            className="stroke-ink"
             style={{ animation: `stroke-draw ${duration}s ease-in-out ${start}s both` }}
           />
         ))}

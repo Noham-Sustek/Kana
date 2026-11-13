@@ -18,9 +18,9 @@ const LEVEL_OPTIONS: { value: WritingLevel; label: string }[] = [
 ]
 
 const PRIMARY_BUTTON =
-  'flex min-h-12 items-center justify-center gap-2 rounded-xl bg-accent-500 px-4 font-semibold text-white shadow-sm active:scale-95'
+  'flex min-h-12 items-center justify-center gap-2 rounded-md bg-accent px-4 font-semibold text-on-accent active:scale-95'
 const SECONDARY_BUTTON =
-  'flex min-h-12 items-center justify-center gap-2 rounded-xl bg-white px-4 font-medium shadow-sm active:scale-95 dark:bg-slate-900'
+  'flex min-h-12 items-center justify-center gap-2 rounded-md border border-hairline bg-paper-raised px-4 font-medium active:scale-95'
 
 export function WritingExercisePage() {
   const { kanaId = '' } = useParams()
@@ -54,12 +54,12 @@ export function WritingExercisePage() {
         <button
           type="button"
           onClick={goBack}
-          className="-ml-2 flex min-h-11 items-center gap-1 px-2 text-sm font-medium text-slate-600 dark:text-slate-300"
+          className="-ml-2 flex min-h-11 items-center gap-1 px-2 text-sm font-medium text-ink-muted"
         >
           <Icon name="chevronLeft" className="size-5" />
           Écriture
         </button>
-        <span className="text-xs text-slate-400 dark:text-slate-500">
+        <span className="text-xs text-ink-muted">
           {index + 1} / {siblings.length}
         </span>
       </header>
@@ -73,12 +73,12 @@ export function WritingExercisePage() {
             <span className="text-2xl font-semibold tracking-wide">{kana.romaji[0]}</span>
           </>
         )}
-        <span className="text-sm text-slate-500 dark:text-slate-400">
+        <span className="text-sm text-ink-muted">
           {strokes.length} trait{strokes.length > 1 ? 's' : ''}
         </span>
       </div>
       {level === 3 && (
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Écrivez ce kana de mémoire.</p>
+        <p className="mt-1 text-sm text-ink-muted">Écrivez ce kana de mémoire.</p>
       )}
 
       <div className="mt-4">
@@ -153,7 +153,7 @@ function PracticeStep({ strokes, level, onNextLevel, onNextKana }: PracticeStepP
         <WritingPad key={attempt} strokes={strokes} mode={level === 2 ? 'trace' : 'free'} onComplete={setResult} />
       )}
       {result && (
-        <section className="mt-4 rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-900" style={{ animation: 'fade-in 0.2s' }}>
+        <section className="mt-4 rounded-md border border-hairline bg-paper-raised p-4" style={{ animation: 'fade-in 0.2s' }}>
           <p className="font-semibold">{resultText(result, strokes.length)}</p>
           <div className="mt-3 grid grid-cols-2 gap-3">
             <button

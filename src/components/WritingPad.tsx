@@ -15,12 +15,13 @@ import { evaluateStroke, prepareStroke, type MatchMode } from '@/features/writin
 import { useIsDark } from '@/lib/useIsDark'
 
 const INK_WIDTH = 4.5
-const INK_LIGHT = '#0f172a' // slate-900
-const INK_DARK = '#f1f5f9' // slate-100
-const ERROR_COLOR = '#dc2626' // red-600
+// Le canvas ne lit pas les classes : valeurs des jetons ink (clair / sombre) et error.
+const INK_LIGHT = '#1e1b17'
+const INK_DARK = '#ede6d8'
+const ERROR_COLOR = '#c8321f'
 const FLASH_MS = 500
 const TOOL_BUTTON =
-  'flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-white text-sm font-medium shadow-sm active:scale-95 dark:bg-slate-900'
+  'flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-hairline bg-paper-raised text-sm font-medium active:scale-95'
 /** Écart minimal entre deux points enregistrés (unités KanjiVG) : évite d'accumuler du bruit. */
 const MIN_POINT_GAP = 0.4
 
@@ -201,13 +202,13 @@ export function WritingPad({ strokes, mode, onComplete, showCompare = true, vali
 
   const feedback = validate
     ? feedbackOf(session)
-    : { text: 'Dessinez librement, puis validez.', className: 'text-slate-500 dark:text-slate-400' }
+    : { text: 'Dessinez librement, puis validez.', className: 'text-ink-muted' }
   // Traits validés : ceux du modèle (calque) ou ceux réellement dessinés (libre).
   const doneStrokes = mode === 'trace' ? strokes.slice(0, session.done) : drawn
 
   return (
     <div>
-      <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-white shadow-sm dark:bg-slate-900">
+      <div className="relative aspect-square w-full overflow-hidden rounded-md border border-hairline bg-paper-raised">
         <svg
           viewBox={`0 0 ${STROKE_VIEWBOX} ${STROKE_VIEWBOX}`}
           className="pointer-events-none absolute inset-0 size-full"
@@ -220,7 +221,7 @@ export function WritingPad({ strokes, mode, onComplete, showCompare = true, vali
                 <polyline
                   key={`model-${i}`}
                   points={toSvgPoints(points)}
-                  className="stroke-slate-200 dark:stroke-slate-700"
+                  className="stroke-hairline"
                 />
               ))}
             {doneStrokes.map((points, i) => (
@@ -228,7 +229,7 @@ export function WritingPad({ strokes, mode, onComplete, showCompare = true, vali
                 key={`done-${i}`}
                 points={toSvgPoints(points)}
                 className={`transition-colors duration-300 ${
-                  i === flash ? 'stroke-emerald-600' : 'stroke-slate-900 dark:stroke-slate-100'
+                  i === flash ? 'stroke-correct' : 'stroke-ink'
                 }`}
               />
             ))}
@@ -263,7 +264,7 @@ export function WritingPad({ strokes, mode, onComplete, showCompare = true, vali
         <p aria-live="polite" className={`text-sm font-medium ${feedback.className}`}>
           {feedback.text}
         </p>
-        <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">
+        <span className="shrink-0 text-xs text-ink-muted">
           {validate
             ? `${Math.min(session.done + 1, strokes.length)} / ${strokes.length}`
             : `${drawn.length} trait${drawn.length > 1 ? 's' : ''}`}
@@ -331,11 +332,11 @@ export function WritingPad({ strokes, mode, onComplete, showCompare = true, vali
 
 function feedbackOf(session: WritingState): { text: string; className: string } {
   const last = session.last
-  const neutral = 'text-slate-500 dark:text-slate-400'
-  if (isComplete(session)) return { text: 'Kana terminé !', className: 'text-emerald-600' }
+  const neutral = 'text-ink-muted'
+  if (isComplete(session)) return { text: 'Kana terminé !', className: 'text-correct-ink' }
   if (!last) return { text: 'Tracez le premier trait.', className: neutral }
-  if (last.ok) return { text: 'Bien ! Trait suivant.', className: 'text-emerald-600' }
-  const error = 'text-red-600'
+  if (last.ok) return { text: 'Bien ! Trait suivant.', className: 'text-correct-ink' }
+  const error = 'text-error-ink'
   switch (last.fault) {
     case 'order':
       return {

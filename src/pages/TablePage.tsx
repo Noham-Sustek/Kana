@@ -38,7 +38,7 @@ export function TablePage() {
         renderCell={(kana) => (
           <Link
             to={`/table/${kana.id}`}
-            className={`${KANA_CELL_CLASS} ${heat ? HEAT_CLASSES[heatLevel(stats?.perKana.get(kana.id))] : 'bg-white dark:bg-slate-900'}`}
+            className={`${KANA_CELL_CLASS} ${heat ? HEAT_CLASSES[heatLevel(stats?.perKana.get(kana.id))] : 'bg-paper-raised'}`}
           >
             <KanaCellContent kana={kana} />
           </Link>

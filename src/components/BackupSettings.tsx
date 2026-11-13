@@ -4,7 +4,7 @@ import { BackupError, backupFileName, parseBackup, profileToActivate, type Backu
 import { useProfileStore } from '@/stores/profileStore'
 
 const BUTTON_CLASS =
-  'flex min-h-11 flex-1 items-center justify-center rounded-xl border border-slate-200 px-3 text-sm font-medium active:scale-[0.98] dark:border-slate-700'
+  'flex min-h-11 flex-1 items-center justify-center rounded-md border border-hairline px-3 text-sm font-medium active:scale-[0.98]'
 
 const dateFormat = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeStyle: 'short' })
 
@@ -80,7 +80,7 @@ export function BackupSettings() {
 
   return (
     <>
-      <p className="text-sm text-slate-600 dark:text-slate-300">
+      <p className="text-sm text-ink-muted">
         Toute la progression (profils, réponses, listes) et les réglages, dans un fichier JSON : pour la mettre à l’abri
         ou la transférer sur un autre téléphone.
       </p>
@@ -100,12 +100,12 @@ export function BackupSettings() {
         <input ref={fileRef} type="file" accept="application/json,.json" onChange={onFile} className="hidden" />
       </div>
 
-      {exportMessage && <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{exportMessage}</p>}
+      {exportMessage && <p className="mt-2 text-xs text-ink-muted">{exportMessage}</p>}
 
-      {state.step === 'error' && <p className="mt-3 text-sm font-medium text-red-600">{state.message}</p>}
+      {state.step === 'error' && <p className="mt-3 text-sm font-medium text-error-ink">{state.message}</p>}
 
       {(state.step === 'confirm' || state.step === 'busy') && (
-        <div className="mt-3 rounded-xl border-2 border-red-600 p-3 text-sm">
+        <div className="mt-3 rounded-md border-2 border-error p-3 text-sm">
           {state.step === 'confirm' && (
             <>
               <p>
@@ -113,7 +113,7 @@ export function BackupSettings() {
                 {state.backup.profiles.length} profil{state.backup.profiles.length > 1 ? 's' : ''},{' '}
                 {state.backup.answers.length} réponse{state.backup.answers.length > 1 ? 's' : ''}.
               </p>
-              <p className="mt-1 font-semibold text-red-600">
+              <p className="mt-1 font-semibold text-error-ink">
                 Toutes les données actuelles de cet appareil seront remplacées.
               </p>
               <div className="mt-3 flex gap-2">
@@ -123,7 +123,7 @@ export function BackupSettings() {
                 <button
                   type="button"
                   onClick={() => confirmImport(state.backup)}
-                  className="flex min-h-11 flex-1 items-center justify-center rounded-xl bg-red-600 px-3 text-sm font-semibold text-white active:scale-[0.98]"
+                  className="flex min-h-11 flex-1 items-center justify-center rounded-md bg-error px-3 text-sm font-semibold text-on-signal active:scale-[0.98]"
                 >
                   Remplacer
                 </button>

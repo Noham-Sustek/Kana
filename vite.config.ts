@@ -42,7 +42,7 @@ export default defineConfig({
       // Tout le build est précaché à l'installation et servi depuis le cache
       // (cache-first) : l'app fonctionne intégralement en mode avion.
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2,mp3,ogg,json,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2,mp3,ogg,json,webmanifest,txt}'],
         navigateFallback: 'index.html',
         cleanupOutdatedCaches: true,
         // Filet de sécurité pour un fichier du même site absent du précache.

@@ -24,10 +24,10 @@ export function ProfileSettings() {
 
   return (
     <>
-      <p className="mb-2 text-sm text-slate-600 dark:text-slate-300">
+      <p className="mb-2 text-sm text-ink-muted">
         Chaque profil a sa propre progression, ses listes et ses stats.
       </p>
-      <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+      <ul className="divide-y divide-hairline">
         {profiles.map((p) => (
           <ProfileRow
             key={p.id}
@@ -50,13 +50,13 @@ export function ProfileSettings() {
           maxLength={MAX_NAME_LENGTH}
           placeholder="Nouveau profil"
           aria-label="Nom du nouveau profil"
-          className="min-h-11 min-w-0 flex-1 rounded-xl border border-slate-200 bg-transparent px-3 text-base dark:border-slate-700"
+          className="min-h-11 min-w-0 flex-1 rounded-md border border-hairline bg-transparent px-3 text-base"
         />
         <button
           type="submit"
           disabled={!newName.trim()}
           aria-label="Ajouter le profil"
-          className="flex size-11 items-center justify-center rounded-xl bg-accent-600 text-white disabled:bg-slate-300 dark:disabled:bg-slate-700"
+          className="flex size-11 items-center justify-center rounded-md bg-accent text-on-accent disabled:opacity-40"
         >
           <Icon name="plus" className="size-5" />
         </button>
@@ -94,12 +94,12 @@ function ProfileRow({ profile, active, deletable, onSelect, onDelete }: ProfileR
             onChange={(e) => setName(e.target.value)}
             maxLength={MAX_NAME_LENGTH}
             aria-label="Nom du profil"
-            className="min-h-11 min-w-0 flex-1 rounded-xl border border-slate-200 bg-transparent px-3 text-base dark:border-slate-700"
+            className="min-h-11 min-w-0 flex-1 rounded-md border border-hairline bg-transparent px-3 text-base"
           />
           <button
             type="submit"
             aria-label="Enregistrer"
-            className="flex size-11 items-center justify-center rounded-xl bg-accent-600 text-white"
+            className="flex size-11 items-center justify-center rounded-md bg-accent text-on-accent"
           >
             <Icon name="check" className="size-5" />
           </button>
@@ -118,14 +118,14 @@ function ProfileRow({ profile, active, deletable, onSelect, onDelete }: ProfileR
           <button
             type="button"
             onClick={() => setMode('view')}
-            className="min-h-11 flex-1 rounded-xl border border-slate-200 font-medium dark:border-slate-700"
+            className="min-h-11 flex-1 rounded-md border border-hairline font-medium"
           >
             Annuler
           </button>
           <button
             type="button"
             onClick={onDelete}
-            className="min-h-11 flex-1 rounded-xl bg-red-600 font-semibold text-white"
+            className="min-h-11 flex-1 rounded-md bg-error font-semibold text-on-signal"
           >
             Supprimer
           </button>
@@ -145,10 +145,10 @@ function ProfileRow({ profile, active, deletable, onSelect, onDelete }: ProfileR
       >
         <span
           className={`flex size-5 items-center justify-center rounded-full border-2 ${
-            active ? 'border-accent-500' : 'border-slate-300 dark:border-slate-600'
+            active ? 'border-accent' : 'border-control'
           }`}
         >
-          {active && <span className="size-2.5 rounded-full bg-accent-500" />}
+          {active && <span className="size-2.5 rounded-full bg-accent" />}
         </span>
         <span className={`truncate ${active ? 'font-semibold' : ''}`}>{profile.name}</span>
       </button>
@@ -159,7 +159,7 @@ function ProfileRow({ profile, active, deletable, onSelect, onDelete }: ProfileR
           setMode('rename')
         }}
         aria-label={`Renommer ${profile.name}`}
-        className="flex size-11 items-center justify-center text-slate-500 dark:text-slate-400"
+        className="flex size-11 items-center justify-center text-ink-muted"
       >
         <Icon name="writing" className="size-4" />
       </button>
@@ -168,7 +168,7 @@ function ProfileRow({ profile, active, deletable, onSelect, onDelete }: ProfileR
           type="button"
           onClick={() => setMode('delete')}
           aria-label={`Supprimer ${profile.name}`}
-          className="flex size-11 items-center justify-center text-slate-500 dark:text-slate-400"
+          className="flex size-11 items-center justify-center text-ink-muted"
         >
           <Icon name="trash" className="size-4" />
         </button>

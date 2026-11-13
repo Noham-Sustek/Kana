@@ -16,15 +16,15 @@ export function Switch({ label, description, checked, onChange }: SwitchProps) {
     >
       <span>
         <span className="block text-sm font-medium">{label}</span>
-        {description && <span className="block text-xs text-slate-500 dark:text-slate-400">{description}</span>}
+        {description && <span className="block text-xs text-ink-muted">{description}</span>}
       </span>
       <span
         className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
-          checked ? 'bg-accent-500' : 'bg-slate-300 dark:bg-slate-700'
+          checked ? 'bg-accent' : 'bg-control'
         }`}
       >
         <span
-          className={`absolute top-1 left-1 size-5 rounded-full bg-white shadow transition-transform ${
+          className={`absolute top-1 left-1 size-5 rounded-full bg-paper-raised transition-transform ${
             checked ? 'translate-x-5' : ''
           }`}
         />

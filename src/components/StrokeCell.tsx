@@ -16,7 +16,7 @@ export function StrokeCell({ strokes, className, caption }: StrokeCellProps) {
     <figure className="max-w-24 min-w-0 flex-1">
       <svg
         viewBox={`0 0 ${STROKE_VIEWBOX} ${STROKE_VIEWBOX}`}
-        className="aspect-square w-full rounded-xl bg-white shadow-sm dark:bg-slate-900"
+        className="aspect-square w-full rounded-md border border-hairline bg-paper-raised"
         aria-hidden="true"
       >
         <KanaGuideLines />
@@ -27,7 +27,7 @@ export function StrokeCell({ strokes, className, caption }: StrokeCellProps) {
         </g>
       </svg>
       {caption && (
-        <figcaption className="text-center text-[0.65rem] text-slate-500 dark:text-slate-400">{caption}</figcaption>
+        <figcaption className="text-center text-[0.65rem] text-ink-muted">{caption}</figcaption>
       )}
     </figure>
   )

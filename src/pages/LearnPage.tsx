@@ -103,7 +103,7 @@ export function LearnPage() {
   const startBlock = (
     <>
       {unavailableReason && (
-        <p className="mb-2 rounded-lg bg-slate-200/90 px-3 py-2 text-center text-xs text-slate-600 backdrop-blur dark:bg-slate-800/90 dark:text-slate-300">
+        <p className="mb-2 rounded-lg bg-hairline/90 px-3 py-2 text-center text-xs text-ink-muted backdrop-blur">
           {unavailableReason}
         </p>
       )}
@@ -111,7 +111,7 @@ export function LearnPage() {
         type="button"
         onClick={start}
         disabled={unavailableReason !== null}
-        className="min-h-12 w-full rounded-xl bg-accent-600 font-semibold text-white shadow-lg transition-transform active:scale-[0.98] disabled:bg-slate-400 disabled:shadow-none dark:disabled:bg-slate-700"
+        className="min-h-12 w-full rounded-md bg-accent font-semibold text-on-accent transition-transform active:scale-[0.98] disabled:opacity-40"
       >
         Commencer
       </button>
@@ -134,18 +134,18 @@ export function LearnPage() {
         <div>
           <Link
             to="/learn/reading"
-            className="mb-4 flex min-h-16 items-center gap-3 rounded-2xl bg-white p-3 shadow-sm dark:bg-slate-900"
+            className="mb-4 flex min-h-16 items-center gap-3 rounded-md border border-hairline bg-paper-raised p-3"
           >
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-accent-50 text-accent-600 dark:bg-accent-500/15 dark:text-accent-500">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-md bg-accent-tint text-accent">
               <Icon name="timer" />
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-semibold">Lecture chronométrée</span>
-              <span className="block text-xs text-slate-500 dark:text-slate-400">
+              <span className="block text-xs text-ink-muted">
                 Lisez un livre en romaji, le plus vite possible (1 à 5 min).
               </span>
             </span>
-            <Icon name="chevronRight" className="size-5 text-slate-400" />
+            <Icon name="chevronRight" className="size-5 text-ink-muted" />
           </Link>
 
           <div className="mb-4">
@@ -181,7 +181,7 @@ export function LearnPage() {
                   value={settings.drawingCheck}
                   onChange={settings.setDrawingCheck}
                 />
-                <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                <p className="mt-1.5 text-xs text-ink-muted">
                   {settings.drawingCheck === 'auto'
                     ? 'Stages 5 et 7 : chaque trait est vérifié (forme, sens, ordre).'
                     : 'Stages 5 et 7 : dessinez librement, comparez au modèle et dites si c’est juste.'}
@@ -233,7 +233,7 @@ function PathPanel() {
 
   return (
     <Card title="Progression">
-      <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">
+      <p className="mb-3 text-sm text-ink-muted">
         On commence par la ligne あ. Quand 80 % des kana en cours sont reconnus vite et sans erreur, la ligne suivante
         s’ajoute. Chaque kana bien connu passe ensuite aux exercices suivants (stages), et revient régulièrement en
         révision.
@@ -242,17 +242,17 @@ function PathPanel() {
       {overview && (
         <div className="mt-4 space-y-4">
           <div>
-            <span className="mb-1.5 block text-xs font-semibold text-slate-500 dark:text-slate-400">
+            <span className="mb-1.5 block text-xs font-semibold text-ink-muted">
               Groupes en cours ({overview.activeGroups.length})
             </span>
             <div className="flex flex-wrap gap-1.5">
               {overview.activeGroups.map((g) => (
                 <span
                   key={g.id}
-                  className="flex min-h-9 items-center gap-1 rounded-lg bg-slate-100 px-2 text-sm dark:bg-slate-800"
+                  className="flex min-h-9 items-center gap-1 rounded-lg bg-paper px-2 text-sm"
                 >
                   <span className="font-jp">{groupGlyph(g)}</span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">{g.label}</span>
+                  <span className="text-xs text-ink-muted">{g.label}</span>
                 </span>
               ))}
             </div>
@@ -261,23 +261,23 @@ function PathPanel() {
           {overview.nextGroup ? (
             <div>
               <div className="mb-1.5 flex items-baseline justify-between text-xs">
-                <span className="font-semibold text-slate-500 dark:text-slate-400">
+                <span className="font-semibold text-ink-muted">
                   Prochain groupe : <span className="font-jp">{groupGlyph(overview.nextGroup)}</span>{' '}
                   {overview.nextGroup.label}
                 </span>
-                <span className="tabular-nums text-slate-400">
+                <span className="tabular-nums text-ink-muted">
                   {Math.round(overview.ratio * 100)} % / {Math.round(overview.requiredRatio * 100)} %
                 </span>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+              <div className="h-2 overflow-hidden rounded-full bg-hairline">
                 <div
-                  className="h-full rounded-full bg-accent-500"
+                  className="h-full rounded-full bg-accent"
                   style={{ width: `${Math.min(1, overview.ratio / overview.requiredRatio) * 100}%` }}
                 />
               </div>
             </div>
           ) : (
-            <p className="text-sm text-slate-500 dark:text-slate-400">Tous les groupes sont débloqués.</p>
+            <p className="text-sm text-ink-muted">Tous les groupes sont débloqués.</p>
           )}
 
           <StageMastery perStage={overview.perStage} />
@@ -299,7 +299,7 @@ function SelectionPanel() {
   return (
     <>
       <Card title="Kana à réviser" aside={`${pool.length} kana`}>
-        <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">
+        <p className="mb-3 text-sm text-ink-muted">
           Cochez ce que vous voulez réviser : les questions portent uniquement sur ces kana, en commençant par ceux que
           vous connaissez le moins.
         </p>
@@ -321,13 +321,13 @@ function SelectionPanel() {
 function StageMastery({ perStage }: { perStage: { stage: StageId; mastered: number; total: number }[] }) {
   return (
     <div>
-      <span className="mb-1.5 block text-xs font-semibold text-slate-500 dark:text-slate-400">
+      <span className="mb-1.5 block text-xs font-semibold text-ink-muted">
         Kana maîtrisés par stage
       </span>
       <ul className="grid grid-cols-3 gap-1.5">
         {perStage.map(({ stage, mastered, total }) => (
-          <li key={stage} className="rounded-lg bg-slate-100 px-2 py-1.5 dark:bg-slate-800">
-            <span className="block text-xs text-slate-500 dark:text-slate-400">{getStage(stage).title}</span>
+          <li key={stage} className="rounded-lg bg-paper px-2 py-1.5">
+            <span className="block text-xs text-ink-muted">{getStage(stage).title}</span>
             <span className="text-sm font-semibold tabular-nums">
               {mastered}/{total}
             </span>
@@ -364,20 +364,20 @@ function ManualPanel() {
                 type="button"
                 aria-pressed={selected}
                 onClick={() => settings.setStage(stage.id)}
-                className={`flex min-h-20 flex-col items-start rounded-xl border p-3 text-left transition-colors ${
+                className={`flex min-h-20 flex-col items-start rounded-md border p-3 text-left transition-colors ${
                   selected
-                    ? 'border-accent-500 bg-accent-50 dark:bg-accent-500/15'
-                    : 'border-slate-200 dark:border-slate-700'
+                    ? 'border-accent bg-accent-tint'
+                    : 'border-hairline'
                 }`}
               >
                 <span
-                  className={`text-xs font-semibold ${selected ? 'text-accent-600 dark:text-accent-500' : 'text-slate-400'}`}
+                  className={`text-xs font-semibold ${selected ? 'text-accent' : 'text-ink-muted'}`}
                 >
                   Stage {stage.id}
                 </span>
                 <span className="text-sm font-semibold">{stage.title}</span>
-                <span className="text-xs text-slate-500 dark:text-slate-400">{stage.description}</span>
-                {note && <span className="mt-1 text-xs text-slate-400 dark:text-slate-500">{note}</span>}
+                <span className="text-xs text-ink-muted">{stage.description}</span>
+                {note && <span className="mt-1 text-xs text-ink-muted">{note}</span>}
               </button>
             )
           })}
@@ -412,10 +412,10 @@ function ManualPanel() {
 
 function Card({ title, aside, children }: { title: string; aside?: ReactNode; children: ReactNode }) {
   return (
-    <section className="mb-4 rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-900">
+    <section className="mb-4 rounded-md border border-hairline bg-paper-raised p-4">
       <div className="mb-3 flex items-baseline justify-between">
-        <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400">{title}</h2>
-        {aside && <span className="text-xs text-slate-400 dark:text-slate-500">{aside}</span>}
+        <h2 className="text-sm font-semibold text-ink-muted">{title}</h2>
+        {aside && <span className="text-xs text-ink-muted">{aside}</span>}
       </div>
       {children}
     </section>
@@ -445,13 +445,13 @@ function GroupPicker({ groups }: { groups: KanaGroup[] }) {
         return (
           <div key={kind}>
             <div className="mb-1.5 flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              <span className="text-xs font-semibold text-ink-muted">
                 {GROUP_KIND_LABELS[kind]}
               </span>
               <button
                 type="button"
                 onClick={() => setGroupsSelected(ids, !allSelected)}
-                className="min-h-8 px-2 text-xs font-medium text-accent-600 dark:text-accent-500"
+                className="min-h-8 px-2 text-xs font-medium text-accent"
               >
                 {allSelected ? 'Aucun' : 'Tous'}
               </button>
@@ -467,8 +467,8 @@ function GroupPicker({ groups }: { groups: KanaGroup[] }) {
                     onClick={() => setGroupsSelected([group.id], !selected)}
                     className={`flex min-h-11 items-center gap-1.5 rounded-lg border px-2.5 text-sm transition-colors ${
                       selected
-                        ? 'border-accent-500 bg-accent-500 text-white'
-                        : 'border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300'
+                        ? 'border-accent bg-accent text-on-accent'
+                        : 'border-hairline text-ink-muted'
                     }`}
                   >
                     <span className="font-jp text-base">{groupGlyph(group)}</span>
@@ -492,11 +492,11 @@ function CustomGroupsCard() {
   return (
     <Card title="Mes listes">
       {customGroups.length === 0 && (
-        <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">
+        <p className="mb-3 text-sm text-ink-muted">
           Regroupez ici les kana qui vous posent problème.
         </p>
       )}
-      <ul className="mb-3 divide-y divide-slate-100 dark:divide-slate-800">
+      <ul className="mb-3 divide-y divide-hairline">
         {customGroups.map((group) => {
           const selected = selectedIds.includes(group.id)
           return (
@@ -510,14 +510,14 @@ function CustomGroupsCard() {
               >
                 <span
                   className={`flex size-6 shrink-0 items-center justify-center rounded-md border-2 ${
-                    selected ? 'border-accent-500 bg-accent-500 text-white' : 'border-slate-300 dark:border-slate-600'
+                    selected ? 'border-accent bg-accent text-on-accent' : 'border-control'
                   }`}
                 >
                   {selected && <Icon name="check" className="size-4" />}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium">{group.name}</span>
-                  <span className="block truncate font-jp text-xs text-slate-500 dark:text-slate-400">
+                  <span className="block truncate font-jp text-xs text-ink-muted">
                     {group.kanaIds.map((id) => getKana(id)?.char).join(' ')}
                   </span>
                 </span>
@@ -525,7 +525,7 @@ function CustomGroupsCard() {
               <Link
                 to={`/learn/custom/${group.id}`}
                 aria-label={`Modifier ${group.name}`}
-                className="flex size-11 items-center justify-center text-slate-400"
+                className="flex size-11 items-center justify-center text-ink-muted"
               >
                 <Icon name="chevronRight" className="size-5" />
               </Link>
@@ -535,7 +535,7 @@ function CustomGroupsCard() {
       </ul>
       <Link
         to="/learn/custom/new"
-        className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 text-sm font-medium text-slate-600 dark:border-slate-700 dark:text-slate-300"
+        className="flex min-h-11 items-center justify-center gap-2 rounded-md border border-dashed border-control text-sm font-medium text-ink-muted"
       >
         <Icon name="plus" className="size-4" />
         Nouvelle liste

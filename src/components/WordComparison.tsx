@@ -16,12 +16,12 @@ export function WordComparison({ chars, drawn, model }: WordComparisonProps) {
     <div className="space-y-2">
       <Row label="Votre tracé">
         {chars.map((_, i) => (
-          <StrokeCell key={i} strokes={drawn[i] ?? []} className="stroke-slate-900 dark:stroke-slate-100" />
+          <StrokeCell key={i} strokes={drawn[i] ?? []} className="stroke-ink" />
         ))}
       </Row>
       <Row label="Modèle">
         {chars.map((c, i) => (
-          <StrokeCell key={i} strokes={model[i] ?? []} className="stroke-emerald-600" caption={isSmallKana(c) ? 'petit' : undefined} />
+          <StrokeCell key={i} strokes={model[i] ?? []} className="stroke-correct" caption={isSmallKana(c) ? 'petit' : undefined} />
         ))}
       </Row>
     </div>
@@ -31,7 +31,7 @@ export function WordComparison({ chars, drawn, model }: WordComparisonProps) {
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
-      <p className="mb-1 text-xs font-medium text-slate-500 dark:text-slate-400">{label}</p>
+      <p className="mb-1 text-xs font-medium text-ink-muted">{label}</p>
       <div className="flex justify-center gap-1.5">{children}</div>
     </div>
   )

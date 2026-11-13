@@ -16,13 +16,13 @@ export function KanaNavButton({ target, direction, onClick }: KanaNavButtonProps
       onClick={onClick}
       disabled={!target}
       aria-label={isPrev ? 'Kana précédent' : 'Kana suivant'}
-      className={`flex min-h-14 items-center gap-2 rounded-xl bg-white px-4 shadow-sm transition-transform active:scale-95 disabled:opacity-30 dark:bg-slate-900 ${
+      className={`flex min-h-14 items-center gap-2 rounded-md border border-hairline bg-paper-raised px-4 transition-transform active:scale-95 disabled:opacity-30 ${
         isPrev ? 'justify-start' : 'flex-row-reverse justify-start'
       }`}
     >
       <Icon name={isPrev ? 'chevronLeft' : 'chevronRight'} className="size-5" />
       {target && <span className="font-jp text-xl">{target.char}</span>}
-      {target && <span className="text-xs text-slate-500 dark:text-slate-400">{target.romaji[0]}</span>}
+      {target && <span className="text-xs text-ink-muted">{target.romaji[0]}</span>}
     </button>
   )
 }

@@ -66,7 +66,7 @@ function CustomGroupForm({ existing }: { existing: CustomGroup | null }) {
         <button
           type="button"
           onClick={() => navigate('/learn', { replace: true })}
-          className="-ml-2 flex min-h-11 items-center gap-1 px-2 text-sm font-medium text-slate-600 dark:text-slate-300"
+          className="-ml-2 flex min-h-11 items-center gap-1 px-2 text-sm font-medium text-ink-muted"
         >
           <Icon name="chevronLeft" className="size-5" />
           Apprendre
@@ -76,7 +76,7 @@ function CustomGroupForm({ existing }: { existing: CustomGroup | null }) {
             type="button"
             onClick={remove}
             aria-label="Supprimer la liste"
-            className="flex size-11 items-center justify-center text-red-600 dark:text-red-400"
+            className="flex size-11 items-center justify-center text-error-ink"
           >
             <Icon name="trash" className="size-5" />
           </button>
@@ -92,7 +92,7 @@ function CustomGroupForm({ existing }: { existing: CustomGroup | null }) {
           onChange={(e) => setName(e.target.value)}
           placeholder="Ex. : kana difficiles"
           maxLength={40}
-          className="min-h-12 w-full rounded-xl border border-slate-300 bg-white px-3 outline-none focus:ring-2 focus:ring-accent-500/40 dark:border-slate-700 dark:bg-slate-900"
+          className="min-h-12 w-full rounded-md border border-control bg-paper-raised px-3 outline-none focus:ring-2 focus:ring-accent/40"
         />
       </label>
 
@@ -108,7 +108,7 @@ function CustomGroupForm({ existing }: { existing: CustomGroup | null }) {
               aria-pressed={selected}
               onClick={() => toggleKana(kana.id)}
               className={`${KANA_CELL_CLASS} ${
-                selected ? 'bg-accent-500 text-white' : 'bg-white dark:bg-slate-900'
+                selected ? 'bg-accent text-on-accent' : 'bg-paper-raised'
               }`}
             >
               <KanaCellContent kana={kana} />
@@ -122,7 +122,7 @@ function CustomGroupForm({ existing }: { existing: CustomGroup | null }) {
           type="button"
           onClick={save}
           disabled={!canSave}
-          className="min-h-12 w-full rounded-xl bg-accent-600 font-semibold text-white shadow-lg active:scale-[0.98] disabled:bg-slate-400 disabled:shadow-none dark:disabled:bg-slate-700"
+          className="min-h-12 w-full rounded-md bg-accent font-semibold text-on-accent active:scale-[0.98] disabled:opacity-40"
         >
           Enregistrer ({kanaIds.length} kana)
         </button>

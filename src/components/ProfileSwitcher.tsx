@@ -20,8 +20,8 @@ export function ProfileSwitcher() {
             onClick={() => setProfileId(p.id)}
             className={`flex min-h-11 shrink-0 items-center rounded-full border px-4 text-sm font-medium transition-colors ${
               selected
-                ? 'border-accent-500 bg-accent-500 text-white'
-                : 'border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300'
+                ? 'border-accent bg-accent text-on-accent'
+                : 'border-hairline text-ink-muted'
             }`}
           >
             {p.name}
@@ -30,7 +30,7 @@ export function ProfileSwitcher() {
       })}
       <Link
         to="/settings"
-        className="flex min-h-11 shrink-0 items-center px-2 text-sm font-medium text-accent-600 dark:text-accent-500"
+        className="flex min-h-11 shrink-0 items-center px-2 text-sm font-medium text-accent"
       >
         Gérer
       </Link>

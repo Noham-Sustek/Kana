@@ -6,12 +6,105 @@
 /* Écran bas, en pratique clavier virtuel ouvert (viewport interactive-widget=resizes-content). */
 @custom-variant short (@media (max-height: 600px));
 
+/* Polices embarquées (licences OFL, cf. À propos). Klee One : kana seuls, les kanji
+   retombent sur la police système. */
+@font-face {
+  font-family: 'Klee One Kana';
+  src: url('./assets/fonts/KleeOne-SemiBold-kana.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Newsreader';
+  src: url('./assets/fonts/Newsreader-latin.woff2') format('woff2');
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Figtree';
+  src: url('./assets/fonts/Figtree-latin.woff2') format('woff2');
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Jetons « Papier et encre » (docs/design/tokens.json). Les couleurs changent avec le
+   thème : les classes bg-paper, text-ink… n'ont pas besoin de variante dark:. */
+:root {
+  --k-paper: #f5f0e6;
+  --k-paper-raised: #fbf8f1;
+  --k-ink: #1e1b17;
+  --k-ink-muted: #655d51;
+  --k-hairline: #d6ccb9;
+  --k-control: #8f8676;
+  --k-accent: #2a4b9b;
+  --k-on-accent: #ffffff;
+  --k-accent-tint: #e1e7f4;
+  --k-correct-ink: #0b7a53;
+  --k-error-ink: #b42a18;
+  --k-correct-tint: #dff0e8;
+  --k-error-tint: #f7e2dc;
+  --k-gold: #8a5a00;
+  --k-heat-1: #e1e7f4;
+  --k-heat-2: #b3c2e6;
+  --k-heat-3: #4f6db8;
+  --k-on-heat-3: #ffffff;
+  --k-scrim: rgba(30, 27, 23, 0.45);
+}
+.dark {
+  --k-paper: #000000;
+  --k-paper-raised: #141210;
+  --k-ink: #ede6d8;
+  --k-ink-muted: #a49b8c;
+  --k-hairline: #35302a;
+  --k-control: #6f675c;
+  --k-accent: #9db4f0;
+  --k-on-accent: #0b1530;
+  --k-accent-tint: #141d36;
+  --k-correct-ink: #4fd1a1;
+  --k-error-ink: #ff8a75;
+  --k-correct-tint: #06231a;
+  --k-error-tint: #2a100b;
+  --k-gold: #e0b252;
+  --k-heat-1: #141d36;
+  --k-heat-2: #2a3c70;
+  --k-heat-3: #4560a8;
+  --k-on-heat-3: #ede6d8;
+  --k-scrim: rgba(0, 0, 0, 0.7);
+}
+
 @theme {
-  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-jp: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif;
-  --color-accent-50: oklch(0.969 0.015 12.4);
-  --color-accent-500: oklch(0.645 0.246 16.4);
-  --color-accent-600: oklch(0.586 0.253 17.6);
+  --font-sans: 'Figtree', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Newsreader', Georgia, serif;
+  --font-jp: 'Klee One Kana', 'Hiragino Sans', 'Yu Gothic', 'Noto Sans JP', 'Meiryo', sans-serif;
+  /* Vert et rouge de réponse : identiques dans les deux thèmes. */
+  --color-correct: #0b7a53;
+  --color-error: #c8321f;
+  --color-on-signal: #ffffff;
+}
+
+@theme inline {
+  --color-paper: var(--k-paper);
+  --color-paper-raised: var(--k-paper-raised);
+  --color-ink: var(--k-ink);
+  --color-ink-muted: var(--k-ink-muted);
+  --color-hairline: var(--k-hairline);
+  --color-control: var(--k-control);
+  --color-accent: var(--k-accent);
+  --color-on-accent: var(--k-on-accent);
+  --color-accent-tint: var(--k-accent-tint);
+  --color-correct-ink: var(--k-correct-ink);
+  --color-error-ink: var(--k-error-ink);
+  --color-correct-tint: var(--k-correct-tint);
+  --color-error-tint: var(--k-error-tint);
+  --color-gold: var(--k-gold);
+  --color-heat-1: var(--k-heat-1);
+  --color-heat-2: var(--k-heat-2);
+  --color-heat-3: var(--k-heat-3);
+  --color-on-heat-3: var(--k-on-heat-3);
+  --color-scrim: var(--k-scrim);
 }
 
 html,
@@ -30,7 +123,7 @@ body,
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+  @apply bg-paper font-sans text-ink antialiased;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior-y: none;
 }

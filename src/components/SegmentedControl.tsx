@@ -10,7 +10,7 @@ export function SegmentedControl<T extends string | number>({ label, options, va
     <div
       role="radiogroup"
       aria-label={label}
-      className="grid gap-1 rounded-xl bg-slate-200 p-1 dark:bg-slate-800"
+      className="grid gap-1 rounded-md bg-hairline p-1"
       style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
     >
       {options.map((opt) => {
@@ -24,8 +24,8 @@ export function SegmentedControl<T extends string | number>({ label, options, va
             onClick={() => onChange(opt.value)}
             className={`min-h-11 rounded-lg text-sm font-medium transition-colors ${
               selected
-                ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-950 dark:text-slate-100'
-                : 'text-slate-500 dark:text-slate-400'
+                ? 'bg-paper-raised text-ink'
+                : 'text-ink-muted'
             }`}
           >
             {opt.label}
