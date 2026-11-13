@@ -37,6 +37,8 @@
         </provider>
     </application>
 
-    <!-- Aucune permission : l'application est servie localement et ne va jamais sur le réseau.
-         Les données restent sur l'appareil (pas de sauvegarde automatique Google). -->
+    <!-- Seule permission : la vibration (réglage Vibrations ; sans elle, navigator.vibrate est
+         ignoré par la WebView). Pas d'INTERNET : l'application est servie localement et ne va
+         jamais sur le réseau. Les données restent sur l'appareil (pas de sauvegarde Google). -->
+    <uses-permission android:name="android.permission.VIBRATE" />
 </manifest>

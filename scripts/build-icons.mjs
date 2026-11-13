@@ -1,211 +1,148 @@
-// Génère les icônes de la PWA (public/*.png + public/icon.svg) à partir des tracés
-// KanjiVG de « あ » (src/data/strokes.json) : aucune police requise, rendu identique
-// partout. Rasterisation maison (distance aux segments, anticrénelage) et encodage
-// PNG avec zlib : aucune dépendance. Usage : npm run icons
+// Icônes de Kana (piste « A · La case ») : PWA (clair et sombre), favicon et application Android.
+// Le あ est le tracé du glyphe de Klee One SemiBold (scripts/icon-glyph.json, extrait une fois de la
+// police embarquée) : aucune police n'est chargée, ni ici ni à l'exécution.
+// Sous 40 px, les repères en croix et le coin indigo disparaissent (illisibles), le cadre s'épaissit.
+// Usage : npm run icons
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { deflateSync } from 'node:zlib'
-
-const BG = [0x0f, 0x17, 0x2a] // slate-900, = theme_color du manifeste
-const INK = [0xf4, 0x3f, 0x5e] // rose-500, couleur d'accent
-const GLYPH = 'あ'
-/** Épaisseur du trait, en unités KanjiVG (les tracés d'origine font ~3). */
-const STROKE_WIDTH = 9
+import { Resvg } from '@resvg/resvg-js'
 
 const root = new URL('../', import.meta.url)
-const data = JSON.parse(readFileSync(new URL('src/data/strokes.json', root), 'utf8'))
-const strokes = data.strokes[GLYPH].map((flat) => {
-  const pts = []
-  for (let i = 0; i + 1 < flat.length; i += 2) pts.push([flat[i], flat[i + 1]])
-  return pts
-})
+const glyph = JSON.parse(readFileSync(new URL('scripts/icon-glyph.json', root), 'utf8'))
 
-// Boîte englobante du glyphe (épaisseur comprise), pour le centrer.
-const xs = strokes.flat().map((p) => p[0])
-const ys = strokes.flat().map((p) => p[1])
-const box = {
-  x: Math.min(...xs) - STROKE_WIDTH / 2,
-  y: Math.min(...ys) - STROKE_WIDTH / 2,
-  w: Math.max(...xs) - Math.min(...xs) + STROKE_WIDTH,
-  h: Math.max(...ys) - Math.min(...ys) + STROKE_WIDTH,
+// Jetons « Papier et encre » (docs/design/tokens.json).
+const THEMES = {
+  light: { ground: '#fbf8f1', edge: '#d6ccb9', caseFill: '#fbf8f1', ink: '#1e1b17', guide: '#d6ccb9', corner: '#2a4b9b' },
+  dark: { ground: '#000000', edge: '#35302a', caseFill: '#141210', ink: '#ede6d8', guide: '#35302a', corner: '#9db4f0' },
+}
+const PAPER = { light: '#f5f0e6', dark: '#000000' }
+
+// Glyphe centré dans la case (repère 100 × 100, case de 19 à 81) : 46 unités de corps,
+// centre de l'avance horizontalement, centre de la boîte englobante verticalement.
+const [, minY, , maxY] = glyph.bbox
+const k = 46 / glyph.unitsPerEm
+const glyphPath = (fill) =>
+  `<path transform="translate(50 50.5) scale(${k} ${-k}) translate(${-glyph.advance / 2} ${-(minY + maxY) / 2})" d="${glyph.d}" fill="${fill}"/>`
+
+/** La case : cadre, repères en croix, coin indigo (taille ≥ 40 px) et あ. */
+function mark(t, { small = false } = {}) {
+  return [
+    `<rect x="19" y="19" width="62" height="62" rx="3" fill="${t.caseFill}" stroke="${t.ink}" stroke-width="${small ? 3 : 2.5}"/>`,
+    small ? '' : `<path d="M50 21V79M21 50H79" stroke="${t.guide}" stroke-width="1.2" stroke-dasharray="3 2.5" fill="none"/>`,
+    small ? '' : `<path d="M79.75 79.75H67L79.75 67Z" fill="${t.corner}"/>`,
+    glyphPath(t.ink),
+  ].join('')
 }
 
-/** Transformation unités KanjiVG → pixels : le glyphe occupe `scale` de la taille, centré. */
-function transform(size, scale) {
-  const k = (size * scale) / Math.max(box.w, box.h)
-  const ox = (size - box.w * k) / 2 - box.x * k
-  const oy = (size - box.h * k) / 2 - box.y * k
-  return { k, map: ([x, y]) => [ox + x * k, oy + y * k] }
+const svg = (body, viewBox = '0 0 100 100') => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}">${body}</svg>`
+
+/** Icône complète : carré arrondi (rx 22) ; `square` : plein cadre (iOS arrondit lui-même). */
+function icon(theme, { small = false, square = false } = {}) {
+  const t = THEMES[theme]
+  const ground = square
+    ? `<rect width="100" height="100" fill="${t.ground}"/>`
+    : theme === 'light'
+      ? `<rect x="0.5" y="0.5" width="99" height="99" rx="22" fill="${t.ground}" stroke="${t.edge}" stroke-width="1"/>`
+      : `<rect width="100" height="100" rx="22" fill="${t.ground}"/>`
+  return svg(ground + mark(t, { small }))
 }
 
-function distToSegment(px, py, [ax, ay], [bx, by]) {
-  const dx = bx - ax
-  const dy = by - ay
-  const len2 = dx * dx + dy * dy
-  const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len2))
-  return Math.hypot(px - (ax + t * dx), py - (ay + t * dy))
+/** Maskable : fond plein cadre, case réduite pour tenir dans le cercle de sécurité (80 %). */
+function maskable(theme) {
+  const t = THEMES[theme]
+  return svg(`<rect width="100" height="100" fill="${t.ground}"/><g transform="translate(50 50) scale(0.82) translate(-50 -50)">${mark(t)}</g>`)
 }
 
-/** Couverture (0 à 1) du glyphe pour chaque pixel. */
-function glyphCoverage(size, scale) {
-  const { k, map } = transform(size, scale)
-  const r = (STROKE_WIDTH * k) / 2
-  const dist = new Float32Array(size * size).fill(Infinity)
-  for (const stroke of strokes) {
-    const pts = stroke.map(map)
-    for (let i = 0; i + 1 < pts.length; i++) {
-      const a = pts[i]
-      const b = pts[i + 1]
-      const x0 = Math.max(0, Math.floor(Math.min(a[0], b[0]) - r - 1))
-      const x1 = Math.min(size - 1, Math.ceil(Math.max(a[0], b[0]) + r + 1))
-      const y0 = Math.max(0, Math.floor(Math.min(a[1], b[1]) - r - 1))
-      const y1 = Math.min(size - 1, Math.ceil(Math.max(a[1], b[1]) + r + 1))
-      for (let y = y0; y <= y1; y++) {
-        for (let x = x0; x <= x1; x++) {
-          const d = distToSegment(x + 0.5, y + 0.5, a, b)
-          if (d < dist[y * size + x]) dist[y * size + x] = d
-        }
-      }
-    }
-  }
-  return dist.map((d) => Math.max(0, Math.min(1, r + 0.5 - d)))
-}
-
-/** Couverture d'un carré à coins arrondis de rayon `radius` (0 = plein cadre). */
-function roundedRectCoverage(size, radius) {
-  const cov = new Float32Array(size * size)
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      const px = x + 0.5
-      const py = y + 0.5
-      const cx = Math.max(radius - px, px - (size - radius), 0)
-      const cy = Math.max(radius - py, py - (size - radius), 0)
-      const d = Math.hypot(cx, cy) - radius
-      cov[y * size + x] = radius === 0 ? 1 : Math.max(0, Math.min(1, 0.5 - d))
-    }
-  }
-  return cov
-}
-
-function render(size, { scale, radius, transparent = false }) {
-  const bg = roundedRectCoverage(size, radius)
-  const ink = glyphCoverage(size, scale)
-  const rgba = Buffer.alloc(size * size * 4)
-  for (let i = 0; i < size * size; i++) {
-    if (transparent) {
-      // Premier plan d'icône adaptative Android : glyphe seul, le fond est une couleur.
-      for (let c = 0; c < 3; c++) rgba[i * 4 + c] = INK[c]
-      rgba[i * 4 + 3] = Math.round(ink[i] * 255)
-      continue
-    }
-    const g = ink[i] * (bg[i] > 0 ? 1 : 0)
-    for (let c = 0; c < 3; c++) rgba[i * 4 + c] = Math.round(BG[c] * (1 - g) + INK[c] * g)
-    rgba[i * 4 + 3] = Math.round(bg[i] * 255)
-  }
-  return encodePng(size, size, rgba)
-}
-
-// --- PNG ---------------------------------------------------------------------
-
-const CRC_TABLE = Array.from({ length: 256 }, (_, n) => {
-  let c = n
-  for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1
-  return c >>> 0
-})
-
-function crc32(buf) {
-  let c = 0xffffffff
-  for (const b of buf) c = CRC_TABLE[(c ^ b) & 0xff] ^ (c >>> 8)
-  return (c ^ 0xffffffff) >>> 0
-}
-
-function chunk(type, body) {
-  const len = Buffer.alloc(4)
-  len.writeUInt32BE(body.length)
-  const typed = Buffer.concat([Buffer.from(type, 'ascii'), body])
-  const crc = Buffer.alloc(4)
-  crc.writeUInt32BE(crc32(typed))
-  return Buffer.concat([len, typed, crc])
-}
-
-function encodePng(width, height, rgba) {
-  const ihdr = Buffer.alloc(13)
-  ihdr.writeUInt32BE(width, 0)
-  ihdr.writeUInt32BE(height, 4)
-  ihdr[8] = 8 // bits par canal
-  ihdr[9] = 6 // RGBA
-  const raw = Buffer.alloc(height * (width * 4 + 1))
-  for (let y = 0; y < height; y++) {
-    raw[y * (width * 4 + 1)] = 0 // filtre : aucun
-    rgba.copy(raw, y * (width * 4 + 1) + 1, y * width * 4, (y + 1) * width * 4)
-  }
-  return Buffer.concat([
-    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-    chunk('IHDR', ihdr),
-    chunk('IDAT', deflateSync(raw, { level: 9 })),
-    chunk('IEND', Buffer.alloc(0)),
-  ])
-}
-
-// --- SVG (favicon) -----------------------------------------------------------
-
-const hex = (c) => '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('')
-
-function svg() {
-  const size = 512
-  const { k, map } = transform(size, 0.72)
-  const lines = strokes
-    .map((s) => `<polyline points="${s.map(map).map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ')}"/>`)
-    .join('')
-  return (
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}">` +
-    `<rect width="${size}" height="${size}" rx="96" fill="${hex(BG)}"/>` +
-    `<g fill="none" stroke="${hex(INK)}" stroke-width="${(STROKE_WIDTH * k).toFixed(1)}" stroke-linecap="round" stroke-linejoin="round">${lines}</g>` +
-    `</svg>\n`
+/** Favicon SVG : version simplifiée, qui suit le thème du système. */
+function faviconSvg() {
+  const l = THEMES.light
+  const d = THEMES.dark
+  const style =
+    `<style>.g{fill:${l.ground};stroke:${l.edge}}.c{fill:${l.caseFill};stroke:${l.ink}}.k{fill:${l.ink}}` +
+    `@media (prefers-color-scheme: dark){.g{fill:${d.ground};stroke:${d.edge}}.c{fill:${d.caseFill};stroke:${d.ink}}.k{fill:${d.ink}}}</style>`
+  return svg(
+    style +
+      `<rect class="g" x="0.5" y="0.5" width="99" height="99" rx="22" stroke-width="1"/>` +
+      `<rect class="c" x="19" y="19" width="62" height="62" rx="3" stroke-width="3"/>` +
+      glyphPath('currentColor').replace('fill="currentColor"', 'class="k"'),
   )
 }
 
-// « any » : carré arrondi, glyphe large. « maskable » : plein cadre, glyphe dans
-// la zone de sécurité (cercle de 80 % du côté) pour survivre à tous les masques.
-const outputs = [
-  ['icon-192.png', 192, { scale: 0.72, radius: 36 }],
-  ['icon-512.png', 512, { scale: 0.72, radius: 96 }],
-  ['icon-maskable-192.png', 192, { scale: 0.5, radius: 0 }],
-  ['icon-maskable-512.png', 512, { scale: 0.5, radius: 0 }],
-  ['apple-touch-icon.png', 180, { scale: 0.62, radius: 0 }],
-]
+const png = (source, size) => new Resvg(source, { fitTo: { mode: 'width', value: size } }).render().asPng()
 
-for (const [name, size, opts] of outputs) {
-  writeFileSync(new URL(`public/${name}`, root), render(size, opts))
-  console.log(`public/${name}`)
+/** .ico contenant des PNG (accepté par tous les navigateurs actuels). */
+function ico(images) {
+  const header = Buffer.alloc(6 + images.length * 16)
+  header.writeUInt16LE(1, 2)
+  header.writeUInt16LE(images.length, 4)
+  let offset = header.length
+  images.forEach(({ size, data }, i) => {
+    const e = 6 + i * 16
+    header.writeUInt8(size >= 256 ? 0 : size, e)
+    header.writeUInt8(size >= 256 ? 0 : size, e + 1)
+    header.writeUInt16LE(1, e + 4)
+    header.writeUInt16LE(32, e + 6)
+    header.writeUInt32LE(data.length, e + 8)
+    header.writeUInt32LE(offset, e + 12)
+    offset += data.length
+  })
+  return Buffer.concat([header, ...images.map((i) => i.data)])
 }
-writeFileSync(new URL('public/icon.svg', root), svg())
-console.log('public/icon.svg')
 
-// Application Android (Capacitor) : icône classique et ronde par densité, icône adaptative
-// (premier plan 108 dp, glyphe dans la zone de sécurité de 66 dp) et sa couleur de fond.
-const res = new URL('android/app/src/main/res/', root)
-const DENSITIES = [
-  ['mdpi', 1],
-  ['hdpi', 1.5],
-  ['xhdpi', 2],
-  ['xxhdpi', 3],
-  ['xxxhdpi', 4],
-]
-for (const [density, factor] of DENSITIES) {
-  const icon = Math.round(48 * factor)
-  const fg = Math.round(108 * factor)
-  const dir = new URL(`mipmap-${density}/`, res)
-  mkdirSync(dir, { recursive: true })
-  writeFileSync(new URL('ic_launcher.png', dir), render(icon, { scale: 0.62, radius: Math.round(icon * 0.18) }))
-  writeFileSync(new URL('ic_launcher_round.png', dir), render(icon, { scale: 0.56, radius: icon / 2 }))
-  writeFileSync(new URL('ic_launcher_foreground.png', dir), render(fg, { scale: 0.42, radius: 0, transparent: true }))
-  console.log(`android mipmap-${density}`)
+const write = (path, data) => {
+  const url = new URL(path, root)
+  mkdirSync(new URL('./', url), { recursive: true })
+  writeFileSync(url, data)
+  console.log(path)
 }
-writeFileSync(
-  new URL('values/ic_launcher_background.xml', res),
-  `<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <color name="ic_launcher_background">${hex(BG)}</color>
-</resources>
-`,
+
+// ── PWA (public/) ──
+for (const theme of ['light', 'dark']) {
+  const suffix = theme === 'light' ? '' : '-dark'
+  for (const size of [192, 512]) {
+    write(`public/icon${suffix}-${size}.png`, png(icon(theme), size))
+    write(`public/icon-maskable${suffix}-${size}.png`, png(maskable(theme), size))
+  }
+  write(`public/apple-touch-icon${suffix}.png`, png(icon(theme, { square: true }), 180))
+  write(`public/icon${suffix}.svg`, icon(theme))
+  write(`public/favicon${suffix}-32.png`, png(icon(theme, { small: true }), 32))
+}
+write('public/favicon.svg', faviconSvg())
+write(
+  'public/favicon.ico',
+  ico([16, 32, 48].map((size) => ({ size, data: png(icon('light', { small: size < 40 }), size) }))),
 )
+
+// ── Application Android (Capacitor) ──
+// Icône adaptative : premier plan 108 dp dont seuls ~72 dp sont visibles et 66 dp toujours sûrs ;
+// la case (diagonale) tient dans ce cercle. Fond = couleur unie. Variantes « night » : icône et
+// écran de démarrage sombres quand le téléphone est en thème sombre.
+const res = 'android/app/src/main/res/'
+const FG_SCALE = (0.43 * 108) / 62
+const foreground = (t) => svg(`<g transform="translate(54 54) scale(${FG_SCALE}) translate(-50 -50)">${mark(t)}</g>`, '0 0 108 108')
+// Monochrome (icônes à thème d'Android 13+) : cadre et あ seuls, teintés par le système.
+const mono = svg(
+  `<g transform="translate(54 54) scale(${FG_SCALE}) translate(-50 -50)"><rect x="19" y="19" width="62" height="62" rx="3" fill="none" stroke="#fff" stroke-width="3"/>${glyphPath('#fff')}</g>`,
+  '0 0 108 108',
+)
+const DENSITIES = { mdpi: 1, hdpi: 1.5, xhdpi: 2, xxhdpi: 3, xxxhdpi: 4 }
+for (const [density, f] of Object.entries(DENSITIES)) {
+  const legacy = Math.round(48 * f)
+  const fg = Math.round(108 * f)
+  for (const theme of ['light', 'dark']) {
+    const dir = `${res}mipmap-${theme === 'dark' ? 'night-' : ''}${density}/`
+    const t = THEMES[theme]
+    write(`${dir}ic_launcher.png`, png(icon(theme), legacy))
+    write(
+      `${dir}ic_launcher_round.png`,
+      png(svg(`<circle cx="50" cy="50" r="50" fill="${t.ground}"/><g transform="translate(50 50) scale(0.9) translate(-50 -50)">${mark(t)}</g>`), legacy),
+    )
+    write(`${dir}ic_launcher_foreground.png`, png(foreground(t), fg))
+  }
+  write(`${res}mipmap-${density}/ic_launcher_monochrome.png`, png(mono, fg))
+}
+for (const theme of ['light', 'dark']) {
+  write(
+    `${res}values${theme === 'dark' ? '-night' : ''}/ic_launcher_background.xml`,
+    `<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">${THEMES[theme].ground}</color>\n    <color name="kana_paper">${PAPER[theme]}</color>\n</resources>\n`,
+  )
+}

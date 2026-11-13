@@ -6,6 +6,7 @@ import { IconButton } from '@/components/IconButton'
 import { ProfileSettings } from '@/components/ProfileSettings'
 import { SegmentedControl } from '@/components/SegmentedControl'
 import { Switch } from '@/components/Switch'
+import { haptic } from '@/lib/haptic'
 import { useInstallPrompt } from '@/lib/installPrompt'
 import { useSettingsStore, type Theme } from '@/stores/settingsStore'
 
@@ -41,7 +42,11 @@ export function SettingsPage() {
                 label="Vibrations"
                 description="Une vibration brève à chaque réponse (Android)."
                 checked={vibrations}
-                onChange={setVibrations}
+                onChange={(on) => {
+                  setVibrations(on)
+                  // Petite vibration de confirmation à l'activation.
+                  if (on) haptic('toggle')
+                }}
               />
             </div>
           </Section>

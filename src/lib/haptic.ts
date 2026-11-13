@@ -8,6 +8,7 @@ export const HAPTIC = {
   unlock: [20, 60, 20, 60, 40],
   record: [20],
   timeout: [40],
+  toggle: [15],
 } as const satisfies Record<string, readonly number[]>
 
 export type HapticKind = keyof typeof HAPTIC

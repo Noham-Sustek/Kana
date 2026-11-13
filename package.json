@@ -31,6 +31,7 @@
   },
   "devDependencies": {
     "@capacitor/cli": "8.6.0",
+    "@resvg/resvg-js": "2.6.2",
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^26.6.5",
     "@types/react": "^19.3.0",

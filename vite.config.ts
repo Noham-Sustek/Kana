@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => ({
       // Application Android : fichiers déjà locaux, pas de service worker ni de manifeste.
       disable: mode === 'android',
       registerType: 'autoUpdate',
-      includeAssets: ['icon.svg', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.svg', 'favicon.ico', 'favicon-*.png', 'icon*.svg', 'apple-touch-icon*.png'],
       manifest: {
         name: 'Kana — hiragana & katakana',
         short_name: 'Kana',
@@ -29,10 +29,12 @@ export default defineConfig(({ mode }) => ({
         scope: './',
         display: 'standalone',
         orientation: 'portrait',
-        background_color: '#0f172a',
-        theme_color: '#0f172a',
-        // Générées par `npm run icons` (scripts/build-icons.mjs). Le 512 sert aussi
-        // à l'écran de démarrage Android (avec name et background_color).
+        // Papier (thème clair) : couleur de l'écran de démarrage et de la barre d'état.
+        background_color: '#f5f0e6',
+        theme_color: '#f5f0e6',
+        // Générées par `npm run icons` (scripts/build-icons.mjs), piste « A · La case ». Le 512 sert
+        // aussi à l'écran de démarrage Android (avec name et background_color). Le manifeste ne connaît
+        // pas le thème sombre : les variantes -dark servent au favicon (index.html).
         icons: [
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },

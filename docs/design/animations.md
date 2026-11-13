@@ -26,6 +26,7 @@ Le mouvement sert à trois choses : dire si une réponse est juste, montrer qu'o
 | Ordre des traits (fiche, observer) | Chaque trait se dessine, pause de 100 ms entre les traits, boucle après 1,2 s | 700 ms par trait | — | Traits numérotés, affichés d'un coup |
 | Ligne débloquée | Écran plein : rayons en fondu, titre qui monte de 8 px, les 5 cases apparaissent l'une après l'autre (échelle 60 → 106 → 100 %) | 360 ms + 60 ms par case | 3 impulsions, 20 · 60 · 20 · 60 · 40 ms | Fondu de l'ensemble |
 | Nouveau record | L'étoile or apparaît à 115 % puis 100 %, le chiffre compte jusqu'à sa valeur | 200 ms / 600 ms | 1 impulsion, 20 ms | Chiffre final direct |
+| Vibrations activées (Réglages) | L'interrupteur glisse | 150 ms | 1 impulsion, 15 ms (confirme que la vibration fonctionne) | Instantané |
 | Récapitulatif | Les carrés de maîtrise se remplissent un à un | 120 ms chacun | — | Instantané |
 | Série +1 | Le carré du jour passe des pointillés au plein | 240 ms | — | Instantané |
 | Changement d'onglet | Aucun mouvement de page ; le trait actif glisse sous l'onglet | 200 ms | — | Instantané |
