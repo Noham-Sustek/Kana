@@ -22,6 +22,49 @@ export function getStage(id: StageId): StageInfo {
   return STAGES.find((s) => s.id === id)!
 }
 
+/** Familles d'exercice du design system, chacune avec son icône. */
+export type StageFamily = 'recognize' | 'write' | 'read'
+
+export const FAMILIES: Record<StageFamily, { label: string; icon: 'eye' | 'writing' | 'book' }> = {
+  recognize: { label: 'Reconnaître', icon: 'eye' },
+  write: { label: 'Écrire', icon: 'writing' },
+  read: { label: 'Lire', icon: 'book' },
+}
+
+export interface StagePresentation {
+  /** Nom montré à l'utilisateur (vocabulaire du design system). */
+  name: string
+  family: StageFamily
+  /** Consigne au-dessus du sujet ; absente quand le sujet suffit (dessin). */
+  ask?: string
+  /** Le nom répète la consigne (« Quel son ? ») : la ligne de famille l'omet. */
+  nameInAsk?: boolean
+}
+
+// Noms et familles du design system (docs/design/README.md, Vocabulaire) ; les numéros ne changent pas.
+const PRESENTATION: Record<StageId, StagePresentation> = {
+  1: { name: 'Quel son ?', family: 'recognize', ask: 'Quel est ce son ?', nameInAsk: true },
+  2: { name: 'Quel kana ?', family: 'recognize', ask: 'Quel est ce kana ?', nameInAsk: true },
+  3: { name: 'Faux jumeaux', family: 'recognize', ask: 'Quel est ce son ?' },
+  4: { name: 'De mémoire', family: 'recognize', ask: 'Tapez la lecture' },
+  5: { name: 'Tracer un kana', family: 'write' },
+  6: { name: 'Lire un mot', family: 'read', ask: 'Tapez la lecture' },
+  7: { name: 'Tracer un mot', family: 'write' },
+  8: { name: 'Lire une phrase', family: 'read', ask: 'Tapez la lecture' },
+  9: { name: 'Composer une phrase', family: 'read', ask: 'Écrivez en kana' },
+}
+
+export function stagePresentation(id: StageId): StagePresentation {
+  return PRESENTATION[id]
+}
+
+/** Ligne de famille d'une question : « Reconnaître » ou « Lire · Lire un mot ». */
+export function stageKindLabel(id: StageId): string {
+  const p = PRESENTATION[id]
+  const family = FAMILIES[p.family].label
+  return p.nameInAsk ? family : `${family} · ${p.name}`
+}
+
 // Historique de la numérotation (persistée dans answers.stage, les sauvegardes
 // et les réglages) :
 // v1 : 1-4, 5 Écouter, 6 Lire

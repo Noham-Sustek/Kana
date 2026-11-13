@@ -22,6 +22,7 @@ import {
   type Transition,
 } from '@/features/quiz/session'
 import type { Question, QuizOptions, StageId } from '@/features/quiz/types'
+import { haptic, type HapticKind } from '@/lib/haptic'
 import { activeProfileId } from '@/stores/profileStore'
 
 export interface AutoParams {
@@ -47,7 +48,8 @@ interface QuizSessionStore {
   startAuto: (params: AutoParams) => Promise<void>
   submit: (answer: string) => void
   submitDrawing: (correct: boolean) => void
-  reveal: () => void
+  /** `timedOut` : chrono écoulé (vibration propre), sinon « Afficher la réponse ». */
+  reveal: (timedOut?: boolean) => void
   next: () => void
   quit: () => void
 }
@@ -56,15 +58,28 @@ function persistError(err: unknown) {
   console.error('Enregistrement impossible', err)
 }
 
+/** Vibration d'une réponse : juste, fausse (aussi à chaque réessai), chrono écoulé. Rien pour « Afficher la réponse ». */
+function answerHaptic(before: SessionState, after: SessionState, timedOut: boolean): HapticKind | null {
+  if (before.status !== 'pending' || after === before) return null
+  if (after.status === 'correct') return 'correct'
+  if (timedOut && after.status === 'failed') return 'timeout'
+  if (after.wrongAnswers.length > before.wrongAnswers.length) return 'wrong'
+  // Dessin raté (pas de réponse texte enregistrée).
+  if (after.status === 'failed' && !after.outcomes[after.index]?.revealed) return 'wrong'
+  return null
+}
+
 // Session en mémoire uniquement : seules les réponses (et le déblocage auto) sont persistées (Dexie).
 export const useQuizSessionStore = create<QuizSessionStore>()((set, get) => {
-  const apply = (transition: (s: SessionState, now: number) => Transition) => {
+  const apply = (transition: (s: SessionState, now: number) => Transition, timedOut = false) => {
     const { session, auto, profileId } = get()
     if (!session) return
     const now = Date.now()
     const question = currentQuestion(session)
     const { state, outcome } = transition(session, now)
     set({ session: state })
+    const feel = answerHaptic(session, state, timedOut)
+    if (feel) haptic(feel)
     if (!question || !outcome) return
 
     const records = toAnswerRecords(question, outcome, now)
@@ -73,7 +88,10 @@ export const useQuizSessionStore = create<QuizSessionStore>()((set, get) => {
     if (auto) {
       const { ctx, newlyUnlocked } = recordAutoAnswers(auto, records)
       set((s) => ({ auto: ctx, unlockedThisSession: [...s.unlockedThisSession, ...newlyUnlocked] }))
-      if (newlyUnlocked.length > 0) saveUnlockedGroups(profileId, ctx.script, ctx.unlocked).catch(persistError)
+      if (newlyUnlocked.length > 0) {
+        haptic('unlock')
+        saveUnlockedGroups(profileId, ctx.script, ctx.unlocked).catch(persistError)
+      }
     }
   }
 
@@ -120,7 +138,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()((set, get) => {
 
     submit: (answer) => apply((s, now) => submitAnswer(s, answer, now)),
     submitDrawing: (correct) => apply((s, now) => submitDrawing(s, correct, now)),
-    reveal: () => apply(revealAnswer),
+    reveal: (timedOut = false) => apply(revealAnswer, timedOut),
 
     next: () => {
       let { session, auto } = get()

@@ -15,7 +15,9 @@ const TICK: Record<TickState, string> = {
 
 /** Barre de session : un segment par question, suivie du compteur « 4 / 12 ». */
 export function SessionProgress({ ticks, className = '' }: SessionProgressProps) {
-  const answered = ticks.filter((t) => t === 'done' || t === 'missed').length
+  // Position de la question en cours (« 4 / 12 ») ; une fois tout répondu, le nombre de réponses.
+  const current = ticks.indexOf('current')
+  const answered = current >= 0 ? current + 1 : ticks.filter((t) => t === 'done' || t === 'missed').length
   return (
     <div className={`flex flex-1 items-center gap-2 ${className}`}>
       <div className="flex flex-1 gap-[3px]" aria-hidden="true">

@@ -1,12 +1,21 @@
-import { Suspense, lazy, useEffect, useRef, useState, type FormEvent } from 'react'
-import { Button } from '@/components/Button'
+import { Fragment, Suspense, lazy, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router'
+import { Button } from '@/components/Button'
+import { Choice, type ChoiceState } from '@/components/Choice'
+import { Dialog } from '@/components/Dialog'
+import { Feedback } from '@/components/Feedback'
 import { Icon } from '@/components/Icon'
+import { IconButton } from '@/components/IconButton'
+import { SessionProgress, type TickState } from '@/components/SessionProgress'
+import { TextField, type FieldState } from '@/components/TextField'
+import { TimerBar } from '@/components/TimerBar'
+import { WordTile, type WordTileState } from '@/components/WordTile'
 import { getKana, groupGlyph } from '@/data/kana'
+import { feedbackFor, type FeedbackContent, type Line } from '@/features/quiz/feedback'
 import { generateQuestions } from '@/features/quiz/questions'
 import { currentQuestion, score, type SessionState } from '@/features/quiz/session'
-import { getStage } from '@/features/quiz/stages'
-import type { ChoiceQuestion, ComposeQuestion, InputQuestion, Question } from '@/features/quiz/types'
+import { FAMILIES, stageKindLabel, stagePresentation } from '@/features/quiz/stages'
+import type { ChoiceQuestion, ComposeQuestion, InputQuestion, Question, StageId } from '@/features/quiz/types'
 import { useQuizPool } from '@/features/quiz/useQuizPool'
 import { effectiveSentenceFilter, useQuizSettingsStore } from '@/stores/quizSettingsStore'
 import { useQuizSessionStore } from '@/stores/quizSessionStore'
@@ -15,10 +24,6 @@ const AUTO_ADVANCE_MS = 700
 
 // Chunk séparé (tracés KanjiVG) : hors du bundle principal, précaché comme le reste.
 const QuizDrawing = lazy(() => import('@/components/QuizDrawing').then((m) => ({ default: m.QuizDrawing })))
-
-// Couleurs de correction volontairement identiques en clair et en sombre.
-const WRONG_CLASS = 'border-error bg-error text-on-signal'
-const RIGHT_CLASS = 'border-correct bg-correct text-on-signal'
 
 export function QuizPage() {
   const session = useQuizSessionStore((s) => s.session)
@@ -33,13 +38,25 @@ function useQuizOrigin(): string {
   return state && typeof state === 'object' && 'from' in state && typeof state.from === 'string' ? state.from : '/learn'
 }
 
+/** Un segment par question : juste, raté (entaillé), en cours, à venir. */
+function sessionTicks(session: SessionState): TickState[] {
+  return Array.from({ length: session.plannedCount }, (_, i) => {
+    if (i === session.index) return 'current'
+    if (i > session.index) return 'todo'
+    return session.outcomes[i]?.correct ? 'done' : 'missed'
+  })
+}
+
+/**
+ * Écran de question (docs/design/README.md, Écrans de question), de haut en bas :
+ * quitter et progression ; famille et consigne ; sujet ; réponse ; retour ; action.
+ */
 function QuizRunner({ session }: { session: SessionState }) {
   const { submit, submitDrawing, reveal, next, quit } = useQuizSessionStore()
   const navigate = useNavigate()
   const question = currentQuestion(session)!
   const { status, options } = session
   const settled = status !== 'pending'
-  const isAuto = useQuizSessionStore((s) => s.auto !== null)
   // Validation du dessin par l'utilisateur : index de la question dont le dessin est fini.
   const selfCheck = options.drawingCheck === 'self'
   const [drawnIndex, setDrawnIndex] = useState<number | null>(null)
@@ -50,6 +67,16 @@ function QuizRunner({ session }: { session: SessionState }) {
     next()
   }
 
+  const origin = useQuizOrigin()
+  const [confirmQuit, setConfirmQuit] = useState(false)
+  const answered = session.outcomes.filter(Boolean).length
+  const exit = () => {
+    quit()
+    navigate(origin, { replace: true })
+  }
+  // Rien n'est perdu en quittant, mais un ✕ touché par mégarde ne doit pas couper la session.
+  const askQuit = () => (answered > 0 ? setConfirmQuit(true) : exit())
+
   // Bonne réponse : passage automatique à la question suivante, sauf s'il y a
   // quelque chose à regarder (comparaison d'un dessin, traduction d'un mot ou
   // d'une phrase).
@@ -58,21 +85,22 @@ function QuizRunner({ session }: { session: SessionState }) {
   const stayAfterAnswer =
     isDrawing || prompt.type === 'word' || prompt.type === 'sentence' || prompt.type === 'romajiSentence'
   useEffect(() => {
-    if (status !== 'correct' || stayAfterAnswer) return
+    if (status !== 'correct' || stayAfterAnswer || confirmQuit) return
     const timer = setTimeout(next, AUTO_ADVANCE_MS)
     return () => clearTimeout(timer)
-  }, [status, next, session.index, stayAfterAnswer])
+  }, [status, next, session.index, stayAfterAnswer, confirmQuit])
 
   // Chrono : à expiration, la réponse est révélée (compte comme une erreur).
   useEffect(() => {
     if (!options.timerSeconds || status !== 'pending' || awaitingVerdict) return
     const remaining = session.questionStartedAt + options.timerSeconds * 1000 - Date.now()
-    const timer = setTimeout(reveal, Math.max(0, remaining))
+    const timer = setTimeout(() => reveal(true), Math.max(0, remaining))
     return () => clearTimeout(timer)
   }, [options.timerSeconds, status, reveal, session.questionStartedAt, awaitingVerdict])
 
   // Clavier physique : Entrée pour continuer, chiffres pour les choix.
   useEffect(() => {
+    if (confirmQuit) return
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement) return
       if (e.key === 'Enter' && settled) next()
@@ -83,54 +111,40 @@ function QuizRunner({ session }: { session: SessionState }) {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [question, settled, next, submit])
+  }, [question, settled, next, submit, confirmQuit])
 
-  const origin = useQuizOrigin()
-  const exit = () => {
-    quit()
-    navigate(origin, { replace: true })
-  }
+  const feedback = feedbackFor({
+    question,
+    status,
+    wrongAnswers: session.wrongAnswers,
+    revealed: session.outcomes[session.index]?.revealed ?? false,
+  })
 
   return (
     <div className="flex min-h-full flex-col">
-      <header className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={exit}
-          aria-label="Quitter le quiz"
-          className="-ml-2 flex size-11 items-center justify-center text-ink-muted"
-        >
-          <Icon name="close" />
-        </button>
-        <div className="h-2 flex-1 overflow-hidden rounded-full bg-hairline">
-          <div
-            className="h-full rounded-full bg-accent transition-[width]"
-            style={{ width: `${(session.index / session.plannedCount) * 100}%` }}
-          />
-        </div>
-        <span className="text-xs tabular-nums text-ink-muted">
-          {session.index + 1}/{session.plannedCount}
-        </span>
+      <header className="-ml-2.5 flex items-center gap-1.5">
+        <IconButton icon="close" label="Quitter la session" onClick={askQuit} />
+        <SessionProgress ticks={sessionTicks(session)} />
       </header>
+      {options.timerSeconds > 0 ? (
+        <TimerBar
+          durationMs={options.timerSeconds * 1000}
+          runKey={session.index}
+          paused={settled || awaitingVerdict}
+          className="mt-1"
+        />
+      ) : (
+        <div className="mt-1 h-[3px]" />
+      )}
 
-      <div className="mt-2 h-1 short:mt-1">
-        {options.timerSeconds > 0 && status === 'pending' && (
-          <div
-            key={session.index}
-            className="h-full origin-left rounded-full bg-ink"
-            style={{ animation: `timer-shrink ${options.timerSeconds}s linear forwards` }}
-          />
-        )}
-      </div>
+      <UnlockNotice />
 
-      <UnlockBanner />
+      <QuestionHeading stage={question.stage} compact={isDrawing} />
 
-      <p className="mt-3 text-center text-xs font-medium text-ink-muted short:mt-1">
-        {isAuto && 'Auto · '}Stage {question.stage} · {getStage(question.stage).description}
-      </p>
-
-      <div className={`flex flex-col justify-center ${isDrawing ? 'py-4' : 'flex-1 py-6 short:py-2'}`}>
-        <PromptView key={session.index} question={question} settled={settled} />
+      <div
+        className={`flex flex-col items-center justify-center ${isDrawing ? 'py-3' : 'min-h-0 flex-1 py-5 short:py-2'}`}
+      >
+        <PromptView key={session.index} question={question} />
       </div>
 
       {question.kind === 'choice' && <ChoiceAnswers question={question} session={session} onPick={submit} />}
@@ -141,79 +155,125 @@ function QuizRunner({ session }: { session: SessionState }) {
         <ComposeAnswer key={session.index} question={question} session={session} onSubmit={submit} />
       )}
       {question.kind === 'draw' && (
-        <>
-          <Suspense>
-            <div className="lg:mx-auto lg:w-full lg:max-w-md">
-              <QuizDrawing
-                key={session.index}
-                question={question}
-                settled={settled}
-                onDone={submitDrawing}
-                selfCheck={selfCheck}
-                onDrawn={() => setDrawnIndex(session.index)}
-              />
-            </div>
-          </Suspense>
-          {awaitingVerdict && (
-            <p className="mt-3 text-center text-sm font-medium text-ink-muted">
-              Votre tracé correspond-il au modèle ?{' '}
-              <span className="font-jp text-base text-ink">
-                {question.target}
-                {question.kanji && ` · ${question.kanji}`}
-              </span>
-            </p>
-          )}
-          {settled && (
-            <p
-              className={`mt-3 text-center text-sm font-medium ${status === 'correct' ? 'text-correct-ink' : 'text-error-ink'}`}
-            >
-              {status === 'correct' ? 'Parfait, sans erreur !' : 'À revoir : comparez avec le modèle.'}{' '}
-              <span className="font-jp text-base text-ink">
-                {question.target}
-                {question.kanji && ` · ${question.kanji}`}
-              </span>
-            </p>
-          )}
-        </>
+        <Suspense>
+          <div className="lg:mx-auto lg:w-full lg:max-w-md">
+            <QuizDrawing
+              key={session.index}
+              question={question}
+              settled={settled}
+              onDone={submitDrawing}
+              selfCheck={selfCheck}
+              onDrawn={() => setDrawnIndex(session.index)}
+            />
+          </div>
+        </Suspense>
+      )}
+
+      {awaitingVerdict && (
+        <p className="mt-3 text-center text-[14.5px] leading-5 font-semibold">
+          Votre tracé correspond-il au modèle ?
+        </p>
+      )}
+      {feedback && (
+        <FeedbackPanel
+          // Rejoue l'apparition à chaque nouveau retour (réessai compris).
+          key={`${session.index}-${status}-${session.wrongAnswers.length}`}
+          content={feedback}
+          className="mt-3 short:mt-2"
+        />
       )}
 
       {/* Collé en bas : une longue phrase ou beaucoup d’étiquettes ne doivent pas le pousser hors de l’écran. */}
-      <div className="sticky bottom-0 z-10 -mx-4 mt-2 bg-paper px-4 pt-2 pb-1 short:mt-0 short:pt-1">
+      <div className="sticky bottom-0 z-10 -mx-4 mt-auto bg-paper px-4 pt-3 pb-1 short:pt-2">
         {awaitingVerdict ? (
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => judge(false)}
-              className={`min-h-12 rounded-md border-2 font-semibold active:scale-[0.98] ${WRONG_CLASS}`}
-            >
+          <div className="grid grid-cols-2 gap-3">
+            <Button variant="line" onClick={() => judge(false)}>
               À revoir
-            </button>
-            <button
-              type="button"
-              onClick={() => judge(true)}
-              className={`min-h-12 rounded-md border-2 font-semibold active:scale-[0.98] ${RIGHT_CLASS}`}
-            >
+            </Button>
+            <Button variant="ink" onClick={() => judge(true)}>
               C’est juste
-            </button>
+            </Button>
           </div>
         ) : settled ? (
-          <Button variant="ink" icon="arrow" onClick={next}>
+          <Button variant="ink" icon="arrow" onClick={next} className="short:min-h-12">
             {session.index + 1 >= session.plannedCount ? 'Voir le résultat' : 'Suivant'}
           </Button>
         ) : (
-          <Button variant="quiet" fullWidth icon="eye" iconPosition="start" onClick={reveal}>
+          <Button variant="text" fullWidth icon="eye" iconPosition="start" onClick={() => reveal()}>
             Afficher la réponse
           </Button>
         )}
       </div>
+
+      <Dialog
+        open={confirmQuit}
+        title="Quitter la session ?"
+        safeLabel="Continuer"
+        onSafe={() => setConfirmQuit(false)}
+        riskyLabel="Quitter"
+        onRisky={exit}
+      >
+        {answered === 1 ? 'Votre réponse est enregistrée.' : `Vos ${answered} réponses sont enregistrées.`}
+      </Dialog>
     </div>
   )
 }
 
-const UNLOCK_BANNER_MS = 3500
+/** Famille (icône + nom) et consigne. Version resserrée pour le dessin et clavier ouvert. */
+function QuestionHeading({ stage, compact }: { stage: StageId; compact: boolean }) {
+  const { family, ask } = stagePresentation(stage)
+  return (
+    <div className="text-center">
+      <p
+        className={`flex items-center justify-center gap-[7px] text-[12.5px] leading-4 font-semibold text-ink-muted ${
+          compact ? 'mt-1' : 'mt-3.5 short:mt-1'
+        }`}
+      >
+        <Icon name={FAMILIES[family].icon} className="size-4" />
+        {stageKindLabel(stage)}
+      </p>
+      {ask && (
+        <h1
+          className={`px-5 font-serif leading-[1.15] font-medium ${
+            compact ? 'mt-0.5 text-[19px]' : 'mt-1 text-2xl short:mt-0.5 short:text-[19px]'
+          }`}
+        >
+          {ask}
+        </h1>
+      )}
+    </div>
+  )
+}
 
-/** Annonce les groupes débloqués pendant la session (mode auto). */
-function UnlockBanner() {
+function FeedbackPanel({ content, className }: { content: FeedbackContent; className?: string }) {
+  return (
+    <Feedback signal={content.signal} title={<Segments line={content.title} />} className={className}>
+      {content.detail.length > 0 &&
+        content.detail.map((line, i) => (
+          <p key={i}>
+            <Segments line={line} />
+          </p>
+        ))}
+    </Feedback>
+  )
+}
+
+function Segments({ line }: { line: Line }) {
+  return line.map((s, i) =>
+    s.jp ? (
+      <span key={i} className="font-jp text-[1.1em]">
+        {s.text}
+      </span>
+    ) : (
+      <Fragment key={i}>{s.text}</Fragment>
+    ),
+  )
+}
+
+const UNLOCK_NOTICE_MS = 3500
+
+/** Annonce une ligne débloquée pendant la session (mode auto). L'or est réservé à ce moment. */
+function UnlockNotice() {
   const unlocked = useQuizSessionStore((s) => s.unlockedThisSession)
   const [visibleCount, setVisibleCount] = useState(0)
   const [hidden, setHidden] = useState(true)
@@ -222,7 +282,7 @@ function UnlockBanner() {
     if (unlocked.length <= visibleCount) return
     setVisibleCount(unlocked.length)
     setHidden(false)
-    const timer = setTimeout(() => setHidden(true), UNLOCK_BANNER_MS)
+    const timer = setTimeout(() => setHidden(true), UNLOCK_NOTICE_MS)
     return () => clearTimeout(timer)
   }, [unlocked.length, visibleCount])
 
@@ -231,113 +291,113 @@ function UnlockBanner() {
   return (
     <p
       role="status"
-      className="mt-3 rounded-md border border-gold bg-paper-raised px-3 py-2 text-center text-sm font-medium text-gold"
+      className="mt-2 flex animate-unlock items-center justify-center gap-2 rounded-md border-[1.5px] border-gold bg-paper-raised px-3 py-2 text-[13.5px] leading-[19px] font-semibold text-gold"
     >
-      Nouveau groupe débloqué : <span className="font-jp">{groupGlyph(group)}</span> {group.label}
+      <Icon name="star" className="size-4" />
+      Ligne débloquée : <span className="font-jp text-base">{groupGlyph(group)}</span> ({group.label})
     </p>
   )
 }
 
-function PromptView({ question, settled }: { question: Question; settled: boolean }) {
+/** Case de papier quadrillé (genkō) : le kana d'une question, avec ses repères en croix. */
+function KanaCase({ children, size }: { children: string; size: 'lg' | 'md' }) {
+  // Yōon (きゃ) : deux caractères côte à côte, la taille est divisée pour tenir dans la case.
+  const pair = children.length > 1
+  const box = size === 'lg' ? 'size-[212px]' : 'size-[168px]'
+  const text = pair
+    ? `${size === 'lg' ? 'text-[88px]' : 'text-[70px]'} short:text-[46px]`
+    : `${size === 'lg' ? 'text-[148px]' : 'text-[116px]'} short:text-[76px]`
+  return (
+    <div
+      className={`relative grid shrink-0 place-items-center rounded-sm border-[1.5px] border-ink bg-paper-raised font-jp leading-none whitespace-nowrap short:size-28 ${box} ${text}`}
+    >
+      <span aria-hidden="true" className="absolute inset-y-2 left-1/2 border-l-[1.5px] border-dashed border-hairline" />
+      <span aria-hidden="true" className="absolute inset-x-2 top-1/2 border-t-[1.5px] border-dashed border-hairline" />
+      <span className="relative">{children}</span>
+    </div>
+  )
+}
+
+function PromptView({ question }: { question: Question }) {
   const { prompt } = question
   switch (prompt.type) {
     case 'kana':
-      return <p className="text-center font-jp text-8xl leading-none lg:text-9xl">{prompt.text}</p>
+      return <KanaCase size={question.stage === 3 ? 'md' : 'lg'}>{prompt.text}</KanaCase>
     case 'romaji':
-      return <p className="text-center text-6xl font-semibold tracking-wide lg:text-7xl">{prompt.text}</p>
+      return (
+        <p className="text-center font-serif text-[64px] leading-none font-medium tracking-wide short:text-5xl lg:text-7xl">
+          {prompt.text}
+        </p>
+      )
     case 'word':
       return (
-        <div className="text-center">
-          <p className={`font-jp leading-tight break-keep ${wordSizeClass(prompt.text)}`}>{prompt.text}</p>
-          {/* Kanji et traduction révélés après la réponse ; hauteur réservée pour éviter un saut. */}
-          <p className="mt-3 min-h-6 text-sm text-ink-muted short:mt-1 lg:text-base">
-            {settled && (
-              <span style={{ animation: 'fade-in 0.2s' }}>
-                {prompt.kanji && (
-                  <>
-                    <span className="font-jp text-base text-ink lg:text-2xl">
-                      {prompt.kanji}
-                    </span>
-                    {' · '}
-                  </>
-                )}
-                {prompt.meaning}
-              </span>
-            )}
-          </p>
-        </div>
+        <p className={`text-center font-jp leading-tight tracking-[0.04em] break-keep ${wordSizeClass(prompt.text)}`}>
+          {prompt.text}
+        </p>
       )
     case 'sentence':
+      return (
+        // Un bloc par mot : le japonais se couperait sinon au milieu d'un mot.
+        <p
+          className={`flex flex-wrap justify-center gap-x-[0.4em] px-1 font-jp leading-relaxed short:leading-snug ${sentenceSizeClass(prompt.text)}`}
+        >
+          {prompt.text.split(' ').map((word, i) => (
+            <span key={i}>{word}</span>
+          ))}
+        </p>
+      )
     case 'romajiSentence':
       return (
         <div className="text-center">
-          {prompt.type === 'sentence' ? (
-            // Un bloc par mot : le japonais se couperait sinon au milieu d'un mot.
-            <p
-              className={`flex flex-wrap justify-center gap-x-[0.4em] font-jp leading-relaxed short:leading-snug ${sentenceSizeClass(prompt.text)}`}
-            >
-              {prompt.text.split(' ').map((word, i) => (
-                <span key={i}>{word}</span>
-              ))}
-            </p>
-          ) : (
-            <p className={`leading-snug font-semibold ${romajiSentenceSizeClass(prompt.text)}`}>{prompt.text}</p>
-          )}
-          {/* Traduction, provenance et réplique d'origine seulement après la réponse : la phrase seule d'abord. */}
-          {settled && (
-            <div style={{ animation: 'fade-in 0.2s' }}>
-              <p className="mt-3 text-sm text-ink-muted short:mt-1 lg:text-base">
-                {prompt.meaning}
-              </p>
-              {prompt.source && (
-                <p className="mt-2 text-xs font-medium text-ink-muted">{prompt.source}</p>
-              )}
-              {prompt.original && (
-                <p className="mt-2 font-jp text-base text-ink lg:text-lg">
-                  {prompt.original}
-                </p>
-              )}
-            </div>
-          )}
+          <p className={`font-serif leading-snug font-medium ${romajiSentenceSizeClass(prompt.text)}`}>{prompt.text}</p>
+          {/* La traduction guide le choix des étiquettes. */}
+          <p className="mt-2 text-[13.5px] leading-[19px] text-ink-muted">
+            {/* Certaines traductions (répliques) ont déjà leurs guillemets. */}
+            {prompt.meaning.startsWith('«') ? prompt.meaning : `« ${prompt.meaning} »`}
+          </p>
         </div>
       )
-    case 'draw':
+    case 'draw': {
+      const count = question.kind === 'draw' ? question.chars.length : 1
       return (
         <div className="text-center">
-          <p className={`font-semibold tracking-wide break-all ${romajiSizeClass(prompt.text)}`}>{prompt.text}</p>
-          <p className="mt-1 text-sm text-ink-muted">
+          <p className={`font-serif leading-none font-medium tracking-wide break-all ${romajiSizeClass(prompt.text)}`}>
+            {prompt.text}
+          </p>
+          <p className="mt-2 text-[13.5px] leading-[19px] text-ink-muted">
             En {prompt.script}
+            {count > 1 && ` · ${count} caractères`}
             {prompt.note && ` · ${prompt.note}`}
-            {prompt.meaning && ` · ${prompt.meaning}`}
           </p>
           {/[āīūēō]/.test(prompt.text) && (
             <p className="mt-1 text-xs text-ink-muted">ā, ī, ū, ē, ō : voyelle longue (ー)</p>
           )}
         </div>
       )
+    }
   }
 }
 
 // Tailles choisies pour tenir sur une ligne à ~350 px de large (mots jusqu'à 10 kana),
 // ~640 px sur grand écran.
 function wordSizeClass(text: string): string {
-  if (text.length <= 5) return 'text-6xl short:text-5xl lg:text-7xl'
+  if (text.length <= 5) return 'text-[64px] short:text-5xl lg:text-7xl'
   if (text.length <= 6) return 'text-5xl lg:text-6xl'
   if (text.length <= 8) return 'text-4xl lg:text-6xl'
   return 'text-3xl lg:text-5xl'
 }
 
 function romajiSizeClass(text: string): string {
-  if (text.length <= 10) return 'text-4xl lg:text-5xl'
+  if (text.length <= 10) return 'text-[44px] lg:text-5xl'
   if (text.length <= 14) return 'text-3xl lg:text-5xl'
   return 'text-2xl lg:text-4xl'
 }
 
 // Les répliques longues (discours) doivent tenir à l'écran avec le clavier ouvert.
 function sentenceSizeClass(text: string): string {
-  if (text.length <= 30) return 'text-3xl short:text-2xl lg:text-4xl'
-  if (text.length <= 60) return 'text-2xl short:text-xl lg:text-3xl'
-  return 'text-xl short:text-lg lg:text-2xl'
+  if (text.length <= 30) return 'text-[25px] short:text-[21px] lg:text-4xl'
+  if (text.length <= 60) return 'text-[21px] short:text-lg lg:text-3xl'
+  return 'text-lg short:text-base lg:text-2xl'
 }
 
 function romajiSentenceSizeClass(text: string): string {
@@ -354,30 +414,28 @@ interface ChoiceAnswersProps {
 
 function ChoiceAnswers({ question, session, onPick }: ChoiceAnswersProps) {
   const settled = session.status !== 'pending'
-  const isKana = question.choiceType === 'kana'
+  const stateOf = (id: string): ChoiceState => {
+    if (session.wrongAnswers.includes(id)) return 'wrong'
+    if (!settled) return 'idle'
+    if (id === question.answerId) return session.status === 'correct' ? 'correct' : 'revealed'
+    return 'dim'
+  }
 
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className="grid grid-cols-2 gap-2.5">
       {question.choices.map((choice) => {
-        const wrong = session.wrongAnswers.includes(choice.id)
-        const right = settled && choice.id === question.answerId
-        const stateClass = wrong
-          ? WRONG_CLASS
-          : right
-            ? RIGHT_CLASS
-            : 'border-control bg-paper-raised'
+        const state = stateOf(choice.id)
         return (
-          <button
+          <Choice
             key={choice.id}
-            type="button"
-            disabled={settled || wrong}
+            state={state}
+            jp={question.choiceType === 'kana'}
+            compact={question.choices.length > 4}
+            disabled={settled || state === 'wrong'}
             onClick={() => onPick(choice.id)}
-            className={`rounded-md border-2 font-medium transition-transform enabled:active:scale-95 ${stateClass} ${
-              question.choices.length > 4 ? 'min-h-14 lg:min-h-16' : 'min-h-16 lg:min-h-20'
-            } ${isKana ? 'font-jp text-3xl lg:text-4xl' : 'text-xl lg:text-2xl'} ${settled && !wrong && !right ? 'opacity-50' : ''}`}
           >
             {choice.label}
-          </button>
+          </Choice>
         )
       })}
     </div>
@@ -396,78 +454,62 @@ function ComposeAnswer({ question, session, onSubmit }: ComposeAnswerProps) {
   const [picked, setPicked] = useState<number[]>([])
   const { status, wrongAnswers } = session
   const settled = status !== 'pending'
-  const wordCount = question.reading.split(' ').length
+  const expected = question.reading.split(' ')
   const answerOf = (indices: number[]) => indices.map((i) => question.tiles[i]!).join(' ')
-  const showWrong = status === 'failed' || (picked.length === wordCount && wrongAnswers.includes(answerOf(picked)))
+  const showWrong =
+    status === 'failed' || (picked.length === expected.length && wrongAnswers.includes(answerOf(picked)))
 
   const pick = (index: number) => {
-    if (settled || picked.length >= wordCount) return
+    if (settled || picked.length >= expected.length) return
     const next = [...picked, index]
     setPicked(next)
     // Phrase complète : vérifiée tout de suite, sans bouton à valider.
-    if (next.length === wordCount) onSubmit(answerOf(next))
+    if (next.length === expected.length) onSubmit(answerOf(next))
   }
   const unpick = (position: number) => {
     if (!settled) setPicked(picked.filter((_, p) => p !== position))
   }
 
-  const placedClass =
-    status === 'correct'
-      ? RIGHT_CLASS
-      : showWrong
-        ? WRONG_CLASS
-        : 'border-control bg-paper-raised'
+  // Seules les étiquettes en cause sont marquées fausses.
+  const placedState = (tileIndex: number, position: number): WordTileState => {
+    if (status === 'correct') return 'correct'
+    if (showWrong && question.tiles[tileIndex] !== expected[position]) return 'wrong'
+    return 'idle'
+  }
 
   return (
     <div>
       <div
         aria-label="Votre phrase"
-        className="flex min-h-16 flex-wrap content-start gap-1.5 rounded-md border-2 border-dashed border-control p-2"
+        className="flex min-h-[116px] flex-wrap content-start gap-2 py-2"
+        // Lignes de cahier tous les 56 px : une étiquette (48 px) + l'écart.
+        style={{ background: 'repeating-linear-gradient(to bottom, transparent 0 55px, var(--k-hairline) 55px 56px)' }}
       >
         {picked.map((tileIndex, position) => (
-          <button
+          <WordTile
             key={position}
-            type="button"
+            state={placedState(tileIndex, position)}
             onClick={() => unpick(position)}
             disabled={settled}
-            className={`min-h-11 rounded-lg border-2 px-3 font-jp text-xl lg:text-2xl ${placedClass}`}
           >
             {question.tiles[tileIndex]}
-          </button>
+          </WordTile>
         ))}
       </div>
 
-      <p className="mt-2 min-h-5 text-center text-sm lg:text-base">
-        {status === 'failed' && (
-          <span>
-            Réponse : <strong className="font-jp text-correct-ink">{question.reading}</strong>
-          </span>
-        )}
-        {status === 'pending' && showWrong && (
-          <span className="text-error-ink">
-            Pas tout à fait : touchez une étiquette pour la retirer.
-          </span>
-        )}
-      </p>
-
-      {/* Étiquettes posées gardées invisibles : la réserve ne se réorganise pas. */}
-      <div className="mt-2 flex flex-wrap justify-center gap-2">
-        {question.tiles.map((tile, index) => {
-          const used = picked.includes(index)
-          return (
-            <button
-              key={index}
-              type="button"
-              onClick={() => pick(index)}
-              disabled={settled || used}
-              className={`min-h-11 rounded-lg border-2 border-control bg-paper-raised px-3 font-jp text-xl enabled:active:scale-95 lg:text-2xl ${
-                used ? 'invisible' : settled ? 'opacity-50' : ''
-              }`}
-            >
-              {tile}
-            </button>
-          )
-        })}
+      {/* Une étiquette posée laisse son emplacement en pointillés : la réserve ne bouge pas. */}
+      <div className="mt-3 flex flex-wrap justify-center gap-2">
+        {question.tiles.map((tile, index) => (
+          <WordTile
+            key={index}
+            state={picked.includes(index) ? 'gone' : 'idle'}
+            onClick={() => pick(index)}
+            disabled={settled}
+            className={settled ? 'opacity-45' : ''}
+          >
+            {tile}
+          </WordTile>
+        ))}
       </div>
     </div>
   )
@@ -485,52 +527,34 @@ function InputAnswer({ question, session, onSubmit, onNext }: InputAnswerProps) 
   const inputRef = useRef<HTMLInputElement>(null)
   const { status, wrongAnswers } = session
   const lastWrong = wrongAnswers.at(-1)
-  const showWrong = status === 'failed' || (lastWrong !== undefined && value === lastWrong)
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     if (status !== 'pending') return onNext()
     if (!value.trim()) return
     onSubmit(value)
+    // Le champ garde le focus : on corrige sans retoucher l'écran.
     inputRef.current?.select()
   }
 
-  const stateClass =
-    status === 'correct'
-      ? RIGHT_CLASS
-      : showWrong
-        ? WRONG_CLASS
-        : 'border-control bg-paper-raised'
+  const state: FieldState =
+    status === 'correct' ? 'correct' : lastWrong !== undefined && value === lastWrong ? 'wrong' : 'idle'
 
   return (
     <form onSubmit={handleSubmit}>
-      <input
+      <TextField
         ref={inputRef}
         value={value}
         onChange={(e) => setValue(e.target.value)}
         readOnly={status !== 'pending'}
         autoFocus
-        autoCapitalize="none"
-        autoCorrect="off"
-        autoComplete="off"
-        spellCheck={false}
+        long={question.stage === 8}
+        state={state}
         enterKeyHint={status === 'pending' ? 'done' : 'next'}
-        placeholder={status === 'pending' ? 'romaji' : ''}
+        placeholder={status === 'pending' ? 'en romaji' : ''}
         aria-label="Votre réponse en romaji"
-        className={`min-h-14 w-full rounded-md border-2 px-4 short:min-h-12 text-center outline-none ${
-          question.stage === 8 ? 'text-lg lg:text-xl' : 'text-2xl lg:text-3xl'
-        } lg:min-h-16 placeholder:text-ink-muted focus:ring-2 focus:ring-accent/40 ${stateClass}`}
+        className="short:[&_input]:min-h-12"
       />
-      <p className="mt-2 min-h-5 text-center text-sm short:mt-1 lg:text-base">
-        {status === 'failed' && (
-          <span>
-            Réponse : <strong className="text-correct-ink">{question.expected}</strong>
-          </span>
-        )}
-        {status === 'pending' && lastWrong !== undefined && (
-          <span className="text-error-ink">Pas tout à fait, réessayez.</span>
-        )}
-      </p>
     </form>
   )
 }

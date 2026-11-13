@@ -7,6 +7,8 @@ interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'si
   state?: FieldState
   /** answer : romaji centré (Newsreader 25 px) · ui : nom de profil, de liste (Figtree 16 px). */
   variant?: 'answer' | 'ui'
+  /** Réponse longue (phrase) : alignée à gauche, en 19 px. */
+  long?: boolean
   ref?: Ref<HTMLInputElement>
 }
 
@@ -18,7 +20,7 @@ const STATES: Record<FieldState, string> = {
 }
 
 /** Champ de saisie : romaji d'une réponse, ou nom (profil, liste). */
-export function TextField({ state = 'idle', variant = 'answer', className = '', ref, ...rest }: TextFieldProps) {
+export function TextField({ state = 'idle', variant = 'answer', long, className = '', ref, ...rest }: TextFieldProps) {
   const answer = variant === 'answer'
   return (
     <div className={`relative ${className}`}>
@@ -31,7 +33,9 @@ export function TextField({ state = 'idle', variant = 'answer', className = '', 
         enterKeyHint="done"
         className={`w-full rounded-md outline-none placeholder:text-ink-muted ${
           answer
-            ? 'min-h-15 px-11 text-center font-serif text-[25px] font-medium placeholder:font-sans placeholder:text-base placeholder:font-normal'
+            ? `min-h-15 font-serif font-medium placeholder:font-sans placeholder:text-base placeholder:font-normal ${
+                long ? 'pr-11 pl-3.5 text-[19px]' : 'px-11 text-center text-[25px]'
+              }`
             : 'min-h-11 px-3.5 text-base'
         } ${STATES[state]}`}
         {...rest}
