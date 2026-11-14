@@ -195,7 +195,8 @@
     box-shadow 160ms ease-out,
     filter 120ms linear;
 }
-[data-ui='wii'] :is(.k-btn--primary, .k-btn--ink, .k-btn--line, .k-iconbtn, .k-card, .k-choice, .k-chip, .k-word, .k-seg__opt[aria-checked='true'], .k-tab__icon)::before {
+/* :where() : spécificité minimale, pour que les reflets propres à chaque composant l'emportent. */
+[data-ui='wii'] :where(.k-btn--primary, .k-btn--ink, .k-btn--line, .k-iconbtn, .k-card, .k-choice, .k-chip, .k-word, .k-seg__opt[aria-checked='true'], .k-tab__icon)::before {
   content: '';
   position: absolute;
   z-index: -1;
@@ -257,9 +258,12 @@
   color: var(--k-ink-muted);
   box-shadow: 0 3px 0 var(--w-pill-drop);
 }
-[data-ui='wii'] .k-iconbtn::before {
-  inset: 3px 22% auto;
-  height: 40%;
+/* Bulles rondes : reflet elliptique qui épouse le cercle (une pastille dessinait un carré dedans). */
+[data-ui='wii'] :is(.k-iconbtn, .k-tab__icon)::before {
+  inset: 0;
+  height: auto;
+  border-radius: 50%;
+  background: radial-gradient(ellipse 72% 46% at 50% 18%, var(--w-gloss) 0%, var(--w-gloss-end) 62%, transparent 72%);
 }
 
 /* ── Cartes, bannières, retours ─────────────────────────────────────── */
@@ -578,10 +582,6 @@
   background: radial-gradient(circle at 50% 28%, var(--w-pill-top), var(--w-pill-bottom) 72%);
   box-shadow: 0 3px 0 var(--w-pill-drop);
 }
-[data-ui='wii'] .k-tab__icon::before {
-  inset: 2px 20% auto;
-  height: 42%;
-}
 [data-ui='wii'] .k-tab:active .k-tab__icon {
   transform: translateY(3px);
   box-shadow: 0 0 0 var(--w-pill-drop);
@@ -807,6 +807,7 @@
 
 /* Reflet plus discret sur les surfaces colorées : le texte blanc doit rester net. */
 [data-ui='wii'] :is(.k-choice--correct, .k-choice--wrong, .k-seg__opt[aria-checked='true'])::before {
-  height: 34%;
-  opacity: 0.55;
+  inset: 3px 12% auto;
+  height: 26%;
+  opacity: 0.5;
 }
