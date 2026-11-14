@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { playSound } from '@/lib/sound'
 
 /** Pilote un <dialog> natif en modal depuis un état React. `showModal` apporte le voile,
  *  le piège du focus, Échap et le geste Retour d'Android (Chrome) : tous passent par
@@ -13,8 +14,13 @@ export function useModalDialog(open: boolean, onClose: () => void) {
   useEffect(() => {
     const dialog = ref.current
     if (!dialog) return
-    if (open && !dialog.open) dialog.showModal()
-    else if (!open && dialog.open) dialog.close()
+    if (open && !dialog.open) {
+      dialog.showModal()
+      playSound('open')
+    } else if (!open && dialog.open) {
+      dialog.close()
+      playSound('close')
+    }
   }, [open])
 
   useEffect(() => {

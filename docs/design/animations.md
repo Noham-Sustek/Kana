@@ -64,15 +64,22 @@ Le flottement anime la propriété `translate`, l'appui `transform`, les entrée
 
 ### Sons (style Wii seulement, `lib/sound.ts`)
 
-Synthétisés par Web Audio (sinusoïdes et triangles, attaque de 5 ms, décroissance exponentielle) : aucun fichier, rien à télécharger. Joués par `haptic(kind)` en même temps que la vibration (même moment clé, même nom), plus un son « bulle » au toucher des contrôles (`installTapSounds`, écoute globale ; pas sur les réponses, qui ont leur son de résultat). Réglage **Sons** (Réglages → Apparence, visible en style Wii), actif par défaut ; rien ne doit en dépendre.
+Synthétisés par Web Audio, sans fichier ni échantillon (les sons de la console ne sont pas repris : seulement l'esprit). Timbres : clochette FM (modulateur ×3,5, longue queue), marimba FM (×4, bref), bulle (sinusoïde qui glisse), triangle feutré ; écho léger (130 ms, filtré) pour le halo. Notes dans la pentatonique de do : le hasard reste mélodieux. Chaque son a une ou plusieurs variantes tirées au hasard.
+
+Joués par `haptic(kind)` en même temps que la vibration, au toucher des contrôles (`installTapSounds` : son choisi par `tapKind` selon le contrôle ; rien sur les réponses, qui ont leur son de résultat), à l'ouverture / fermeture d'une feuille ou fenêtre (`useModalDialog`). Réglage **Sons** (Réglages → Apparence, visible en style Wii), actif par défaut ; rien ne doit en dépendre.
 
 | Son | Forme |
 |---|---|
-| Toucher (`tap`) | Glissando 620 → 1180 Hz, 60 ms |
-| Juste | Mi puis la (1319, 1760 Hz) + octave en triangle |
-| Pas encore / trait refusé | Sol puis ré graves en triangle (392, 294 Hz) |
-| Trait validé | Note brève 1568 Hz |
-| Ligne débloquée | Arpège do-mi-sol-do + éclat |
-| Record | Sol puis do aigus |
-| Chrono écoulé | Glissando 660 → 330 Hz en triangle |
-| Réglage activé (`toggle`) | Deux notes qui montent |
+| Toucher (`tap`) | Bulle, une note pentatonique au hasard |
+| Onglet | Deux lames de marimba |
+| Action principale | Petit accord de clochettes |
+| Retour, fermer | Bulle qui redescend |
+| Puce, interrupteur | Deux notes de marimba qui montent (cocher) ou descendent (décocher) |
+| Touche du clavier intégré | Clic de marimba très bref, hauteur au hasard |
+| Feuille / fenêtre | Souffle qui monte (ouverture) ou descend (fermeture) |
+| Juste | Trois motifs ascendants de clochettes ; un degré plus haut à chaque bonne réponse d'affilée (7 au plus, série remise à zéro par une erreur ou 20 s sans réponse) |
+| Pas encore / trait refusé | Deux notes graves en triangle feutré, deux variantes |
+| Trait validé | Goutte de marimba, un degré plus haut à chaque trait du kana |
+| Ligne débloquée | Arpège de clochettes et pluie d'étincelles |
+| Record | Arpège montant |
+| Chrono écoulé | Glissando 700 → 330 Hz feutré |

@@ -4,6 +4,10 @@ import { persist } from 'zustand/middleware'
 export type Theme = 'light' | 'dark' | 'system'
 /** Habillage de l'interface : « Papier et encre » (par défaut) ou « Wii » (rond, brillant, flottant). */
 export type UiStyle = 'papier' | 'wii'
+/** Saisie du romaji : clavier intégré à l'application (écrans tactiles) ou clavier du système. */
+export type KeyboardMode = 'app' | 'system'
+/** Disposition du clavier intégré ; `auto` = d'après la langue du système. */
+export type KeyboardLayoutSetting = 'auto' | 'azerty' | 'qwerty' | 'qwertz'
 
 interface SettingsState {
   theme: Theme
@@ -12,6 +16,8 @@ interface SettingsState {
   vibrations: boolean
   /** Sons de l'interface et des réponses (style Wii seulement). */
   sounds: boolean
+  keyboard: KeyboardMode
+  keyboardLayout: KeyboardLayoutSetting
   /** Dernier export de la sauvegarde (rappel sur l'Accueil). */
   lastBackupAt: number | null
   /** Rappel de sauvegarde masqué à cette date. */
@@ -22,6 +28,8 @@ interface SettingsState {
   setUi: (ui: UiStyle) => void
   setVibrations: (vibrations: boolean) => void
   setSounds: (sounds: boolean) => void
+  setKeyboard: (keyboard: KeyboardMode) => void
+  setKeyboardLayout: (keyboardLayout: KeyboardLayoutSetting) => void
   markBackedUp: (at: number) => void
   dismissBackupReminder: (at: number) => void
   setOnboarded: () => void
@@ -37,6 +45,8 @@ export const useSettingsStore = create<SettingsState>()(
       ui: 'papier',
       vibrations: true,
       sounds: true,
+      keyboard: 'app',
+      keyboardLayout: 'auto',
       lastBackupAt: null,
       backupReminderDismissedAt: null,
       onboarded: false,
@@ -44,6 +54,8 @@ export const useSettingsStore = create<SettingsState>()(
       setUi: (ui) => set({ ui }),
       setVibrations: (vibrations) => set({ vibrations }),
       setSounds: (sounds) => set({ sounds }),
+      setKeyboard: (keyboard) => set({ keyboard }),
+      setKeyboardLayout: (keyboardLayout) => set({ keyboardLayout }),
       markBackedUp: (at) => set({ lastBackupAt: at }),
       dismissBackupReminder: (at) => set({ backupReminderDismissedAt: at }),
       setOnboarded: () => set({ onboarded: true }),

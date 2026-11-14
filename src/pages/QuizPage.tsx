@@ -1,5 +1,6 @@
 import { Suspense, lazy, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router'
+import { AppKeyboard } from '@/components/AppKeyboard'
 import { Button } from '@/components/Button'
 import { Choice, type ChoiceState } from '@/components/Choice'
 import { Dialog } from '@/components/Dialog'
@@ -16,6 +17,7 @@ import { feedbackFor, type FeedbackContent } from '@/features/quiz/feedback'
 import { currentQuestion, type SessionState } from '@/features/quiz/session'
 import { FAMILIES, stageKindLabel, stagePresentation } from '@/features/quiz/stages'
 import type { ChoiceQuestion, ComposeQuestion, InputQuestion, Question, StageId } from '@/features/quiz/types'
+import { useAppKeyboard } from '@/lib/useAppKeyboard'
 import { useQuizOrigin } from '@/lib/useQuizOrigin'
 import { QuizSummary } from '@/pages/QuizSummary'
 import { useQuizSessionStore } from '@/stores/quizSessionStore'
@@ -51,6 +53,9 @@ function QuizRunner({ session }: { session: SessionState }) {
   const question = currentQuestion(session)!
   const { status, options } = session
   const settled = status !== 'pending'
+  // Clavier romaji intégré sous les questions à saisir (écran tactile, réglage « Intégré »).
+  const keyboard = useAppKeyboard()
+  const appKeyboard = question.kind === 'input' ? keyboard : null
   // Validation du dessin par l'utilisateur : index de la question dont le dessin est fini.
   const selfCheck = options.drawingCheck === 'self'
   const [drawnIndex, setDrawnIndex] = useState<number | null>(null)
@@ -118,7 +123,7 @@ function QuizRunner({ session }: { session: SessionState }) {
   })
 
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="flex min-h-full flex-col" data-app-keyboard={appKeyboard ? '' : undefined}>
       <header className="-ml-2.5 flex items-center gap-1.5">
         <IconButton icon="close" label="Quitter la session" onClick={askQuit} />
         <SessionProgress ticks={sessionTicks(session)} />
@@ -146,7 +151,14 @@ function QuizRunner({ session }: { session: SessionState }) {
 
       {question.kind === 'choice' && <ChoiceAnswers question={question} session={session} onPick={submit} />}
       {question.kind === 'input' && (
-        <InputAnswer key={session.index} question={question} session={session} onSubmit={submit} onNext={next} />
+        <InputAnswer
+          key={session.index}
+          question={question}
+          session={session}
+          onSubmit={submit}
+          onNext={next}
+          appKeyboard={appKeyboard !== null}
+        />
       )}
       {question.kind === 'compose' && (
         <ComposeAnswer key={session.index} question={question} session={session} onSubmit={submit} />
@@ -200,6 +212,7 @@ function QuizRunner({ session }: { session: SessionState }) {
             Afficher la réponse
           </Button>
         )}
+        {appKeyboard && <AppKeyboard targetId={ANSWER_ID} layout={appKeyboard} enterLabel={settled ? 'Suivant' : 'Valider'} />}
       </div>
 
       <Dialog
@@ -545,9 +558,13 @@ interface InputAnswerProps {
   session: SessionState
   onSubmit: (value: string) => void
   onNext: () => void
+  /** Clavier intégré affiché : le clavier du système ne doit pas s'ouvrir. */
+  appKeyboard: boolean
 }
 
-function InputAnswer({ question, session, onSubmit, onNext }: InputAnswerProps) {
+const ANSWER_ID = 'quiz-answer'
+
+function InputAnswer({ question, session, onSubmit, onNext, appKeyboard }: InputAnswerProps) {
   const [value, setValue] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const { status, wrongAnswers } = session
@@ -569,6 +586,8 @@ function InputAnswer({ question, session, onSubmit, onNext }: InputAnswerProps) 
     <form onSubmit={handleSubmit}>
       <TextField
         ref={inputRef}
+        id={ANSWER_ID}
+        inputMode={appKeyboard ? 'none' : undefined}
         value={value}
         onChange={(e) => setValue(e.target.value)}
         readOnly={status !== 'pending'}

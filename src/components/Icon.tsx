@@ -37,6 +37,7 @@ const PATHS = {
   arrow: 'M5 12h14M13 6l6 6-6 6',
   chevronDown: 'M6 9l6 6 6-6',
   chevronUp: 'M18 15l-6-6-6 6',
+  backspace: 'M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zM18 9l-6 6M12 9l6 6',
 } as const
 
 export type IconName = keyof typeof PATHS

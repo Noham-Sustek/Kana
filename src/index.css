@@ -5,8 +5,19 @@
 /* Le mode sombre est piloté par la classe .dark sur <html> (cf. useApplyTheme). */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Écran bas, en pratique clavier virtuel ouvert (viewport interactive-widget=resizes-content). */
-@custom-variant short (@media (max-height: 600px));
+/* Écran bas, en pratique clavier virtuel ouvert (viewport interactive-widget=resizes-content),
+   ou clavier romaji intégré affiché. */
+@custom-variant short {
+  @media (max-height: 600px) {
+    @slot;
+  }
+  /* Clavier intégré affiché (data-app-keyboard sur l'écran) sur un écran de hauteur moyenne. */
+  @media (max-height: 860px) {
+    &:where([data-app-keyboard] *) {
+      @slot;
+    }
+  }
+}
 
 /* Polices embarquées (licences OFL, cf. À propos). Klee One : kana seuls, les kanji
    retombent sur la police système. */

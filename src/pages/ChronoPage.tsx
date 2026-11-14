@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
+import { AppKeyboard } from '@/components/AppKeyboard'
 import { Button } from '@/components/Button'
 import { Icon } from '@/components/Icon'
 import { IconButton } from '@/components/IconButton'
@@ -21,6 +22,7 @@ import {
   type ChronoState,
 } from '@/features/chrono/chrono'
 import { toRomaji } from '@/features/quiz/reading'
+import { useAppKeyboard } from '@/lib/useAppKeyboard'
 import { bestScoreKey, useChronoSettingsStore } from '@/stores/chronoSettingsStore'
 import { useProfileStore } from '@/stores/profileStore'
 
@@ -152,6 +154,8 @@ function ChronoRunner({ state, onChange, script, duration, onFinish, onQuit }: C
   const currentRef = useRef<HTMLSpanElement>(null)
   const words = useWords(script)
   const remaining = remainingSeconds(state, duration, now)
+  // Clavier romaji intégré (écran tactile, réglage « Intégré ») : le texte ne bouge plus.
+  const keyboard = useAppKeyboard()
 
   // Tic du chrono ; à zéro, la partie s'arrête sur l'état courant.
   useEffect(() => {
@@ -202,7 +206,7 @@ function ChronoRunner({ state, onChange, script, duration, onFinish, onQuit }: C
   const pace = elapsedMin > 0.05 ? Math.round(state.correctKana / elapsedMin) : null
 
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="flex min-h-full flex-col" data-app-keyboard={keyboard ? '' : undefined}>
       <header className="-ml-2 flex items-center gap-3">
         <IconButton icon="close" label="Quitter la lecture" onClick={onQuit} />
         <div className="h-1.5 flex-1 overflow-hidden rounded-[1px] bg-hairline" aria-hidden="true">
@@ -261,6 +265,8 @@ function ChronoRunner({ state, onChange, script, duration, onFinish, onQuit }: C
       <div className="sticky bottom-0 z-10 -mx-4 mt-auto bg-paper px-4 pt-2 pb-1">
         <TextField
           ref={inputRef}
+          id="chrono-answer"
+          inputMode={keyboard ? 'none' : undefined}
           value={value}
           onChange={(e) => handleChange(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -284,6 +290,7 @@ function ChronoRunner({ state, onChange, script, duration, onFinish, onQuit }: C
             Passer le mot
           </Button>
         </div>
+        {keyboard && <AppKeyboard targetId="chrono-answer" layout={keyboard} enterLabel="OK" />}
       </div>
     </div>
   )

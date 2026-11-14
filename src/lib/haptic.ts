@@ -1,3 +1,4 @@
+import { Capacitor, registerPlugin } from '@capacitor/core'
 import { playSound } from '@/lib/sound'
 import { useSettingsStore } from '@/stores/settingsStore'
 
@@ -10,9 +11,14 @@ export const HAPTIC = {
   record: [20],
   timeout: [40],
   toggle: [15],
+  key: [6],
 } as const satisfies Record<string, readonly number[]>
 
 export type HapticKind = keyof typeof HAPTIC
+
+/** Plugin natif de l'application Android (KanaHapticsPlugin.java) : vibre aussi en mode silencieux,
+ *  où la WebView ignore navigator.vibrate. */
+const KanaHaptics = registerPlugin<{ vibrate(options: { pattern: number[] }): Promise<void> }>('KanaHaptics')
 
 /** Retour d'un moment clé : vibration si l'appareil le permet (Android) et si le réglage
  *  Vibrations est actif, et son du style Wii (`playSound`, réglage Sons).
@@ -20,6 +26,10 @@ export type HapticKind = keyof typeof HAPTIC
 export function haptic(kind: HapticKind) {
   playSound(kind)
   if (!useSettingsStore.getState().vibrations) return
+  if (Capacitor.isNativePlatform()) {
+    KanaHaptics.vibrate({ pattern: [...HAPTIC[kind]] }).catch(() => {})
+    return
+  }
   if (typeof navigator === 'undefined' || !('vibrate' in navigator)) return
   try {
     navigator.vibrate([...HAPTIC[kind]])

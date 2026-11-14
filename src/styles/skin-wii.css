@@ -234,6 +234,18 @@
   transition-duration: 70ms;
 }
 
+/* Zone tactile prolongée de 6 px vers le haut : à l'appui, la surface s'enfonce de 3 px ; un doigt
+   posé tout en haut se retrouvait au-dessus du bouton au relâché, et le clic était perdu (« il faut
+   appuyer deux fois »). Le pseudo-élément suit le bouton mais couvre encore le point touché. */
+[data-ui='wii'] :is(.k-btn--primary, .k-btn--ink, .k-btn--line, .k-iconbtn, .k-card, .k-choice, .k-chip, .k-word, .k-tab)::after {
+  content: '';
+  position: absolute;
+  inset: -6px -2px -2px;
+}
+[data-ui='wii'] .k-tab {
+  position: relative;
+}
+
 /* ── Boutons ────────────────────────────────────────────────────────── */
 [data-ui='wii'] .k-btn {
   font-weight: 800;
@@ -530,6 +542,38 @@
 }
 [data-ui='wii'] .k-word--wrong {
   border-color: var(--w-red-ring);
+}
+
+/* ── Clavier romaji intégré ─────────────────────────────────────────── */
+[data-ui='wii'] .k-keyboard {
+  border-top: 0;
+  border-radius: 26px 26px 0 0;
+  background: linear-gradient(var(--w-nav-top), var(--w-nav-bottom));
+  box-shadow:
+    inset 0 3px 0 var(--w-card-top),
+    0 -2px 0 var(--w-nav-line),
+    0 1rem 0 0 var(--w-nav-bottom);
+  padding-top: 10px;
+}
+[data-ui='wii'] .k-key {
+  border: 2px solid var(--w-pill-edge);
+  border-radius: 12px;
+  background: linear-gradient(var(--w-pill-top), var(--w-pill-bottom));
+  box-shadow: 0 3px 0 var(--w-pill-drop);
+  font-weight: 700;
+  transition: transform 260ms var(--w-spring), box-shadow 120ms ease-out;
+}
+[data-ui='wii'] .k-key:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--w-pill-drop);
+  transition-duration: 50ms;
+}
+[data-ui='wii'] .k-key--enter {
+  border-color: var(--w-blue-rim);
+  background: linear-gradient(180deg, var(--w-blue-top), var(--w-blue-mid) 55%, var(--w-blue-bottom));
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(0, 60, 90, 0.35);
+  box-shadow: 0 3px 0 var(--w-blue-drop);
 }
 
 /* ── Barres de progression ──────────────────────────────────────────── */
