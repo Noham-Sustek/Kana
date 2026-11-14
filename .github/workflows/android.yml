@@ -24,12 +24,12 @@ jobs:
       KANA_VERSION_CODE: ${{ github.run_number }}0
       HAS_KEY: ${{ secrets.KANA_KEYSTORE_BASE64 != '' }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
@@ -38,16 +38,28 @@ jobs:
       - run: npm test
       - run: npm run build:android
 
+      # Espaces et retours à la ligne collés avec les secrets retirés ; la clé est vérifiée
+      # avant Gradle pour un message clair si le mot de passe ne lui correspond pas.
       - name: Keystore
         if: env.HAS_KEY == 'true'
-        run: echo "${{ secrets.KANA_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/kana-release.jks"
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KANA_KEYSTORE_BASE64 }}
+          RAW_PASSWORD: ${{ secrets.KANA_KEYSTORE_PASSWORD }}
+        run: |
+          printf '%s' "$KEYSTORE_BASE64" | tr -d '[:space:]' | base64 -d > "$RUNNER_TEMP/kana-release.jks"
+          PASSWORD=$(printf '%s' "$RAW_PASSWORD" | tr -d '[:space:]')
+          echo "::add-mask::$PASSWORD"
+          if ! keytool -list -keystore "$RUNNER_TEMP/kana-release.jks" -storepass "$PASSWORD" -alias kana > /dev/null 2>&1; then
+            echo "::error::KANA_KEYSTORE_PASSWORD ne correspond pas à la clé KANA_KEYSTORE_BASE64 (voir kana-signing/LISEZMOI.txt)."
+            exit 1
+          fi
+          echo "KANA_KEYSTORE_PASSWORD=$PASSWORD" >> "$GITHUB_ENV"
 
       - name: APK signé
         if: env.HAS_KEY == 'true'
         working-directory: android
         env:
           KANA_KEYSTORE: ${{ runner.temp }}/kana-release.jks
-          KANA_KEYSTORE_PASSWORD: ${{ secrets.KANA_KEYSTORE_PASSWORD }}
         run: |
           bash ./gradlew --no-daemon assembleRelease
           cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/kana.apk"
