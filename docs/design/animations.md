@@ -58,6 +58,21 @@ Quand `<html data-ui="wii">`, les mêmes classes `animate-*` prennent un mouveme
 | Entrée d'une carte | Gonfle de 90 → 100 % en fondu, en cascade | 620 ms |
 | Bonne réponse / mauvaise | Rebond 92 → 107 → 100 % / tremblement avec rotation | 460 ms |
 | Feuille, dialogue | Monte avec un léger dépassement / gonfle de 82 % | 560 ms / 460 ms |
-| Fond | Bulles qui dérivent lentement | 38 s, aller-retour |
+| Fond | Bulles qui montent sans fin, en deux couches : grosses bulles pleines lentes, petites bulles cerclées plus rapides (calque de deux écrans de haut, motif répété, translaté de -50 % en boucle) | 90 s / 42 s par écran |
 
 Le flottement anime la propriété `translate`, l'appui `transform`, les entrées `scale` : ils se combinent. Mouvement réduit : plus aucune boucle ni rebond, fondu de 100 ms. Performances : seules des propriétés composées (`translate`, `transform`, `scale`, `opacity`) bouclent ; fond en calques fixes, jamais `background-attachment: fixed`.
+
+### Sons (style Wii seulement, `lib/sound.ts`)
+
+Synthétisés par Web Audio (sinusoïdes et triangles, attaque de 5 ms, décroissance exponentielle) : aucun fichier, rien à télécharger. Joués par `haptic(kind)` en même temps que la vibration (même moment clé, même nom), plus un son « bulle » au toucher des contrôles (`installTapSounds`, écoute globale ; pas sur les réponses, qui ont leur son de résultat). Réglage **Sons** (Réglages → Apparence, visible en style Wii), actif par défaut ; rien ne doit en dépendre.
+
+| Son | Forme |
+|---|---|
+| Toucher (`tap`) | Glissando 620 → 1180 Hz, 60 ms |
+| Juste | Mi puis la (1319, 1760 Hz) + octave en triangle |
+| Pas encore / trait refusé | Sol puis ré graves en triangle (392, 294 Hz) |
+| Trait validé | Note brève 1568 Hz |
+| Ligne débloquée | Arpège do-mi-sol-do + éclat |
+| Record | Sol puis do aigus |
+| Chrono écoulé | Glissando 660 → 330 Hz en triangle |
+| Réglage activé (`toggle`) | Deux notes qui montent |

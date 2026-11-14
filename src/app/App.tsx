@@ -1,6 +1,7 @@
-import { Suspense, lazy } from 'react'
+import { Suspense, lazy, useEffect } from 'react'
 import { HashRouter, Navigate, Route, Routes, useLocation, useParams } from 'react-router'
 import { AppLayout } from '@/components/AppLayout'
+import { installTapSounds } from '@/lib/sound'
 import { useApplyTheme } from '@/lib/useApplyTheme'
 import { useEnsureActiveProfile } from '@/lib/useProfiles'
 import { FreeSessionPage } from '@/pages/FreeSessionPage'
@@ -31,6 +32,8 @@ const ComponentsPage = import.meta.env.DEV
 
 export function App() {
   useApplyTheme()
+  // Son « bulle » au toucher des contrôles (style Wii, réglage Sons ; vérifié à chaque toucher).
+  useEffect(installTapSounds, [])
   useEnsureActiveProfile()
 
   return (

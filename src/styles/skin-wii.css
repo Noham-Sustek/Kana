@@ -40,6 +40,7 @@
   --w-scan-a: #ffffff;
   --w-scan-b: #eef2f5;
   --w-bubble: rgba(92, 202, 240, 0.16);
+  --w-bubble-ring: rgba(26, 154, 211, 0.22);
   --w-card-top: #ffffff;
   --w-card-bottom: #e9eff3;
   --w-card-edge: #d3dce2;
@@ -112,6 +113,7 @@
   --w-scan-a: #0e1a26;
   --w-scan-b: #112131;
   --w-bubble: rgba(92, 202, 240, 0.08);
+  --w-bubble-ring: rgba(92, 202, 240, 0.16);
   --w-card-top: #1e3244;
   --w-card-bottom: #152535;
   --w-card-edge: #2c4357;
@@ -141,7 +143,7 @@
   --w-gold-ink: #3a2600;
 }
 
-/* ── Fond : lignes de balayage et bulles qui dérivent ───────────────── */
+/* ── Fond : lignes de balayage et bulles qui montent ───────────────── */
 /* Performances (téléphone) : les lignes et les bulles sont deux calques fixes composités une fois,
    jamais repeints au défilement (pas de background-attachment: fixed, coûteux sur mobile). */
 [data-ui='wii'] body {
@@ -157,19 +159,40 @@
   background: repeating-linear-gradient(0deg, var(--w-scan-a) 0 3px, var(--w-scan-b) 3px 4px);
   will-change: transform;
 }
-[data-ui='wii'] body::before {
+/* Bulles qui montent sans fin : calque deux fois plus haut que l'écran, motif répété tous les
+   50 % (une hauteur d'écran), translaté de -50 % en boucle ; raccord invisible, rien n'est repeint.
+   Deux calques à deux vitesses (grosses bulles lentes, petites bulles cerclées plus rapides). */
+[data-ui='wii'] body::before,
+[data-ui='wii'] #root::before {
   content: '';
   position: fixed;
-  inset: -20%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 200%;
   z-index: -1;
   pointer-events: none;
+  background-size: 100% 50%;
   will-change: transform;
-  background:
-    radial-gradient(circle at 18% 22%, var(--w-bubble) 0 9%, transparent 9.5%),
-    radial-gradient(circle at 82% 14%, var(--w-bubble) 0 5%, transparent 5.5%),
-    radial-gradient(circle at 70% 64%, var(--w-bubble) 0 12%, transparent 12.5%),
-    radial-gradient(circle at 26% 82%, var(--w-bubble) 0 6%, transparent 6.5%);
-  animation: kw-drift 38s ease-in-out infinite alternate;
+}
+[data-ui='wii'] body::before {
+  background-image:
+    radial-gradient(circle 70px at 16% 20%, var(--w-bubble) 97%, transparent),
+    radial-gradient(circle 42px at 84% 14%, var(--w-bubble) 96%, transparent),
+    radial-gradient(circle 96px at 72% 58%, var(--w-bubble) 97%, transparent),
+    radial-gradient(circle 52px at 24% 78%, var(--w-bubble) 96%, transparent),
+    radial-gradient(circle 30px at 50% 40%, var(--w-bubble) 95%, transparent);
+  animation: kw-bubbles 90s linear infinite;
+}
+[data-ui='wii'] #root::before {
+  background-image:
+    radial-gradient(circle 16px at 8% 34%, transparent 62%, var(--w-bubble-ring) 66% 94%, transparent),
+    radial-gradient(circle 11px at 38% 12%, transparent 58%, var(--w-bubble-ring) 64% 92%, transparent),
+    radial-gradient(circle 22px at 92% 46%, transparent 64%, var(--w-bubble-ring) 68% 95%, transparent),
+    radial-gradient(circle 13px at 62% 86%, transparent 60%, var(--w-bubble-ring) 65% 93%, transparent),
+    radial-gradient(circle 18px at 30% 62%, transparent 62%, var(--w-bubble-ring) 66% 94%, transparent),
+    radial-gradient(circle 9px at 78% 26%, transparent 55%, var(--w-bubble-ring) 62% 90%, transparent);
+  animation: kw-bubbles 42s linear infinite;
 }
 
 [data-ui='wii'] h1,
@@ -700,12 +723,12 @@
     scale: 1.015;
   }
 }
-@keyframes kw-drift {
+@keyframes kw-bubbles {
   from {
-    transform: translate3d(0, 0, 0) rotate(0deg);
+    transform: translate3d(0, 0, 0);
   }
   to {
-    transform: translate3d(4%, -6%, 0) rotate(8deg);
+    transform: translate3d(0, -50%, 0);
   }
 }
 @keyframes kw-pulse {
@@ -793,7 +816,8 @@
 /* Mouvement réduit : ni flottement ni rebond, un fondu de 100 ms comme dans « Papier et encre ». */
 @media (prefers-reduced-motion: reduce) {
   [data-ui='wii'] *,
-  [data-ui='wii'] body::before {
+  [data-ui='wii'] body::before,
+  [data-ui='wii'] #root::before {
     animation: none !important;
     transition-duration: 1ms !important;
   }
@@ -810,10 +834,4 @@
   inset: 3px 12% auto;
   height: 26%;
   opacity: 0.5;
-}
-
-/* Puces cochées (lignes de kana) : le bleu brillant en relief suffit, sans coche (demande de
-   l'utilisateur). L'état reste annoncé par aria-pressed ; « Papier et encre » garde la coche. */
-[data-ui='wii'] .k-chip__check {
-  display: none;
 }

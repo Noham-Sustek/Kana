@@ -1,5 +1,4 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
-import { Icon } from '@/components/Icon'
 
 export type ChipState = 'off' | 'on' | 'partial'
 
@@ -31,7 +30,6 @@ export function Chip({ state = 'off', glyph, detail, type = 'button', className 
       {detail !== undefined && (
         <small className={`text-[13px] font-normal ${state === 'on' ? 'text-on-accent' : 'text-ink-muted'}`}>{detail}</small>
       )}
-      {state === 'on' && <Icon name="check" strokeWidth={3} className="k-chip__check size-3.5" />}
     </button>
   )
 }

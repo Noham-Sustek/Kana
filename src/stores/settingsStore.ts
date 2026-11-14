@@ -10,6 +10,8 @@ interface SettingsState {
   ui: UiStyle
   /** Retour haptique (Android ; sans effet sur iPhone). */
   vibrations: boolean
+  /** Sons de l'interface et des réponses (style Wii seulement). */
+  sounds: boolean
   /** Dernier export de la sauvegarde (rappel sur l'Accueil). */
   lastBackupAt: number | null
   /** Rappel de sauvegarde masqué à cette date. */
@@ -19,6 +21,7 @@ interface SettingsState {
   setTheme: (theme: Theme) => void
   setUi: (ui: UiStyle) => void
   setVibrations: (vibrations: boolean) => void
+  setSounds: (sounds: boolean) => void
   markBackedUp: (at: number) => void
   dismissBackupReminder: (at: number) => void
   setOnboarded: () => void
@@ -33,12 +36,14 @@ export const useSettingsStore = create<SettingsState>()(
       theme: 'system',
       ui: 'papier',
       vibrations: true,
+      sounds: true,
       lastBackupAt: null,
       backupReminderDismissedAt: null,
       onboarded: false,
       setTheme: (theme) => set({ theme }),
       setUi: (ui) => set({ ui }),
       setVibrations: (vibrations) => set({ vibrations }),
+      setSounds: (sounds) => set({ sounds }),
       markBackedUp: (at) => set({ lastBackupAt: at }),
       dismissBackupReminder: (at) => set({ backupReminderDismissedAt: at }),
       setOnboarded: () => set({ onboarded: true }),

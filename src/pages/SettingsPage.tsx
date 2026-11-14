@@ -8,6 +8,7 @@ import { SegmentedControl } from '@/components/SegmentedControl'
 import { Switch } from '@/components/Switch'
 import { haptic } from '@/lib/haptic'
 import { useInstallPrompt } from '@/lib/installPrompt'
+import { playSound } from '@/lib/sound'
 import { useSettingsStore, type Theme, type UiStyle } from '@/stores/settingsStore'
 
 const UI_OPTIONS: { value: UiStyle; label: string }[] = [
@@ -31,6 +32,8 @@ export function SettingsPage() {
   const setUi = useSettingsStore((s) => s.setUi)
   const vibrations = useSettingsStore((s) => s.vibrations)
   const setVibrations = useSettingsStore((s) => s.setVibrations)
+  const sounds = useSettingsStore((s) => s.sounds)
+  const setSounds = useSettingsStore((s) => s.setSounds)
   const install = useInstallPrompt()
 
   return (
@@ -58,6 +61,17 @@ export function SettingsPage() {
                   if (on) haptic('toggle')
                 }}
               />
+              {ui === 'wii' && (
+                <Switch
+                  label="Sons"
+                  description="Petits sons au toucher et à chaque réponse."
+                  checked={sounds}
+                  onChange={(on) => {
+                    setSounds(on)
+                    if (on) playSound('toggle')
+                  }}
+                />
+              )}
             </div>
           </Section>
 

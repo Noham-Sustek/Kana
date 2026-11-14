@@ -1,3 +1,4 @@
+import { playSound } from '@/lib/sound'
 import { useSettingsStore } from '@/stores/settingsStore'
 
 /** Motifs de vibration (ms, alternance vibration / pause), cf. docs/design/animations.md. */
@@ -13,9 +14,11 @@ export const HAPTIC = {
 
 export type HapticKind = keyof typeof HAPTIC
 
-/** Vibre si l'appareil le permet (Android) et si le réglage Vibrations est actif.
+/** Retour d'un moment clé : vibration si l'appareil le permet (Android) et si le réglage
+ *  Vibrations est actif, et son du style Wii (`playSound`, réglage Sons).
  *  Rien ne doit en dépendre : iPhone n'a pas `navigator.vibrate`. */
 export function haptic(kind: HapticKind) {
+  playSound(kind)
   if (!useSettingsStore.getState().vibrations) return
   if (typeof navigator === 'undefined' || !('vibrate' in navigator)) return
   try {
