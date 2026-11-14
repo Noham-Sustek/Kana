@@ -811,3 +811,9 @@
   height: 26%;
   opacity: 0.5;
 }
+
+/* Puces cochées (lignes de kana) : le bleu brillant en relief suffit, sans coche (demande de
+   l'utilisateur). L'état reste annoncé par aria-pressed ; « Papier et encre » garde la coche. */
+[data-ui='wii'] .k-chip__check {
+  display: none;
+}
