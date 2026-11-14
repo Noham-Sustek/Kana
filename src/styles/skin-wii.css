@@ -142,10 +142,20 @@
 }
 
 /* ── Fond : lignes de balayage et bulles qui dérivent ───────────────── */
+/* Performances (téléphone) : les lignes et les bulles sont deux calques fixes composités une fois,
+   jamais repeints au défilement (pas de background-attachment: fixed, coûteux sur mobile). */
 [data-ui='wii'] body {
-  background: repeating-linear-gradient(0deg, var(--w-scan-a) 0 3px, var(--w-scan-b) 3px 4px);
-  background-attachment: fixed;
+  background: var(--w-scan-a);
   font-weight: 500;
+}
+[data-ui='wii'] body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, var(--w-scan-a) 0 3px, var(--w-scan-b) 3px 4px);
+  will-change: transform;
 }
 [data-ui='wii'] body::before {
   content: '';
@@ -153,6 +163,7 @@
   inset: -20%;
   z-index: -1;
   pointer-events: none;
+  will-change: transform;
   background:
     radial-gradient(circle at 18% 22%, var(--w-bubble) 0 9%, transparent 9.5%),
     radial-gradient(circle at 82% 14%, var(--w-bubble) 0 5%, transparent 5.5%),
@@ -181,7 +192,7 @@
   isolation: isolate;
   transition:
     transform 380ms var(--w-spring),
-    box-shadow 380ms var(--w-spring),
+    box-shadow 160ms ease-out,
     filter 120ms linear;
 }
 [data-ui='wii'] :is(.k-btn--primary, .k-btn--ink, .k-btn--line, .k-iconbtn, .k-card, .k-choice, .k-chip, .k-word, .k-seg__opt[aria-checked='true'], .k-tab__icon)::before {
@@ -619,22 +630,15 @@
 [data-ui='wii'] li:nth-child(3n + 3) > .k-card {
   animation-delay: -2.9s;
 }
-/* Cases de kana : une houle qui traverse les colonnes. */
-[data-ui='wii'] .k-tile:not(.k-tile--locked, .k-tile--heat-0) {
-  --w-float: -2px;
+/* Cases de kana : seule la ligne en cours du parcours flotte. Animer chaque case de la grille
+   (plus de 100 calques) faisait ramer le téléphone. */
+[data-ui='wii'] .k-tile--current {
+  --w-float: -3px;
   animation: kw-float 3.6s ease-in-out infinite;
 }
-[data-ui='wii'] .k-tile:nth-child(5n + 2) {
-  animation-delay: -0.36s;
-}
-[data-ui='wii'] .k-tile:nth-child(5n + 3) {
-  animation-delay: -0.72s;
-}
-[data-ui='wii'] .k-tile:nth-child(5n + 4) {
-  animation-delay: -1.08s;
-}
-[data-ui='wii'] .k-tile:nth-child(5n + 5) {
-  animation-delay: -1.44s;
+/* Éléments flottants : calque préparé d'avance, pas de création de calque à chaque cycle. */
+[data-ui='wii'] :is(.k-card, .k-choice--idle, .k-word--idle, .k-banner, .k-prompt, .k-tile--current) {
+  will-change: translate;
 }
 
 /* ── Entrées élastiques (remplacent celles de « Papier et encre ») ──── */
@@ -706,8 +710,7 @@
 }
 @keyframes kw-pulse {
   50% {
-    filter: brightness(1.15);
-    scale: 1 1.25;
+    opacity: 0.6;
   }
 }
 @keyframes kw-hop {

@@ -50,7 +50,7 @@ Quand `<html data-ui="wii">`, les mêmes classes `animate-*` prennent un mouveme
 | Moment | Mouvement | Durée |
 |---|---|---|
 | Repos : cartes, réponses, étiquettes, bannières | Flottement vertical de 4 px, décalé d'un élément à l'autre | 4,4 s en boucle |
-| Repos : cases de kana | Houle de 2 px qui traverse les colonnes | 3,6 s en boucle |
+| Repos : case en cours du parcours | Flottement de 3 px (les cases de la grille restent fixes : plus de 100 calques animés font ramer) | 3,6 s en boucle |
 | Repos : case de la question (écran 3DS) | Flottement de 5 px | 5,2 s en boucle |
 | Bouton principal | Respiration (échelle 1 → 1,015) | 3,6 s en boucle |
 | Appui (boutons, cartes, cases) | S'enfonce de 3 px (l'ombre du bas disparaît), rebondit au relâché | 70 ms / 380 ms |
@@ -60,4 +60,4 @@ Quand `<html data-ui="wii">`, les mêmes classes `animate-*` prennent un mouveme
 | Feuille, dialogue | Monte avec un léger dépassement / gonfle de 82 % | 560 ms / 460 ms |
 | Fond | Bulles qui dérivent lentement | 38 s, aller-retour |
 
-Le flottement anime la propriété `translate`, l'appui `transform`, les entrées `scale` : ils se combinent. Mouvement réduit : plus aucune boucle ni rebond, fondu de 100 ms.
+Le flottement anime la propriété `translate`, l'appui `transform`, les entrées `scale` : ils se combinent. Mouvement réduit : plus aucune boucle ni rebond, fondu de 100 ms. Performances : seules des propriétés composées (`translate`, `transform`, `scale`, `opacity`) bouclent ; fond en calques fixes, jamais `background-attachment: fixed`.
