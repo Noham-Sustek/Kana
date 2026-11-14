@@ -1,0 +1,809 @@
+/* Style « Wii » (Réglages → Apparence → Style) : habillage rond, brillant et flottant, inspiré des
+   menus Wii / 3DS. Actif quand <html data-ui="wii"> (useApplyTheme, script inline d'index.html).
+   Hors de toute @layer : ces règles passent devant les utilitaires Tailwind sans !important.
+   Les écrans ne changent pas : on remplace les jetons --k-*, les polices, les rayons, puis on
+   habille les composants par leurs classes d'accroche k-* (k-btn, k-card, k-tile…).
+   Mouvement : flottement lent au repos (propriété `translate`), appui qui s'enfonce (`transform`)
+   et rebond au relâché, entrées élastiques ; tout se coupe en mouvement réduit. */
+
+/* ── Jetons ─────────────────────────────────────────────────────────── */
+:root[data-ui='wii'] {
+  --k-paper: #f4f7f9;
+  --k-paper-raised: #ffffff;
+  --k-ink: #3c434a;
+  --k-ink-muted: #5a626a;
+  --k-hairline: #d3dce2;
+  --k-control: #aebbc4;
+  --k-accent: #0a7fae;
+  --k-on-accent: #ffffff;
+  --k-accent-tint: #def2fa;
+  --k-correct-ink: #2a7a1b;
+  --k-error-ink: #b9321f;
+  --k-correct-tint: #e5f6de;
+  --k-error-tint: #fde7e2;
+  --k-gold: #94650a;
+  --k-heat-1: #def2fa;
+  --k-heat-2: #a9dcf1;
+  --k-heat-3: #3aa6d6;
+  --k-on-heat-3: #ffffff;
+  --k-scrim: rgba(38, 58, 74, 0.42);
+  --color-correct: #3fa82a;
+  --color-error: #d04a35;
+
+  --font-sans: 'M PLUS Rounded 1c', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'M PLUS Rounded 1c', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --radius-sm: 14px;
+  --radius-md: 22px;
+  --radius-2xl: 30px;
+
+  /* Surfaces propres au style (redéfinies en sombre). */
+  --w-scan-a: #ffffff;
+  --w-scan-b: #eef2f5;
+  --w-bubble: rgba(92, 202, 240, 0.16);
+  --w-card-top: #ffffff;
+  --w-card-bottom: #e9eff3;
+  --w-card-edge: #d3dce2;
+  --w-card-drop: #c2ccd3;
+  --w-pill-top: #ffffff;
+  --w-pill-bottom: #e6edf1;
+  --w-pill-edge: #c9d3da;
+  --w-pill-drop: #b6c1c9;
+  --w-gloss: rgba(255, 255, 255, 0.7);
+  --w-gloss-end: rgba(255, 255, 255, 0.05);
+  --w-blue-top: #5ccaf0;
+  --w-blue-mid: #1a9ad3;
+  --w-blue-bottom: #0a6f9e;
+  --w-blue-ring: #9fd6ec;
+  --w-blue-drop: #08608a;
+  --w-blue-rim: #ffffff;
+  --w-next-edge: #7fcbe9;
+  --w-next-bottom: #e3eef4;
+  --w-next-drop: #8bb9cf;
+  --w-track: #dfe6eb;
+  --w-panel-out-top: #f3f6f8;
+  --w-panel-out-bottom: #cfd8de;
+  --w-panel-in-top: #ffffff;
+  --w-panel-in-bottom: #e2f0f7;
+  --w-panel-edge: #c3ced5;
+  --w-panel-drop: #b9c4cc;
+  --w-nav-top: #f6f9fb;
+  --w-nav-bottom: #dde5ea;
+  --w-nav-line: #c9d2d8;
+  --w-green-top: #5fc84a;
+  --w-green-bottom: #2a841b;
+  --w-green-ring: #3fa82a;
+  --w-green-drop: #1f6414;
+  --w-red-top: #ee7863;
+  --w-red-bottom: #b9321f;
+  --w-red-ring: #d04a35;
+  --w-red-drop: #8f2516;
+  --w-gold-top: #fff1c2;
+  --w-gold-bottom: #f3c95a;
+  --w-gold-ring: #d9a32a;
+  --w-gold-drop: #b9851a;
+  --w-gold-ink: #4a3100;
+
+  --w-spring: cubic-bezier(0.3, 1.5, 0.5, 1);
+  --w-soft-spring: cubic-bezier(0.25, 1.3, 0.45, 1);
+}
+
+/* Variante sombre (le canevas n'existe qu'en clair) : nuit bleutée, mêmes reliefs. */
+:root[data-ui='wii'].dark {
+  --k-paper: #0e1a26;
+  --k-paper-raised: #182838;
+  --k-ink: #e4edf3;
+  --k-ink-muted: #a3b4c1;
+  --k-hairline: #2b3e50;
+  --k-control: #4a6274;
+  --k-accent: #5cc8f0;
+  --k-on-accent: #04293b;
+  --k-accent-tint: #133a50;
+  --k-correct-ink: #7fdc6a;
+  --k-error-ink: #ff9a86;
+  --k-correct-tint: #14301a;
+  --k-error-tint: #3a1a16;
+  --k-gold: #f3c95a;
+  --k-heat-1: #133a50;
+  --k-heat-2: #1d5f80;
+  --k-heat-3: #2b8fbf;
+  --k-on-heat-3: #ffffff;
+  --k-scrim: rgba(2, 8, 14, 0.7);
+
+  --w-scan-a: #0e1a26;
+  --w-scan-b: #112131;
+  --w-bubble: rgba(92, 202, 240, 0.08);
+  --w-card-top: #1e3244;
+  --w-card-bottom: #152535;
+  --w-card-edge: #2c4357;
+  --w-card-drop: #08121b;
+  --w-pill-top: #22384b;
+  --w-pill-bottom: #182a3a;
+  --w-pill-edge: #34506a;
+  --w-pill-drop: #08121b;
+  --w-gloss: rgba(255, 255, 255, 0.1);
+  --w-gloss-end: rgba(255, 255, 255, 0);
+  --w-blue-ring: #1f5f7d;
+  --w-blue-drop: #04324a;
+  --w-blue-rim: #8edcf7;
+  --w-next-edge: #2f86ad;
+  --w-next-bottom: #16334a;
+  --w-next-drop: #04121c;
+  --w-track: #0a1520;
+  --w-panel-out-top: #233a4e;
+  --w-panel-out-bottom: #14273a;
+  --w-panel-in-top: #1e3346;
+  --w-panel-in-bottom: #13283b;
+  --w-panel-edge: #2f4a60;
+  --w-panel-drop: #06101a;
+  --w-nav-top: #1c3043;
+  --w-nav-bottom: #12222f;
+  --w-nav-line: #2b4254;
+  --w-gold-ink: #3a2600;
+}
+
+/* ── Fond : lignes de balayage et bulles qui dérivent ───────────────── */
+[data-ui='wii'] body {
+  background: repeating-linear-gradient(0deg, var(--w-scan-a) 0 3px, var(--w-scan-b) 3px 4px);
+  background-attachment: fixed;
+  font-weight: 500;
+}
+[data-ui='wii'] body::before {
+  content: '';
+  position: fixed;
+  inset: -20%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 22%, var(--w-bubble) 0 9%, transparent 9.5%),
+    radial-gradient(circle at 82% 14%, var(--w-bubble) 0 5%, transparent 5.5%),
+    radial-gradient(circle at 70% 64%, var(--w-bubble) 0 12%, transparent 12.5%),
+    radial-gradient(circle at 26% 82%, var(--w-bubble) 0 6%, transparent 6.5%);
+  animation: kw-drift 38s ease-in-out infinite alternate;
+}
+
+[data-ui='wii'] h1,
+[data-ui='wii'] h2,
+[data-ui='wii'] h3 {
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+[data-ui='wii'] .font-jp {
+  font-weight: 600;
+}
+[data-ui='wii'] hr {
+  border-top-width: 2px;
+  border-style: dashed;
+}
+
+/* ── Relief commun : surface brillante qui s'enfonce à l'appui ──────── */
+[data-ui='wii'] :is(.k-btn--primary, .k-btn--ink, .k-btn--line, .k-iconbtn, .k-card, .k-choice, .k-chip, .k-word, .k-tile, .k-seg__opt[aria-checked='true'], .k-switch, .k-tab__icon) {
+  position: relative;
+  isolation: isolate;
+  transition:
+    transform 380ms var(--w-spring),
+    box-shadow 380ms var(--w-spring),
+    filter 120ms linear;
+}
+[data-ui='wii'] :is(.k-btn--primary, .k-btn--ink, .k-btn--line, .k-iconbtn, .k-card, .k-choice, .k-chip, .k-word, .k-seg__opt[aria-checked='true'], .k-tab__icon)::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 3px 10% auto;
+  height: 46%;
+  border-radius: 999px;
+  background: linear-gradient(var(--w-gloss), var(--w-gloss-end));
+  pointer-events: none;
+}
+[data-ui='wii'] :is(.k-btn--primary, .k-btn--ink, .k-btn--line, .k-iconbtn, .k-card, .k-choice, .k-chip, .k-word, button.k-tile):active {
+  transform: translateY(3px) scale(0.985);
+  transition-duration: 70ms;
+}
+
+/* ── Boutons ────────────────────────────────────────────────────────── */
+[data-ui='wii'] .k-btn {
+  font-weight: 800;
+}
+[data-ui='wii'] :is(.k-btn--primary, .k-btn--ink, .k-btn--line) {
+  border-radius: 999px;
+}
+[data-ui='wii'] .k-btn--primary {
+  border: 3px solid var(--w-blue-rim);
+  background: linear-gradient(180deg, var(--w-blue-top), var(--w-blue-mid) 52%, var(--w-blue-bottom));
+  color: #fff;
+  text-shadow: 0 2px 0 rgba(0, 60, 90, 0.35);
+  box-shadow:
+    0 0 0 2px var(--w-blue-ring),
+    0 5px 0 var(--w-blue-drop);
+}
+[data-ui='wii'] .k-btn--primary:active {
+  box-shadow:
+    0 0 0 2px var(--w-blue-ring),
+    0 2px 0 var(--w-blue-drop);
+}
+[data-ui='wii'] .k-btn--lg.k-btn--primary {
+  animation: kw-breathe 3.6s ease-in-out infinite;
+}
+[data-ui='wii'] .k-btn--ink {
+  border: 3px solid var(--w-next-edge);
+  background: linear-gradient(var(--w-pill-top), var(--w-next-bottom));
+  color: var(--k-accent);
+  box-shadow: 0 4px 0 var(--w-next-drop);
+}
+[data-ui='wii'] .k-btn--line {
+  border: 3px solid var(--w-pill-edge);
+  background: linear-gradient(var(--w-pill-top), var(--w-pill-bottom));
+  color: var(--k-ink);
+  box-shadow: 0 4px 0 var(--w-pill-drop);
+}
+[data-ui='wii'] :is(.k-btn--ink, .k-btn--line, .k-chip, .k-iconbtn):active {
+  box-shadow: 0 1px 0 var(--w-pill-drop);
+}
+
+[data-ui='wii'] .k-iconbtn {
+  border-radius: 50%;
+  border: 3px solid var(--w-pill-edge);
+  background: radial-gradient(circle at 50% 28%, var(--w-pill-top), var(--w-pill-bottom) 72%);
+  color: var(--k-ink-muted);
+  box-shadow: 0 3px 0 var(--w-pill-drop);
+}
+[data-ui='wii'] .k-iconbtn::before {
+  inset: 3px 22% auto;
+  height: 40%;
+}
+
+/* ── Cartes, bannières, retours ─────────────────────────────────────── */
+[data-ui='wii'] .k-card {
+  border: 3px solid var(--w-card-edge);
+  border-radius: 24px;
+  background: linear-gradient(var(--w-card-top), var(--w-card-bottom));
+  box-shadow: 0 4px 0 var(--w-card-drop);
+}
+[data-ui='wii'] .k-card::before {
+  inset: 3px 4% auto;
+  height: 40%;
+  border-radius: 20px 20px 50% 50% / 20px 20px 18px 18px;
+}
+[data-ui='wii'] .k-card:active {
+  box-shadow: 0 1px 0 var(--w-card-drop);
+}
+[data-ui='wii'] .k-card > svg:first-child {
+  box-sizing: content-box;
+  padding: 9px;
+  border-radius: 50%;
+  background: var(--k-accent-tint);
+  border: 2px solid var(--w-card-edge);
+}
+
+[data-ui='wii'] .k-banner {
+  border: 3px solid var(--w-card-edge);
+  border-radius: 22px;
+  background: linear-gradient(var(--w-card-top), var(--w-card-bottom));
+  box-shadow: 0 3px 0 var(--w-card-drop);
+}
+
+[data-ui='wii'] .k-feedback {
+  border-width: 3px;
+  border-radius: 22px;
+  box-shadow: 0 4px 0 color-mix(in srgb, currentColor 18%, transparent);
+}
+[data-ui='wii'] .k-feedback--correct {
+  border-color: var(--w-green-ring);
+}
+[data-ui='wii'] .k-feedback--wrong {
+  border-color: var(--w-red-ring);
+}
+[data-ui='wii'] .k-feedback--revealed {
+  border-color: var(--w-next-edge);
+  background: var(--k-accent-tint);
+}
+
+/* Écran 3DS : la case du kana à lire, dans son cadre. */
+[data-ui='wii'] .k-prompt {
+  border: 3px solid var(--w-panel-edge);
+  border-radius: 24px;
+  background: linear-gradient(var(--w-panel-in-top), var(--w-panel-in-bottom));
+  box-shadow:
+    0 0 0 7px var(--w-panel-out-top),
+    0 0 0 9px var(--w-panel-edge),
+    0 12px 0 2px var(--w-panel-drop);
+  margin-block: 10px 14px;
+  animation: kw-float 5.2s ease-in-out infinite;
+  --w-float: -5px;
+}
+
+/* ── Réponses à choisir ─────────────────────────────────────────────── */
+[data-ui='wii'] .k-choice {
+  border-radius: 24px;
+  font-weight: 700;
+}
+[data-ui='wii'] :is(.k-choice--idle, .k-choice--dim) {
+  border: 3px solid var(--w-card-edge);
+  background: linear-gradient(var(--w-card-top), var(--w-card-bottom));
+  box-shadow: 0 4px 0 var(--w-card-drop);
+}
+[data-ui='wii'] .k-choice--idle:active {
+  box-shadow: 0 1px 0 var(--w-card-drop);
+}
+[data-ui='wii'] .k-choice--correct {
+  border: 3px solid #fff;
+  background: linear-gradient(var(--w-green-top), var(--w-green-bottom));
+  color: #fff;
+  text-shadow: 0 2px 0 rgba(20, 70, 10, 0.35);
+  box-shadow:
+    0 0 0 2px var(--w-green-ring),
+    0 4px 0 var(--w-green-drop);
+}
+[data-ui='wii'] .k-choice--wrong {
+  border: 3px solid #fff;
+  background: linear-gradient(var(--w-red-top), var(--w-red-bottom));
+  color: #fff;
+  text-shadow: 0 2px 0 rgba(90, 20, 10, 0.35);
+  box-shadow:
+    0 0 0 2px var(--w-red-ring),
+    0 4px 0 var(--w-red-drop);
+}
+[data-ui='wii'] .k-choice--revealed {
+  border: 3px solid var(--w-next-edge);
+  background: linear-gradient(var(--w-pill-top), var(--k-accent-tint));
+  box-shadow: 0 4px 0 var(--w-next-drop);
+}
+[data-ui='wii'].dark :is(.k-choice--correct, .k-choice--wrong) {
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+/* ── Cases de kana ──────────────────────────────────────────────────── */
+[data-ui='wii'] .k-tile {
+  border-width: 2.5px;
+  border-radius: 14px;
+  box-shadow: 0 3px 0 var(--w-card-drop);
+}
+[data-ui='wii'] :is(.k-tile--base, .k-tile--heat-1):not(.k-tile--selected) {
+  border-color: var(--w-card-edge);
+  background: linear-gradient(var(--w-card-top), var(--w-card-bottom));
+}
+[data-ui='wii'] :is(.k-tile--done, .k-tile--heat-4) {
+  border-color: var(--w-blue-rim);
+  background: linear-gradient(180deg, var(--w-blue-top), var(--w-blue-mid) 55%, var(--w-blue-bottom));
+  color: #fff;
+  text-shadow: 0 2px 0 rgba(0, 60, 90, 0.3);
+  box-shadow:
+    0 0 0 1.5px var(--w-blue-ring),
+    0 3px 0 var(--w-blue-drop);
+}
+[data-ui='wii'] .k-tile--current {
+  border-width: 3px;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--k-accent) 25%, transparent),
+    0 3px 0 var(--w-card-drop);
+}
+[data-ui='wii'] :is(.k-tile--locked, .k-tile--heat-0) {
+  box-shadow: none;
+  background: color-mix(in srgb, var(--k-paper-raised) 45%, transparent);
+}
+[data-ui='wii'] .k-tile--selected:not(.k-tile--done) {
+  border-color: var(--w-next-edge);
+  background: linear-gradient(var(--w-pill-top), var(--k-accent-tint));
+  box-shadow: 0 3px 0 var(--w-next-drop);
+}
+[data-ui='wii'] button.k-tile:active {
+  box-shadow: 0 0 0 var(--w-card-drop);
+}
+
+/* ── Contrôles ──────────────────────────────────────────────────────── */
+[data-ui='wii'] .k-seg {
+  border: 3px solid var(--w-pill-edge);
+  border-radius: 999px;
+  background: var(--w-track);
+  box-shadow: inset 0 3px 0 rgba(0, 0, 0, 0.06);
+  padding: 4px;
+}
+[data-ui='wii'] .k-seg__opt {
+  border-radius: 999px;
+  font-weight: 700;
+}
+[data-ui='wii'] .k-seg__opt[aria-checked='true'] {
+  background: linear-gradient(180deg, var(--w-blue-top), var(--w-blue-mid) 55%, var(--w-blue-bottom));
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(0, 60, 90, 0.35);
+  box-shadow: 0 3px 0 var(--w-blue-drop);
+  animation: kw-pop 420ms var(--w-spring);
+}
+
+[data-ui='wii'] .k-switch {
+  border: 3px solid var(--w-pill-edge);
+  background: var(--w-track);
+  box-shadow: inset 0 3px 0 rgba(0, 0, 0, 0.07);
+}
+[data-ui='wii'] .k-switch.bg-accent {
+  border-color: var(--w-blue-ring);
+  background: linear-gradient(180deg, var(--w-blue-top), var(--w-blue-mid) 55%, var(--w-blue-bottom));
+}
+[data-ui='wii'] .k-switch__thumb {
+  top: 1.5px;
+  left: 1.5px;
+  background: radial-gradient(circle at 50% 30%, #fff, #dfe7ec 75%);
+  color: var(--w-blue-mid);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.18);
+  transition: translate 420ms var(--w-spring);
+}
+
+[data-ui='wii'] .k-chip {
+  border-radius: 999px;
+  font-weight: 700;
+  box-shadow: 0 3px 0 var(--w-pill-drop);
+}
+[data-ui='wii'] .k-chip--off {
+  border: 3px solid var(--w-pill-edge);
+  background: linear-gradient(var(--w-pill-top), var(--w-pill-bottom));
+}
+[data-ui='wii'] .k-chip--on {
+  border: 3px solid var(--w-blue-rim);
+  background: linear-gradient(180deg, var(--w-blue-top), var(--w-blue-mid) 55%, var(--w-blue-bottom));
+  box-shadow:
+    0 0 0 1.5px var(--w-blue-ring),
+    0 3px 0 var(--w-blue-drop);
+  text-shadow: 0 1px 0 rgba(0, 60, 90, 0.35);
+}
+[data-ui='wii'] .k-chip--partial {
+  border: 3px solid var(--w-next-edge);
+  background: linear-gradient(var(--w-pill-top), var(--k-accent-tint));
+  box-shadow: 0 3px 0 var(--w-next-drop);
+}
+
+[data-ui='wii'] .k-field {
+  border-width: 3px;
+  border-radius: 22px;
+  box-shadow: inset 0 3px 0 rgba(0, 0, 0, 0.05);
+  font-weight: 700;
+}
+[data-ui='wii'] .k-field--idle {
+  border-color: var(--w-pill-edge);
+}
+[data-ui='wii'] .k-field--idle:focus {
+  border-width: 3px;
+  border-color: var(--w-next-edge);
+  box-shadow:
+    inset 0 3px 0 rgba(0, 0, 0, 0.05),
+    0 0 0 4px color-mix(in srgb, var(--k-accent) 22%, transparent);
+}
+[data-ui='wii'] .k-field--correct {
+  border-color: var(--w-green-ring);
+}
+[data-ui='wii'] .k-field--wrong {
+  border-color: var(--w-red-ring);
+}
+
+/* Étiquettes de mot (composer une phrase) : petites briques qui flottent dans la réserve. */
+[data-ui='wii'] .k-word {
+  border-width: 3px;
+  border-radius: 16px;
+  box-shadow: 0 4px 0 var(--w-card-drop);
+}
+[data-ui='wii'] .k-word--idle {
+  border-color: var(--w-card-edge);
+  background: linear-gradient(var(--w-card-top), var(--w-card-bottom));
+}
+[data-ui='wii'] .k-word--gone {
+  box-shadow: none;
+  background: transparent;
+}
+[data-ui='wii'] .k-word--correct {
+  border-color: var(--w-green-ring);
+}
+[data-ui='wii'] .k-word--wrong {
+  border-color: var(--w-red-ring);
+}
+
+/* ── Barres de progression ──────────────────────────────────────────── */
+[data-ui='wii'] .k-bar {
+  height: 12px;
+  border-radius: 999px;
+  background: var(--w-track);
+  box-shadow: inset 0 2px 0 rgba(0, 0, 0, 0.08);
+}
+[data-ui='wii'] .k-bar__fill {
+  border-radius: 999px;
+  background:
+    linear-gradient(var(--w-gloss), transparent 55%),
+    linear-gradient(90deg, #6fd2f4, #1593c9);
+  transition: width 700ms var(--w-soft-spring);
+}
+[data-ui='wii'] .k-tick {
+  height: 10px;
+  border-radius: 999px;
+}
+[data-ui='wii'] .k-tick--todo {
+  background: var(--w-track);
+  box-shadow: inset 0 2px 0 rgba(0, 0, 0, 0.07);
+}
+[data-ui='wii'] .k-tick--current {
+  background: linear-gradient(#ffd977, #f0b52c);
+  animation: kw-pulse 1.4s ease-in-out infinite;
+}
+[data-ui='wii'] .k-tick--done {
+  background: linear-gradient(#6fd2f4, #1593c9);
+}
+
+/* ── Feuilles et fenêtres ───────────────────────────────────────────── */
+[data-ui='wii'] .k-sheet {
+  border-top: 3px solid var(--w-card-edge);
+  background: linear-gradient(var(--w-card-top), var(--k-paper) 30%);
+  box-shadow: 0 -6px 0 color-mix(in srgb, var(--w-card-drop) 45%, transparent);
+}
+[data-ui='wii'] .k-dialog {
+  border: 3px solid var(--w-card-edge);
+  background: linear-gradient(var(--w-card-top), var(--w-card-bottom));
+  box-shadow: 0 6px 0 var(--w-card-drop);
+}
+
+/* ── Navigation : barre bombée et onglets en bulles ─────────────────── */
+[data-ui='wii'] .k-tabbar {
+  border-top: 0;
+  border-radius: 50% 50% 0 0 / 30px 30px 0 0;
+  background: linear-gradient(var(--w-nav-top), var(--w-nav-bottom));
+  box-shadow:
+    inset 0 3px 0 var(--w-card-top),
+    0 -2px 0 var(--w-nav-line);
+  padding-top: 6px;
+}
+[data-ui='wii'] .k-rail {
+  border-right: 0;
+  border-radius: 0 30px 30px 0;
+  background: linear-gradient(90deg, var(--w-nav-bottom), var(--w-nav-top));
+  box-shadow:
+    inset -3px 0 0 var(--w-card-top),
+    2px 0 0 var(--w-nav-line);
+}
+[data-ui='wii'] .k-tab {
+  border-color: transparent;
+  font-weight: 700;
+  gap: 2px;
+}
+[data-ui='wii'] .k-tab__icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 3px solid var(--w-pill-edge);
+  background: radial-gradient(circle at 50% 28%, var(--w-pill-top), var(--w-pill-bottom) 72%);
+  box-shadow: 0 3px 0 var(--w-pill-drop);
+}
+[data-ui='wii'] .k-tab__icon::before {
+  inset: 2px 20% auto;
+  height: 42%;
+}
+[data-ui='wii'] .k-tab:active .k-tab__icon {
+  transform: translateY(3px);
+  box-shadow: 0 0 0 var(--w-pill-drop);
+  transition-duration: 70ms;
+}
+[data-ui='wii'] .k-tab[aria-current='page'] .k-tab__icon {
+  border-color: var(--w-blue-rim);
+  background: linear-gradient(180deg, var(--w-blue-top), var(--w-blue-mid) 55%, var(--w-blue-bottom));
+  color: #fff;
+  box-shadow:
+    0 0 0 2px var(--w-blue-ring),
+    0 3px 0 var(--w-blue-drop);
+  transform: translateY(-4px);
+  animation: kw-hop 520ms var(--w-spring);
+}
+[data-ui='wii'] .k-tab__label {
+  font-size: 11px;
+}
+
+/* ── Or : records et déblocage ──────────────────────────────────────── */
+[data-ui='wii'] .border-gold.bg-paper-raised {
+  border: 3px solid var(--w-gold-ring);
+  border-radius: 999px;
+  background: linear-gradient(var(--w-gold-top), var(--w-gold-bottom));
+  color: var(--w-gold-ink);
+  box-shadow: 0 4px 0 var(--w-gold-drop);
+}
+
+/* ── Flottement au repos ────────────────────────────────────────────── */
+[data-ui='wii'] :is(.k-card, .k-choice--idle, .k-word--idle, .k-banner) {
+  animation: kw-float 4.4s ease-in-out infinite;
+}
+[data-ui='wii'] :is(.k-card, .k-choice--idle, .k-word--idle):nth-child(4n + 2) {
+  animation-delay: -1.1s;
+}
+[data-ui='wii'] :is(.k-card, .k-choice--idle, .k-word--idle):nth-child(4n + 3) {
+  animation-delay: -2.2s;
+}
+[data-ui='wii'] :is(.k-card, .k-choice--idle, .k-word--idle):nth-child(4n + 4) {
+  animation-delay: -3.3s;
+}
+/* Les cartes d'action sont souvent seules dans leur <li> : décalage par élément de liste. */
+[data-ui='wii'] li:nth-child(3n + 2) > .k-card {
+  animation-delay: -1.5s;
+}
+[data-ui='wii'] li:nth-child(3n + 3) > .k-card {
+  animation-delay: -2.9s;
+}
+/* Cases de kana : une houle qui traverse les colonnes. */
+[data-ui='wii'] .k-tile:not(.k-tile--locked, .k-tile--heat-0) {
+  --w-float: -2px;
+  animation: kw-float 3.6s ease-in-out infinite;
+}
+[data-ui='wii'] .k-tile:nth-child(5n + 2) {
+  animation-delay: -0.36s;
+}
+[data-ui='wii'] .k-tile:nth-child(5n + 3) {
+  animation-delay: -0.72s;
+}
+[data-ui='wii'] .k-tile:nth-child(5n + 4) {
+  animation-delay: -1.08s;
+}
+[data-ui='wii'] .k-tile:nth-child(5n + 5) {
+  animation-delay: -1.44s;
+}
+
+/* ── Entrées élastiques (remplacent celles de « Papier et encre ») ──── */
+[data-ui='wii'] .animate-pop {
+  animation: kw-pop 460ms var(--w-spring);
+}
+[data-ui='wii'] .animate-shake {
+  animation: kw-wobble 460ms ease-out;
+}
+[data-ui='wii'] .animate-rise {
+  animation: kw-rise 560ms var(--w-soft-spring) both;
+}
+[data-ui='wii'] .animate-badge-in {
+  animation: kw-badge 520ms var(--w-spring) both;
+}
+[data-ui='wii'] .animate-unlock {
+  animation: kw-unlock 720ms var(--w-spring) both;
+}
+[data-ui='wii'] .animate-sheet-in {
+  animation: kw-sheet 560ms var(--w-soft-spring) both;
+}
+[data-ui='wii'] .animate-dialog-in {
+  animation: kw-dialog 460ms var(--w-spring) both;
+}
+/* Les cartes arrivent en douceur, puis flottent. */
+[data-ui='wii'] main .k-card {
+  animation:
+    kw-bubble-in 620ms var(--w-spring) both,
+    kw-float 4.4s ease-in-out 620ms infinite;
+}
+[data-ui='wii'] main li:nth-child(2) > .k-card {
+  animation-delay: 60ms, -0.9s;
+}
+[data-ui='wii'] main li:nth-child(3) > .k-card {
+  animation-delay: 120ms, -1.8s;
+}
+[data-ui='wii'] main li:nth-child(4) > .k-card {
+  animation-delay: 180ms, -2.7s;
+}
+[data-ui='wii'] main li:nth-child(n + 5) > .k-card {
+  animation-delay: 240ms, -3.6s;
+}
+
+@keyframes kw-float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 var(--w-float, -4px);
+  }
+}
+@keyframes kw-breathe {
+  0%,
+  100% {
+    scale: 1;
+  }
+  50% {
+    scale: 1.015;
+  }
+}
+@keyframes kw-drift {
+  from {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  to {
+    transform: translate3d(4%, -6%, 0) rotate(8deg);
+  }
+}
+@keyframes kw-pulse {
+  50% {
+    filter: brightness(1.15);
+    scale: 1 1.25;
+  }
+}
+@keyframes kw-hop {
+  0% {
+    translate: 0 4px;
+    scale: 0.92;
+  }
+  55% {
+    translate: 0 -4px;
+    scale: 1.08;
+  }
+}
+@keyframes kw-pop {
+  0% {
+    scale: 0.92;
+  }
+  45% {
+    scale: 1.07;
+  }
+  100% {
+    scale: 1;
+  }
+}
+@keyframes kw-wobble {
+  15% {
+    transform: translateX(-7px) rotate(-2deg);
+  }
+  35% {
+    transform: translateX(6px) rotate(1.5deg);
+  }
+  55% {
+    transform: translateX(-4px) rotate(-1deg);
+  }
+  75% {
+    transform: translateX(2px) rotate(0.5deg);
+  }
+}
+@keyframes kw-rise {
+  from {
+    opacity: 0;
+    translate: 0 16px;
+    scale: 0.96;
+  }
+}
+@keyframes kw-badge {
+  from {
+    scale: 0;
+    rotate: -30deg;
+  }
+}
+@keyframes kw-unlock {
+  0% {
+    opacity: 0;
+    scale: 0.4;
+    rotate: -6deg;
+  }
+  60% {
+    opacity: 1;
+  }
+}
+@keyframes kw-sheet {
+  from {
+    translate: 0 100%;
+  }
+}
+@keyframes kw-dialog {
+  from {
+    opacity: 0;
+    scale: 0.82;
+    translate: 0 18px;
+  }
+}
+@keyframes kw-bubble-in {
+  from {
+    opacity: 0;
+    scale: 0.9;
+  }
+}
+
+/* Mouvement réduit : ni flottement ni rebond, un fondu de 100 ms comme dans « Papier et encre ». */
+@media (prefers-reduced-motion: reduce) {
+  [data-ui='wii'] *,
+  [data-ui='wii'] body::before {
+    animation: none !important;
+    transition-duration: 1ms !important;
+  }
+  [data-ui='wii'] :is(.animate-pop, .animate-shake, .animate-rise, .animate-badge-in, .animate-unlock, .animate-sheet-in, .animate-dialog-in) {
+    animation: k-fade 100ms linear both !important;
+  }
+  [data-ui='wii'] .k-tab[aria-current='page'] .k-tab__icon {
+    transform: none;
+  }
+}
+
+/* Reflet plus discret sur les surfaces colorées : le texte blanc doit rester net. */
+[data-ui='wii'] :is(.k-choice--correct, .k-choice--wrong, .k-seg__opt[aria-checked='true'])::before {
+  height: 34%;
+  opacity: 0.55;
+}

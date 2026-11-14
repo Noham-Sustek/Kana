@@ -1,4 +1,6 @@
 @import 'tailwindcss';
+/* Style « Wii » (data-ui="wii" sur <html>), hors @layer. */
+@import './styles/skin-wii.css';
 
 /* Le mode sombre est piloté par la classe .dark sur <html> (cf. useApplyTheme). */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -26,6 +28,29 @@
   font-family: 'Figtree';
   src: url('./assets/fonts/Figtree-latin.woff2') format('woff2');
   font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Style « Wii » seulement : téléchargée au premier usage (précachée comme le reste). */
+@font-face {
+  font-family: 'M PLUS Rounded 1c';
+  src: url('./assets/fonts/MPlusRounded1c-500-latin.woff2') format('woff2');
+  font-weight: 400 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'M PLUS Rounded 1c';
+  src: url('./assets/fonts/MPlusRounded1c-700-latin.woff2') format('woff2');
+  font-weight: 600 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'M PLUS Rounded 1c';
+  src: url('./assets/fonts/MPlusRounded1c-800-latin.woff2') format('woff2');
+  font-weight: 800 900;
   font-style: normal;
   font-display: swap;
 }

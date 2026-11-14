@@ -20,8 +20,8 @@ export function BottomTabBar({ rail }: BottomTabBarProps) {
       aria-label="Navigation principale"
       className={
         rail
-          ? 'flex w-[92px] shrink-0 flex-col items-center gap-1 border-r border-hairline bg-paper pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]'
-          : 'border-t border-hairline bg-paper pb-[env(safe-area-inset-bottom)]'
+          ? 'k-rail flex w-[92px] shrink-0 flex-col items-center gap-1 border-r border-hairline bg-paper pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]'
+          : 'k-tabbar border-t border-hairline bg-paper pb-[env(safe-area-inset-bottom)]'
       }
     >
       {rail && <RailProfile />}
@@ -33,18 +33,20 @@ export function BottomTabBar({ rail }: BottomTabBarProps) {
               <Link
                 to={tab.path}
                 aria-current={active ? 'page' : undefined}
-                className={`flex flex-col items-center justify-center gap-[3px] text-[11.5px] leading-[14px] font-semibold transition-colors duration-200 ${
+                className={`k-tab flex flex-col items-center justify-center gap-[3px] text-[11.5px] leading-[14px] font-semibold transition-colors duration-200 ${
                   rail ? 'min-h-15 w-[84px] border-l-2' : '-mt-px min-h-14 border-t-2'
                 } ${active ? 'border-accent text-accent' : 'border-transparent text-ink-muted active:text-ink'}`}
               >
-                {typeof tab.icon === 'object' ? (
-                  <span className="font-jp text-[21px] leading-[22px]" aria-hidden="true">
-                    {tab.icon.glyph}
-                  </span>
-                ) : (
-                  <Icon name={tab.icon} className="size-[22px]" />
-                )}
-                <span>{tab.label}</span>
+                <span className="k-tab__icon grid place-items-center">
+                  {typeof tab.icon === 'object' ? (
+                    <span className="font-jp text-[21px] leading-[22px]" aria-hidden="true">
+                      {tab.icon.glyph}
+                    </span>
+                  ) : (
+                    <Icon name={tab.icon} className="size-[22px]" />
+                  )}
+                </span>
+                <span className="k-tab__label">{tab.label}</span>
               </Link>
             </li>
           )

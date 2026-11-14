@@ -8,7 +8,12 @@ import { SegmentedControl } from '@/components/SegmentedControl'
 import { Switch } from '@/components/Switch'
 import { haptic } from '@/lib/haptic'
 import { useInstallPrompt } from '@/lib/installPrompt'
-import { useSettingsStore, type Theme } from '@/stores/settingsStore'
+import { useSettingsStore, type Theme, type UiStyle } from '@/stores/settingsStore'
+
+const UI_OPTIONS: { value: UiStyle; label: string }[] = [
+  { value: 'papier', label: 'Papier et encre' },
+  { value: 'wii', label: 'Wii' },
+]
 
 const THEME_OPTIONS: { value: Theme; label: string }[] = [
   { value: 'light', label: 'Clair' },
@@ -22,6 +27,8 @@ export function SettingsPage() {
   const back = () => ((window.history.state as { idx?: number } | null)?.idx ? navigate(-1) : navigate('/home'))
   const theme = useSettingsStore((s) => s.theme)
   const setTheme = useSettingsStore((s) => s.setTheme)
+  const ui = useSettingsStore((s) => s.ui)
+  const setUi = useSettingsStore((s) => s.setUi)
   const vibrations = useSettingsStore((s) => s.vibrations)
   const setVibrations = useSettingsStore((s) => s.setVibrations)
   const install = useInstallPrompt()
@@ -36,7 +43,10 @@ export function SettingsPage() {
       <div className="lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-10">
         <div>
           <Section title="Apparence" first>
-            <SegmentedControl label="Thème" options={THEME_OPTIONS} value={theme} onChange={setTheme} />
+            <SegmentedControl label="Style" options={UI_OPTIONS} value={ui} onChange={setUi} />
+            <div className="mt-4">
+              <SegmentedControl label="Thème" options={THEME_OPTIONS} value={theme} onChange={setTheme} />
+            </div>
             <div className="mt-2">
               <Switch
                 label="Vibrations"

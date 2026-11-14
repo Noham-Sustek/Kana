@@ -23,7 +23,7 @@ export function Chip({ state = 'off', glyph, detail, type = 'button', className 
     <button
       type={type}
       aria-pressed={state === 'on' ? true : state === 'partial' ? 'mixed' : false}
-      className={`inline-flex min-h-11 items-center gap-1.5 rounded-md px-3 text-[13.5px] leading-none font-semibold active:brightness-90 disabled:opacity-40 ${STATES[state]} ${className}`}
+      className={`k-chip k-chip--${state} inline-flex min-h-11 items-center gap-1.5 rounded-md px-3 text-[13.5px] leading-none font-semibold active:brightness-90 disabled:opacity-40 ${STATES[state]} ${className}`}
       {...rest}
     >
       {glyph && <span className="font-jp text-xl">{glyph}</span>}

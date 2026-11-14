@@ -42,3 +42,22 @@ Le mouvement sert à trois choses : dire si une réponse est juste, montrer qu'o
 - Keyframes dans `components/bundle.css` : `k-pop`, `k-shake`, `k-rise`, `k-badge-in`, `k-unlock`, `k-ink` ; classes `k-anim-*`. À reprendre dans `src/index.css` à côté des existantes (`stroke-draw`, `fade-in`, `timer-shrink`).
 - Haptique : une fonction `haptic(pattern)` dans `lib/`, qui teste `'vibrate' in navigator` et le réglage, appelée par les stores au moment où la session fixe le résultat (pas par les composants).
 - Transitions d'écran : View Transitions API quand elle existe (`document.startViewTransition`), sinon aucune animation.
+
+## Style « Wii » (`src/styles/skin-wii.css`)
+
+Quand `<html data-ui="wii">`, les mêmes classes `animate-*` prennent un mouvement élastique (`cubic-bezier(.3, 1.5, .5, 1)`), et l'interface flotte :
+
+| Moment | Mouvement | Durée |
+|---|---|---|
+| Repos : cartes, réponses, étiquettes, bannières | Flottement vertical de 4 px, décalé d'un élément à l'autre | 4,4 s en boucle |
+| Repos : cases de kana | Houle de 2 px qui traverse les colonnes | 3,6 s en boucle |
+| Repos : case de la question (écran 3DS) | Flottement de 5 px | 5,2 s en boucle |
+| Bouton principal | Respiration (échelle 1 → 1,015) | 3,6 s en boucle |
+| Appui (boutons, cartes, cases) | S'enfonce de 3 px (l'ombre du bas disparaît), rebondit au relâché | 70 ms / 380 ms |
+| Onglet actif | La bulle saute et reste 4 px plus haut | 520 ms |
+| Entrée d'une carte | Gonfle de 90 → 100 % en fondu, en cascade | 620 ms |
+| Bonne réponse / mauvaise | Rebond 92 → 107 → 100 % / tremblement avec rotation | 460 ms |
+| Feuille, dialogue | Monte avec un léger dépassement / gonfle de 82 % | 560 ms / 460 ms |
+| Fond | Bulles qui dérivent lentement | 38 s, aller-retour |
+
+Le flottement anime la propriété `translate`, l'appui `transform`, les entrées `scale` : ils se combinent. Mouvement réduit : plus aucune boucle ni rebond, fondu de 100 ms.

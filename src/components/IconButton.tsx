@@ -13,7 +13,7 @@ export function IconButton({ icon, label, type = 'button', className = '', ...re
     <button
       type={type}
       aria-label={label}
-      className={`grid size-11 shrink-0 place-items-center rounded-md text-ink-muted active:brightness-90 disabled:opacity-40 ${className}`}
+      className={`k-iconbtn grid size-11 shrink-0 place-items-center rounded-md text-ink-muted active:brightness-90 disabled:opacity-40 ${className}`}
       {...rest}
     >
       <Icon name={icon} className="size-[22px]" />

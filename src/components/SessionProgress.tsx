@@ -24,7 +24,7 @@ export function SessionProgress({ ticks, showCount = true, className = '' }: Ses
     <div className={`flex flex-1 items-center gap-2 ${className}`}>
       <div className="flex flex-1 gap-[3px]" aria-hidden="true">
         {ticks.map((t, i) => (
-          <i key={i} className={`h-[5px] flex-1 rounded-[1px] transition-colors duration-200 ${TICK[t]}`} />
+          <i key={i} className={`k-tick k-tick--${t} h-[5px] flex-1 rounded-[1px] transition-colors duration-200 ${TICK[t]}`} />
         ))}
       </div>
       {showCount && (

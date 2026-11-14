@@ -65,7 +65,7 @@ export function KanaTile({
       {...(onClick ? { type: 'button' as const, onClick, 'aria-pressed': selected } : {})}
       aria-label={label}
       style={style}
-      className={`relative grid aspect-square min-w-11 place-items-center overflow-hidden rounded-sm border-[1.5px] font-jp leading-none transition-transform ${
+      className={`k-tile k-tile--${heat !== undefined ? `heat-${heat}` : variant} ${selected ? 'k-tile--selected' : ''} relative grid aspect-square min-w-11 place-items-center overflow-hidden rounded-sm border-[1.5px] font-jp leading-none transition-transform ${
         romaji ? 'pb-2.5 text-[26px]' : 'text-3xl'
       } ${onClick ? 'active:scale-95' : ''} ${look} ${className}`}
     >

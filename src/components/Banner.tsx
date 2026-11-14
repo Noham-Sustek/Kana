@@ -15,7 +15,7 @@ interface BannerProps {
 export function Banner({ icon, children, actionLabel, onAction, onDismiss, className = '' }: BannerProps) {
   return (
     <div
-      className={`flex items-start gap-2.5 rounded-md border border-control bg-paper-raised py-2.5 pr-1 pl-3 text-[13.5px] leading-[19px] ${className}`}
+      className={`k-banner flex items-start gap-2.5 rounded-md border border-control bg-paper-raised py-2.5 pr-1 pl-3 text-[13.5px] leading-[19px] ${className}`}
     >
       <Icon name={icon} className="mt-px size-5 text-ink-muted" />
       <div className="min-w-0 flex-1">

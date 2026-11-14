@@ -21,7 +21,7 @@ export function WordTile({ state = 'idle', type = 'button', disabled, className 
     <button
       type={type}
       disabled={state === 'gone' || disabled}
-      className={`relative inline-flex min-h-12 items-center rounded-sm border-[1.5px] border-b-[3px] px-[13px] font-jp text-[22px] leading-none transition-transform duration-100 ${STATES[state]} ${className}`}
+      className={`k-word k-word--${state} relative inline-flex min-h-12 items-center rounded-sm border-[1.5px] border-b-[3px] px-[13px] font-jp text-[22px] leading-none transition-transform duration-100 ${STATES[state]} ${className}`}
       {...rest}
     >
       {children}

@@ -23,7 +23,7 @@ export function Feedback({ signal, title, children, className = '' }: FeedbackPr
     <div
       role="status"
       aria-live="polite"
-      className={`flex animate-rise items-center gap-[11px] rounded-md border-[1.5px] px-3 py-2.5 ${s.box} ${className}`}
+      className={`k-feedback k-feedback--${signal} flex animate-rise items-center gap-[11px] rounded-md border-[1.5px] px-3 py-2.5 ${s.box} ${className}`}
     >
       <SignalBadge signal={signal} size="md" />
       <div className="min-w-0">

@@ -31,7 +31,7 @@ export function TextField({ state = 'idle', variant = 'answer', long, className 
         autoComplete="off"
         spellCheck={false}
         enterKeyHint="done"
-        className={`w-full rounded-md outline-none placeholder:text-ink-muted ${
+        className={`k-field k-field--${state} w-full rounded-md outline-none placeholder:text-ink-muted ${
           answer
             ? `min-h-15 font-serif font-medium placeholder:font-sans placeholder:text-base placeholder:font-normal ${
                 long ? 'pr-11 pl-3.5 text-[19px]' : 'px-11 text-center text-[25px]'

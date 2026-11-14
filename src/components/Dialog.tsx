@@ -30,7 +30,7 @@ export function Dialog({ open, title, children, safeLabel, onSafe, riskyLabel, o
       role="alertdialog"
       aria-labelledby={titleId}
       aria-describedby={descId}
-      className="m-auto w-[calc(100%-48px)] max-w-[340px] rounded-2xl border border-hairline bg-paper px-5 pt-[22px] pb-4 text-ink shadow-[0_-8px_32px_rgba(30,27,23,0.16)] open:animate-dialog-in dark:shadow-none"
+      className="k-dialog m-auto w-[calc(100%-48px)] max-w-[340px] rounded-2xl border border-hairline bg-paper px-5 pt-[22px] pb-4 text-ink shadow-[0_-8px_32px_rgba(30,27,23,0.16)] open:animate-dialog-in dark:shadow-none"
     >
       {open && (
         <>

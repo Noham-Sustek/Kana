@@ -2,9 +2,12 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 export type Theme = 'light' | 'dark' | 'system'
+/** Habillage de l'interface : « Papier et encre » (par défaut) ou « Wii » (rond, brillant, flottant). */
+export type UiStyle = 'papier' | 'wii'
 
 interface SettingsState {
   theme: Theme
+  ui: UiStyle
   /** Retour haptique (Android ; sans effet sur iPhone). */
   vibrations: boolean
   /** Dernier export de la sauvegarde (rappel sur l'Accueil). */
@@ -14,6 +17,7 @@ interface SettingsState {
   /** Accueil du premier lancement vu (ou passé). */
   onboarded: boolean
   setTheme: (theme: Theme) => void
+  setUi: (ui: UiStyle) => void
   setVibrations: (vibrations: boolean) => void
   markBackedUp: (at: number) => void
   dismissBackupReminder: (at: number) => void
@@ -27,11 +31,13 @@ export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
       theme: 'system',
+      ui: 'papier',
       vibrations: true,
       lastBackupAt: null,
       backupReminderDismissedAt: null,
       onboarded: false,
       setTheme: (theme) => set({ theme }),
+      setUi: (ui) => set({ ui }),
       setVibrations: (vibrations) => set({ vibrations }),
       markBackedUp: (at) => set({ lastBackupAt: at }),
       dismissBackupReminder: (at) => set({ backupReminderDismissedAt: at }),

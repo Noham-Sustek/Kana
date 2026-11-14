@@ -18,9 +18,11 @@
     <meta name="format-detection" content="telephone=no" />
     <title>Kana</title>
     <script>
-      // Applique le thème avant le premier rendu pour éviter le flash.
+      // Applique le thème et le style avant le premier rendu pour éviter le flash.
       try {
-        var t = JSON.parse(localStorage.getItem('kana-settings') || '{}').state?.theme || 'system'
+        var s = JSON.parse(localStorage.getItem('kana-settings') || '{}').state || {}
+        var t = s.theme || 'system'
+        document.documentElement.dataset.ui = s.ui || 'papier'
         var dark = t === 'dark' || (t === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
         document.documentElement.classList.toggle('dark', dark)
       } catch (e) {}

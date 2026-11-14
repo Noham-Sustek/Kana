@@ -40,7 +40,7 @@ export function Sheet({ open, onClose, title, children }: SheetProps) {
       // Toucher le voile : le clic arrive sur le <dialog> lui-même, hors de son contenu.
       onClick={(e) => e.target === e.currentTarget && onClose()}
       style={drag ? { transform: `translateY(${drag}px)` } : undefined}
-      className="mx-auto mt-auto mb-0 max-h-[85dvh] w-full max-w-lg overflow-hidden rounded-t-2xl border-t border-hairline bg-paper p-0 text-ink shadow-[0_-8px_32px_rgba(30,27,23,0.16)] open:animate-sheet-in dark:shadow-none"
+      className="k-sheet mx-auto mt-auto mb-0 max-h-[85dvh] w-full max-w-lg overflow-hidden rounded-t-2xl border-t border-hairline bg-paper p-0 text-ink shadow-[0_-8px_32px_rgba(30,27,23,0.16)] open:animate-sheet-in dark:shadow-none"
     >
       {open && (
         <div className="flex max-h-[85dvh] flex-col">

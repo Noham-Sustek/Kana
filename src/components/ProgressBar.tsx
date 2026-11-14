@@ -16,9 +16,9 @@ export function ProgressBar({ value, label, className = '' }: ProgressBarProps) 
       aria-valuenow={pct}
       aria-valuemin={0}
       aria-valuemax={100}
-      className={`h-1.5 overflow-hidden rounded-[1px] bg-hairline ${className}`}
+      className={`k-bar h-1.5 overflow-hidden rounded-[1px] bg-hairline ${className}`}
     >
-      <div className="h-full bg-accent transition-[width] duration-200" style={{ width: `${pct}%` }} />
+      <div className="k-bar__fill h-full bg-accent transition-[width] duration-200" style={{ width: `${pct}%` }} />
     </div>
   )
 }

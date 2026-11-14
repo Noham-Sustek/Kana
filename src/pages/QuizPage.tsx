@@ -294,7 +294,7 @@ function KanaCase({ children, size }: { children: string; size: 'lg' | 'md' }) {
     : `${size === 'lg' ? 'text-[148px]' : 'text-[116px]'} short:text-[76px]`
   return (
     <div
-      className={`relative grid shrink-0 place-items-center rounded-sm border-[1.5px] border-ink bg-paper-raised font-jp leading-none whitespace-nowrap short:size-28 ${box} ${text}`}
+      className={`k-prompt relative grid shrink-0 place-items-center rounded-sm border-[1.5px] border-ink bg-paper-raised font-jp leading-none whitespace-nowrap short:size-28 ${box} ${text}`}
     >
       <span aria-hidden="true" className="absolute inset-y-2 left-1/2 border-l-[1.5px] border-dashed border-hairline" />
       <span aria-hidden="true" className="absolute inset-x-2 top-1/2 border-t-[1.5px] border-dashed border-hairline" />

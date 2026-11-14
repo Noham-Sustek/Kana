@@ -9,6 +9,7 @@ const FONTS = [
   { name: 'Klee One', copyright: '© 2020 The Klee Project Authors (Fontworks)', license: './licenses/KleeOne-OFL.txt' },
   { name: 'Newsreader', copyright: '© 2020 The Newsreader Project Authors (Production Type)', license: './licenses/newsreader-OFL.txt' },
   { name: 'Figtree', copyright: '© 2022 The Figtree Project Authors (Erik Kennedy)', license: './licenses/figtree-OFL.txt' },
+  { name: 'M PLUS Rounded 1c', copyright: '© 2016 The Rounded M+ Project Authors', license: './licenses/mplusrounded1c-OFL.txt' },
 ]
 
 export function AboutPage() {
@@ -123,7 +124,7 @@ export function AboutPage() {
           ))}
         </ul>
         <p className="mt-2 text-ink-muted">
-          Modification : Klee One est réduite aux seuls kana, Newsreader et Figtree aux caractères latins.
+          Modification : Klee One est réduite aux seuls kana, Newsreader, Figtree et M PLUS Rounded 1c (style Wii) aux caractères latins.
         </p>
       </section>
     </>

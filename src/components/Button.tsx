@@ -49,7 +49,7 @@ export function Button({
   return (
     <button
       type={type}
-      className={`flex items-center gap-2 rounded-md transition-[transform,filter] duration-75 select-none active:translate-y-px active:brightness-90 disabled:pointer-events-none disabled:opacity-40 ${
+      className={`k-btn k-btn--${variant} ${size === 'lg' && !textual ? 'k-btn--lg' : ''} flex items-center gap-2 rounded-md transition-[transform,filter] duration-75 select-none active:translate-y-px active:brightness-90 disabled:pointer-events-none disabled:opacity-40 ${
         detail ? 'justify-between text-left' : 'justify-center text-center'
       } ${full ? 'w-full' : ''} ${sizing} ${VARIANTS[variant]} ${className}`}
       {...rest}

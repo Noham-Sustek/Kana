@@ -28,7 +28,7 @@ export function Choice({ state = 'idle', jp, compact, type = 'button', className
   return (
     <button
       type={type}
-      className={`relative flex items-center justify-center rounded-md px-2 text-center transition-[transform,filter] duration-75 active:translate-y-px active:brightness-90 ${
+      className={`k-choice k-choice--${state} relative flex items-center justify-center rounded-md px-2 text-center transition-[transform,filter] duration-75 active:translate-y-px active:brightness-90 ${
         compact ? 'min-h-13' : 'min-h-[62px]'
       } ${jp ? 'font-jp text-[34px] leading-none' : `font-serif leading-none font-medium ${compact ? 'text-[22px]' : 'text-[25px]'}`} ${
         STATES[state]
