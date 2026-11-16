@@ -11,24 +11,29 @@ interface AppKeyboardProps {
   enterLabel: string
 }
 
-const VALUE_SETTER = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set
+/** Champ cible : un input, ou la zone de texte des phrases (stage 8). */
+type Field = HTMLInputElement | HTMLTextAreaElement
+
+const INPUT_SETTER = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set
+const TEXTAREA_SETTER = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set
 
 /** Écrit dans le champ comme une vraie frappe : valeur posée par le setter natif puis événement
  *  `input`, que React relaie à l'onChange du champ contrôlé. */
-function type(target: HTMLInputElement, text: string | null) {
+function type(target: Field, text: string | null) {
   if (target.readOnly || target.disabled) return
   const start = target.selectionStart ?? target.value.length
   const end = target.selectionEnd ?? start
   const { value, caret } = editValue(target.value, start, end, text)
   if (value === target.value) return
-  VALUE_SETTER?.call(target, value)
+  const setter = target instanceof HTMLTextAreaElement ? TEXTAREA_SETTER : INPUT_SETTER
+  setter?.call(target, value)
   target.dispatchEvent(new Event('input', { bubbles: true }))
   target.setSelectionRange(caret, caret)
 }
 
 /** Entrée : touche `keydown` (la lecture chronométrée l'écoute), puis envoi du formulaire si
  *  personne ne l'a prise en charge (quiz). */
-function enter(target: HTMLInputElement) {
+function enter(target: Field) {
   const handled = !target.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
   if (!handled) target.form?.requestSubmit()
 }
@@ -37,7 +42,7 @@ function enter(target: HTMLInputElement) {
  *  tiret (ー), apostrophe (n'), espace, effacer, Entrée. Ne prend jamais le focus. */
 export function AppKeyboard({ targetId, layout, enterLabel }: AppKeyboardProps) {
   const rows = LAYOUT_ROWS[layout]
-  const target = () => document.getElementById(targetId) as HTMLInputElement | null
+  const target = () => document.getElementById(targetId) as Field | null
 
   const press = (text: string | null) => {
     const el = target()

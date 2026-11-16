@@ -9,7 +9,7 @@ import { Icon } from '@/components/Icon'
 import { IconButton } from '@/components/IconButton'
 import { SegmentText } from '@/components/SegmentText'
 import { SessionProgress, type TickState } from '@/components/SessionProgress'
-import { TextField, type FieldState } from '@/components/TextField'
+import { LongTextField, TextField, type FieldState } from '@/components/TextField'
 import { TimerBar } from '@/components/TimerBar'
 import { WordTile, type WordTileState } from '@/components/WordTile'
 import { groupGlyph } from '@/data/kana'
@@ -101,7 +101,7 @@ function QuizRunner({ session }: { session: SessionState }) {
   useEffect(() => {
     if (confirmQuit) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement) return
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
       if ((e.key === 'Enter' || e.key === ' ') && settled) {
         e.preventDefault()
         next()
@@ -567,6 +567,7 @@ const ANSWER_ID = 'quiz-answer'
 function InputAnswer({ question, session, onSubmit, onNext, appKeyboard }: InputAnswerProps) {
   const [value, setValue] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const { status, wrongAnswers } = session
   const lastWrong = wrongAnswers.at(-1)
 
@@ -576,29 +577,37 @@ function InputAnswer({ question, session, onSubmit, onNext, appKeyboard }: Input
     if (!value.trim()) return
     onSubmit(value)
     // Le champ garde le focus : on corrige sans retoucher l'écran.
-    inputRef.current?.select()
+    ;(inputRef.current ?? textareaRef.current)?.select()
   }
 
   const state: FieldState =
     status === 'correct' ? 'correct' : lastWrong !== undefined && value === lastWrong ? 'wrong' : 'idle'
 
+  const field = {
+    id: ANSWER_ID,
+    inputMode: appKeyboard ? ('none' as const) : undefined,
+    value,
+    readOnly: status !== 'pending',
+    autoFocus: true,
+    state,
+    enterKeyHint: status === 'pending' ? ('done' as const) : ('next' as const),
+    placeholder: status === 'pending' ? 'en romaji' : '',
+    'aria-label': 'Votre réponse en romaji',
+  }
+
   return (
     <form onSubmit={handleSubmit}>
-      <TextField
-        ref={inputRef}
-        id={ANSWER_ID}
-        inputMode={appKeyboard ? 'none' : undefined}
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        readOnly={status !== 'pending'}
-        autoFocus
-        long={question.stage === 8}
-        state={state}
-        enterKeyHint={status === 'pending' ? 'done' : 'next'}
-        placeholder={status === 'pending' ? 'en romaji' : ''}
-        aria-label="Votre réponse en romaji"
-        className="short:[&_input]:min-h-12"
-      />
+      {question.stage === 8 ? (
+        // Phrase : le champ passe à la ligne et grandit, la fin de la saisie reste visible.
+        <LongTextField ref={textareaRef} onChange={(e) => setValue(e.target.value)} {...field} />
+      ) : (
+        <TextField
+          ref={inputRef}
+          onChange={(e) => setValue(e.target.value)}
+          className="short:[&_input]:min-h-12"
+          {...field}
+        />
+      )}
     </form>
   )
 }
