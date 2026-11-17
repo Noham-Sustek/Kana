@@ -144,7 +144,7 @@ function QuizRunner({ session }: { session: SessionState }) {
       <QuestionHeading stage={question.stage} compact={isDrawing} />
 
       <div
-        className={`flex flex-col items-center justify-center ${isDrawing ? 'py-3' : 'min-h-0 flex-1 py-5 short:py-2'}`}
+        className={`flex min-h-0 flex-1 flex-col items-center justify-center ${isDrawing ? 'py-3' : 'py-5 short:py-2'}`}
       >
         <PromptView key={session.index} question={question} done={settled || awaitingVerdict} />
       </div>
@@ -192,19 +192,14 @@ function QuizRunner({ session }: { session: SessionState }) {
         />
       )}
 
-      {/* Choix : l'espace libre se partage au-dessus et au-dessous des cases, qui remontent vers le centre. */}
-      {question.kind === 'choice' && <div className="min-h-0 flex-1" />}
+      {/* Même mise en page pour tous les exercices : l'espace libre se partage au-dessus et au-dessous de
+          la zone de réponse, qui remonte vers le centre. Sauf le champ de saisie, qui reste contre le clavier
+          intégré. */}
+      {!(question.kind === 'input' && appKeyboard) && <div className="min-h-0 flex-1" />}
 
-      {/* Bouton d'action et clavier collés en bas, sur fond plein : une longue phrase ou beaucoup d’étiquettes
-          ne doivent pas les pousser hors de l’écran. « Afficher la réponse » seul : collé en bas lui aussi,
-          mais sans fond (pas de bande qui masque la dernière rangée de cases). */}
-      <div
-        className={
-          awaitingVerdict || settled || appKeyboard
-            ? 'sticky bottom-0 z-10 -mx-4 mt-auto bg-paper px-4 pt-3 pb-1 short:pt-2'
-            : 'sticky bottom-0 z-10 mt-auto pt-2 pb-1 short:pt-1'
-        }
-      >
+      {/* Collé en bas, sans fond (pas de bande qui masque la zone de réponse) : une longue phrase ou beaucoup
+          d’étiquettes ne doivent pas pousser le bouton ni le clavier hors de l’écran. */}
+      <div className="sticky bottom-0 z-10 -mx-4 mt-auto px-4 pt-3 pb-1 short:pt-2">
         {awaitingVerdict ? (
           <div className="grid grid-cols-2 gap-3">
             <Button variant="line" onClick={() => judge(false)}>
