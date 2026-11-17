@@ -192,8 +192,19 @@ function QuizRunner({ session }: { session: SessionState }) {
         />
       )}
 
-      {/* Collé en bas : une longue phrase ou beaucoup d’étiquettes ne doivent pas le pousser hors de l’écran. */}
-      <div className="sticky bottom-0 z-10 -mx-4 mt-auto bg-paper px-4 pt-3 pb-1 short:pt-2">
+      {/* Choix : l'espace libre se partage au-dessus et au-dessous des cases, qui remontent vers le centre. */}
+      {question.kind === 'choice' && <div className="min-h-0 flex-1" />}
+
+      {/* Bouton d'action et clavier collés en bas, sur fond plein : une longue phrase ou beaucoup d’étiquettes
+          ne doivent pas les pousser hors de l’écran. « Afficher la réponse » seul : simple lien en fin de
+          page, sans fond, qui ne recouvre jamais la dernière rangée de cases. */}
+      <div
+        className={
+          awaitingVerdict || settled || appKeyboard
+            ? 'sticky bottom-0 z-10 -mx-4 mt-auto bg-paper px-4 pt-3 pb-1 short:pt-2'
+            : 'mt-auto pt-2 short:pt-1'
+        }
+      >
         {awaitingVerdict ? (
           <div className="grid grid-cols-2 gap-3">
             <Button variant="line" onClick={() => judge(false)}>
