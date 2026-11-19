@@ -51,6 +51,8 @@ const LEARNING_STEPS = [2 * MINUTE, 10 * MINUTE, DAY]
 const NEW_CARD_PRIORITY = 1
 /** Le tirage se fait parmi les N cartes les plus prioritaires. */
 const CANDIDATE_POOL = 4
+/** Part des questions réservée aux kana à apprendre en priorité (`focusKanaIds`), s'il y en a. */
+export const FOCUS_SHARE = 0.35
 
 // ---------------------------------------------------------------------------
 // Types
@@ -240,6 +242,9 @@ export interface NextCardInput {
   recent?: readonly CardRef[]
   /** Exclut une carte impossible à poser (ex. stage 6 sans mot disponible). */
   isApplicable?: (card: CardRef) => boolean
+  /** Kana à faire revenir souvent (dernière ligne débloquée pas encore acquise) : FOCUS_SHARE des
+   *  questions leur sont réservées, quelles que soient les priorités des autres cartes. */
+  focusKanaIds?: readonly string[]
   rng: Rng
 }
 
@@ -275,7 +280,15 @@ export function nextCard(input: NextCardInput): CardRef | null {
   const last = input.recent?.at(-1)?.kanaId
   const fresh = all.filter((c) => !recentKana.has(c.ref.kanaId))
   const notLast = all.filter((c) => c.ref.kanaId !== last)
-  const pool = fresh.length > 0 ? fresh : notLast.length > 0 ? notLast : all
+  let pool = fresh.length > 0 ? fresh : notLast.length > 0 ? notLast : all
+
+  // Sans quota, la ligne à terminer pouvait ne jamais sortir : les nouvelles cartes des kana acquis
+  // (stage suivant) ont la même priorité et passent devant, rangées avant elle.
+  const focus = new Set(input.focusKanaIds ?? [])
+  if (focus.size > 0) {
+    const focused = pool.filter((c) => focus.has(c.ref.kanaId))
+    if (focused.length > 0 && input.rng() < FOCUS_SHARE) pool = focused
+  }
 
   const top = [...pool].sort((a, b) => b.priority - a.priority).slice(0, CANDIDATE_POOL)
   const total = top.reduce((sum, c) => sum + c.priority, 0)

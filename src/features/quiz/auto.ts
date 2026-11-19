@@ -3,6 +3,7 @@ import {
   activeKanaIds,
   applyAnswers,
   buildProgress,
+  isAcquired,
   nextCard,
   unlockedGroupCount,
   type AnswerEvent,
@@ -77,6 +78,18 @@ export function createSelectionContext(
   return { script, path: [], selection, stages, progress: buildProgress(history), unlocked: 0, recent: [] }
 }
 
+/**
+ * Kana à faire revenir souvent : ceux de la dernière ligne débloquée pas encore acquis (il faut
+ * l'apprendre pour ouvrir la suivante) ; si elle l'est déjà, les kana actifs qui manquent encore au
+ * déblocage. Rien pour une sélection, ni une fois tout le parcours ouvert et acquis.
+ */
+export function focusKanaIds(ctx: AutoContext): string[] {
+  if (ctx.selection) return []
+  const notAcquired = (id: string) => !isAcquired(ctx.progress, id, ctx.stages)
+  const newest = ctx.path[ctx.unlocked - 1]?.kanaIds.filter(notAcquired) ?? []
+  return newest.length > 0 ? newest : activeKanaIds(ctx.path, ctx.unlocked).filter(notAcquired)
+}
+
 export function activeKana(ctx: AutoContext): Kana[] {
   const ids = ctx.selection ?? activeKanaIds(ctx.path, ctx.unlocked)
   return ids.map((id) => getKana(id)!)
@@ -99,6 +112,7 @@ export function nextAutoQuestion(ctx: AutoContext, now: number, rng: Rng): { que
     recent: ctx.recent,
     isApplicable: ({ kanaId, stage }) =>
       stage >= 8 ? inSentences.has(kanaId) : stage >= 6 ? inWords.has(kanaId) : true,
+    focusKanaIds: focusKanaIds(ctx),
     rng,
   })
   if (!card) return null

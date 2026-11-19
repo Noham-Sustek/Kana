@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { seededRng } from '@/features/quiz/random'
 import type { StageId } from '@/features/quiz/types'
 import {
+  FOCUS_SHARE,
   MASTERY_THRESHOLD,
   SLOW_QUALITY,
   acquiredRatio,
@@ -232,6 +233,32 @@ describe('choix de la prochaine carte', () => {
       })!
       expect(c.stage).not.toBe(2)
     }
+  })
+})
+
+describe('kana à faire revenir (focusKanaIds)', () => {
+  it('reçoivent environ FOCUS_SHARE des questions, même à priorité égale et rangés en dernier', () => {
+    // Ligne a acquise aux stages 1 et 2 : ses nouvelles cartes au stage 3 ont la même priorité que
+    // les kana neufs de la ligne ka, rangés après elle.
+    const progress = buildProgress(PATH[0]!.kanaIds.flatMap((id) => [...answers(id, 1, 4), ...answers(id, 2, 4)]))
+    const all = [...PATH[0]!.kanaIds, ...PATH[1]!.kanaIds]
+    const count = (focusKanaIds?: readonly string[]) => {
+      const rng = seededRng(6)
+      let n = 0
+      for (let i = 0; i < 2000; i++) {
+        const c = nextCard({ progress, kanaIds: all, stages: STAGES, now: T0 + 3 * DAY, focusKanaIds, rng })!
+        if (PATH[1]!.kanaIds.includes(c.kanaId)) n++
+      }
+      return n / 2000
+    }
+    expect(count()).toBe(0)
+    expect(count(PATH[1]!.kanaIds)).toBeGreaterThanOrEqual(FOCUS_SHARE - 0.05)
+  })
+
+  it('n’ont aucun effet si aucun n’est posable', () => {
+    const rng = seededRng(7)
+    const c = nextCard({ progress: new Map(), kanaIds: ['h-a'], stages: [1], now: T0, focusKanaIds: ['h-ka'], rng })
+    expect(c?.kanaId).toBe('h-a')
   })
 })
 

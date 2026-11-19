@@ -5,9 +5,11 @@ import {
   AUTO_STAGES,
   createAutoContext,
   createSelectionContext,
+  focusKanaIds,
   nextAutoQuestion,
   recordAutoAnswers,
 } from '@/features/quiz/auto'
+import { groupsOfScript } from '@/data/kana'
 import { checkAnswer, correctAnswerLabel } from '@/features/quiz/questions'
 import { seededRng } from '@/features/quiz/random'
 import { toAnswerRecords } from '@/features/quiz/session'
@@ -38,7 +40,8 @@ describe('mode auto', () => {
     const unlockedGroups: string[] = []
     const stages = new Set<number>()
 
-    for (let i = 0; i < 1500; i++) {
+    // Assez de questions pour ouvrir tout le parcours (une part lui est réservée) et monter en stage.
+    for (let i = 0; i < 2500; i++) {
       const next = nextAutoQuestion(ctx, now, rng)!
       ctx = next.ctx
       const q = next.question
@@ -55,6 +58,44 @@ describe('mode auto', () => {
 
     expect(unlockedGroups.slice(0, 2)).toEqual(['hiragana-ka', 'hiragana-sa'])
     for (const stage of [5, 6, 7, 8]) expect(stages.has(stage)).toBe(true)
+  }, 30_000)
+
+  it('la dernière ligne débloquée revient à chaque session, même après des jours sans jouer', () => {
+    // Lignes a et ka acquises aux stages 1 et 2 il y a trois jours, ligne sa tout juste ouverte.
+    const DAY = 86_400_000
+    const path = groupsOfScript('hiragana')
+    const history: AnswerEvent[] = path.slice(0, 2).flatMap((g) =>
+      g.kanaIds.flatMap((kanaId) =>
+        ([1, 2] as const).flatMap((stage) =>
+          [0, 1, 2, 3].map((i) => ({ kanaId, stage, correct: true, responseMs: 900, answeredAt: T0 + i * 60_000, revealed: false })),
+        ),
+      ),
+    )
+    const start = createAutoContext('hiragana', AUTO_STAGES, history, 3)
+    expect(focusKanaIds(start)).toEqual(path[2]!.kanaIds)
+
+    for (let seed = 1; seed <= 30; seed++) {
+      let ctx = start
+      const rng = seededRng(seed)
+      let newest = 0
+      for (let q = 0; q < 20; q++) {
+        ctx = nextAutoQuestion(ctx, T0 + 3 * DAY + q * 10_000, rng)!.ctx
+        if (path[2]!.kanaIds.includes(ctx.recent.at(-1)!.kanaId)) newest++
+      }
+      expect(newest).toBeGreaterThanOrEqual(2)
+    }
+  })
+
+  it('une fois la dernière ligne acquise, ce sont les kana qui manquent au déblocage', () => {
+    const acquired = (ids: string[]): AnswerEvent[] =>
+      ids.flatMap((kanaId) =>
+        [0, 1, 2, 3].map((i) => ({ kanaId, stage: 1 as const, correct: true, responseMs: 900, answeredAt: T0 + i, revealed: false })),
+      )
+    // Ligne ka acquise, mais trop peu de la ligne a pour ouvrir la suivante.
+    const ctx = createAutoContext('hiragana', AUTO_STAGES, acquired(['h-a', 'h-ka', 'h-ki', 'h-ku', 'h-ke', 'h-ko']), 2)
+    expect(ctx.unlocked).toBe(2)
+    expect(focusKanaIds(ctx)).toEqual(['h-i', 'h-u', 'h-e', 'h-o'])
+    expect(focusKanaIds(createSelectionContext(['h-a'], AUTO_STAGES, []))).toEqual([])
   })
 
   it('le katakana a son propre parcours', () => {
