@@ -59,16 +59,27 @@ export function AppKeyboard({ targetId, layout, enterLabel }: AppKeyboardProps) 
       role="group"
       aria-label="Clavier romaji"
     >
-      {rows.map((row, r) => (
-        <div key={row} className="flex justify-center gap-[5px]">
-          {[...row].map((letter) => (
-            <Key key={letter} label={letter} onPress={() => press(letter)}>
-              {letter}
-            </Key>
-          ))}
-          {r === rows.length - 1 && <Backspace onPress={() => press(null)} />}
-        </div>
-      ))}
+      {rows.map((row, r) => {
+        const last = r === rows.length - 1
+        return (
+          <div key={row} className="flex justify-center gap-[5px]">
+            {/* Dernière rangée comme sur le clavier du téléphone : Effacer calé sur le bord droit (aligné
+                avec la dernière lettre au-dessus), lettres centrées, une place vide symétrique à gauche. */}
+            {last && <span aria-hidden style={keyFlex(SIDE_WIDTH)} />}
+            {[...row].map((letter, i) => (
+              <Key
+                key={letter}
+                label={letter}
+                onPress={() => press(letter)}
+                className={last ? (i === 0 ? 'ml-auto' : i === row.length - 1 ? 'mr-auto' : '') : ''}
+              >
+                {letter}
+              </Key>
+            ))}
+            {last && <Backspace onPress={() => press(null)} />}
+          </div>
+        )
+      })}
       <div className="flex justify-center gap-[5px]">
         <Key label="tiret, voyelle longue" onPress={() => press('-')} wide={1.2}>
           -
@@ -95,6 +106,12 @@ export function AppKeyboard({ targetId, layout, enterLabel }: AppKeyboardProps) 
   )
 }
 
+/** Grille de 10 colonnes : une lettre = 1/10 de la largeur (moins les espacements). */
+const keyFlex = (wide: number) => ({ flex: `0 1 calc(${wide} * (100% - 45px) / 10)` })
+
+/** Largeur d'Effacer et de la place vide en face : 7 lettres (QWERTY) + 2 × 1,5 = une rangée pleine. */
+const SIDE_WIDTH = 1.5
+
 interface KeyProps {
   label: string
   onPress: () => void
@@ -102,13 +119,14 @@ interface KeyProps {
   wide?: number
   accent?: boolean
   repeat?: boolean
+  className?: string
   children: ReactNode
 }
 
 // Le geste ne doit jamais retirer le focus au champ (le curseur clignoterait ailleurs).
 const keepFocus = (e: ReactPointerEvent) => e.preventDefault()
 
-function Key({ label, onPress, wide = 1, accent, repeat, children }: KeyProps) {
+function Key({ label, onPress, wide = 1, accent, repeat, className = '', children }: KeyProps) {
   const timers = useRef<{ delay?: number; tick?: number }>({})
   const stop = () => {
     window.clearTimeout(timers.current.delay)
@@ -140,11 +158,10 @@ function Key({ label, onPress, wide = 1, accent, repeat, children }: KeyProps) {
           onPress()
         }
       }}
-      // Grille de 10 colonnes : une lettre = 1/10 de la largeur (moins les espacements).
-      style={{ flex: `0 1 calc(${wide} * (100% - 45px) / 10)` }}
+      style={keyFlex(wide)}
       className={`k-key ${accent ? 'k-key--enter bg-accent text-on-accent' : 'bg-paper text-ink'} grid h-[46px] min-w-0 place-items-center rounded-sm border border-control text-[19px] leading-none font-medium touch-manipulation active:brightness-90 ${
         accent ? 'text-[15px] font-semibold' : ''
-      }`}
+      } ${className}`}
     >
       {children}
     </button>
@@ -153,7 +170,7 @@ function Key({ label, onPress, wide = 1, accent, repeat, children }: KeyProps) {
 
 function Backspace({ onPress }: { onPress: () => void }) {
   return (
-    <Key label="effacer" onPress={onPress} wide={1.6} repeat>
+    <Key label="effacer" onPress={onPress} wide={SIDE_WIDTH} repeat>
       <Icon name="backspace" className="size-[22px]" />
     </Key>
   )
