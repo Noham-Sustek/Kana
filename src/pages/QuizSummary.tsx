@@ -8,6 +8,7 @@ import { MASTERY_LABELS, MasterySteps } from '@/components/MasterySteps'
 import { SegmentText } from '@/components/SegmentText'
 import { SessionProgress } from '@/components/SessionProgress'
 import { UnlockCelebration } from '@/components/UnlockCelebration'
+import { ReloadRecap } from '@/components/reload/ReloadRecap'
 import { getKana, groupGlyph } from '@/data/kana'
 import { loadProfileAnswers } from '@/db/answers'
 import { buildProgress } from '@/engine/scheduler'
@@ -105,17 +106,48 @@ function Recap({ session }: { session: SessionState }) {
       : `${kind === 'free' && stage ? stagePresentation(stage).name : title} · ${session.plannedCount} questions`
   const missedKanaIds = [...new Set(session.questions.filter((_, i) => !session.outcomes[i]?.correct).flatMap((q) => q.kanaIds))]
 
+  if (reload) {
+    return (
+      <ReloadRecap
+        title={title}
+        correct={correct}
+        total={total}
+        ticks={session.outcomes.map((o) => (o?.correct ? 'done' : 'missed'))}
+        duration={formatDuration(times.durationMs)}
+        perAnswer={times.averageMs === null ? '—' : formatResponseTime(times.averageMs)}
+        streak={progress ? { days: progress.streak, extended: progress.extended } : null}
+        gains={(progress?.gains ?? []).slice(0, 6).map((g) => ({
+          key: `${g.kanaId}|${g.stage}`,
+          glyph: getKana(g.kanaId)!.char,
+          from: g.from,
+          to: g.to,
+          stageName: stagePresentation(g.stage).name,
+        }))}
+        moreGains={Math.max(0, (progress?.gains.length ?? 0) - 6)}
+        gainsAside={kanaCount(new Set(progress?.gains.map((g) => g.kanaId)).size)}
+        path={progress && path ? { headline: path.headline, detail: path.detail } : null}
+        missed={missed.map((m) => ({
+          key: m.text,
+          glyph: m.text,
+          reading: m.reading,
+          note: m.note,
+          onOpen: m.kanaId ? () => navigate(`/kana/${m.kanaId}`) : undefined,
+        }))}
+        missedAside={kanaCount(missed.length, missed.some((m) => !m.kanaId))}
+        onMakeList={() => navigate(`/learn/custom/new?kana=${missedKanaIds.join(',')}`)}
+        actions={[
+          ...(toTrace.length > 0
+            ? [{ title: traceTitle(toTrace), detail: 'L’écrire aide à ne plus les confondre', onClick: () => navigate(`/writing/${toTrace[0]}`) }]
+            : []),
+          { title: [t('Encore une session')], detail: againDetail, onClick: restart },
+        ]}
+        onFinish={finish}
+      />
+    )
+  }
+
   return (
     <div className="k-recap relative isolate flex min-h-full flex-col">
-      {reload && (
-        <>
-          <span aria-hidden="true" className="absolute -inset-x-4 -top-4 -bottom-4 -z-10 bg-[radial-gradient(ellipse_340px_260px_at_70%_30%,rgba(40,80,255,0.35),rgba(40,80,255,0)_70%),linear-gradient(170deg,#0a1460_0%,#060b38_45%,#03061f_100%)]" />
-          <span aria-hidden="true" className="absolute top-[260px] left-[120px] -z-10 h-[640px] w-[360px] -rotate-12 bg-[#1838d8]" />
-          <p aria-hidden="true" className="rl-display relative -mx-3 -mb-2 -rotate-[8deg] text-[84px] text-[#2259ff] [text-shadow:4px_4px_0_#0b1f8a]">
-            RÉSULTATS
-          </p>
-        </>
-      )}
       <header className="relative -mr-2 flex items-center justify-between">
         <Overline>{title} · terminée</Overline>
         <IconButton icon="close" label="Fermer le récapitulatif" onClick={finish} />
