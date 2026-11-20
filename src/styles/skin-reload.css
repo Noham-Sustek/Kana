@@ -1,0 +1,890 @@
+/* Style « Reload » (Réglages → Apparence → Style) : menus de jeu de rôle, d'après le canevas
+   « Kana — hybride » (mer bleue, éclats blancs, mots en italique très gras, sélection en triangles
+   blanc et rose, panneaux marine biseautés). Actif quand <html data-ui="reload">.
+   Hors de toute @layer, comme le style Wii : ces règles passent devant les utilitaires Tailwind.
+   Les composants gardent leur structure (classes d'accroche k-*) ; l'Accueil, S'entraîner, Kana,
+   la fiche, Réglages, l'écriture et le déblocage ont en plus leur mise en page propre
+   (components/reload/, choisie par `useUiStyle() === 'reload'`).
+   Règle de couleur : le rouge ne sert qu'à la sélection ; une erreur est grise, barrée et porte une
+   croix. Tout mouvement se coupe en mouvement réduit. */
+
+/* ── Jetons ─────────────────────────────────────────────────────────── */
+:root[data-ui='reload'] {
+  --k-paper: #1f58da;
+  --k-paper-raised: #101f86;
+  --k-ink: #ffffff;
+  --k-ink-muted: #c4d6ff;
+  --k-hairline: rgba(255, 255, 255, 0.2);
+  --k-control: #7fa8ff;
+  --k-accent: #5ce1ff;
+  --k-on-accent: #05081f;
+  --k-accent-tint: rgba(92, 225, 255, 0.18);
+  --k-correct-ink: #8ff5d4;
+  --k-error-ink: #c9cff5;
+  --k-correct-tint: rgba(62, 230, 176, 0.16);
+  --k-error-tint: rgba(139, 149, 214, 0.16);
+  --k-gold: #ffd34a;
+  --k-heat-1: #25409e;
+  --k-heat-2: #2a74dd;
+  --k-heat-3: #1fb2ef;
+  --k-on-heat-3: #05081f;
+  --k-scrim: rgba(3, 6, 30, 0.66);
+  --color-correct: #3ee6b0;
+  --color-error: #8b95d6;
+  --color-on-signal: #05081f;
+
+  --font-sans: 'Barlow Semi Condensed', 'Barlow', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Barlow Condensed', 'Barlow Semi Condensed', system-ui, sans-serif;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-2xl: 0px;
+
+  /* Propres au style. */
+  --r-navy: #05081f;
+  --r-panel: rgba(12, 22, 100, 0.9);
+  --r-panel-deep: rgba(5, 10, 50, 0.82);
+  --r-red: #ff1a3c;
+  --r-pink: #ff6fd0;
+  --r-cyan: #5ce1ff;
+  --r-cyan-soft: #9af4ff;
+  --r-shadow: #1636b8;
+  /* Haut plus soutenu que la référence : le texte clair y reste lisible. */
+  --r-sea: radial-gradient(ellipse 70% 30% at 12% 4%, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0) 70%),
+    radial-gradient(ellipse 80% 22% at 85% 34%, rgba(170, 245, 255, 0.16), rgba(170, 245, 255, 0) 70%),
+    repeating-linear-gradient(172deg, rgba(255, 255, 255, 0.045) 0 2px, rgba(255, 255, 255, 0) 2px 26px),
+    linear-gradient(160deg, #2fa8f3 0%, #2381ea 22%, #1f58da 48%, #152a9c 76%, #0b1352 100%);
+  --r-display: 'Montserrat Black Italic', 'Barlow Condensed', system-ui, sans-serif;
+  --r-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --r-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Sombre : la même mer, de nuit. */
+:root[data-ui='reload'].dark {
+  --k-paper: #070f45;
+  --k-paper-raised: #0d1660;
+  --k-ink-muted: #a9bdf0;
+  --k-heat-1: #1a2a78;
+  --k-heat-2: #1f4fb8;
+  --k-heat-3: #168fd0;
+  --r-panel: rgba(8, 14, 70, 0.92);
+  --r-sea: radial-gradient(ellipse 80% 30% at 75% 20%, rgba(40, 80, 255, 0.35), rgba(40, 80, 255, 0) 70%),
+    repeating-linear-gradient(172deg, rgba(255, 255, 255, 0.03) 0 2px, rgba(255, 255, 255, 0) 2px 30px),
+    linear-gradient(170deg, #12309e 0%, #0a1460 40%, #060b38 70%, #03061f 100%);
+}
+
+/* ── Fond : mer, éclats blancs et flocons roses (fixes, derrière tout) ── */
+:root[data-ui='reload'] body {
+  background: var(--r-sea);
+  background-attachment: fixed;
+}
+:root[data-ui='reload'] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    linear-gradient(118deg, transparent 0 70%, rgba(255, 255, 255, 0.85) 70% 80%, transparent 80%) top right / 70vw 34vh no-repeat,
+    linear-gradient(-64deg, transparent 0 70%, rgba(255, 255, 255, 0.5) 70% 76%, transparent 76%) bottom left / 60vw 28vh no-repeat;
+  opacity: 0.32;
+}
+:root[data-ui='reload'].dark body::before {
+  opacity: 0.12;
+}
+:root[data-ui='reload'] #root {
+  position: relative;
+  z-index: 1;
+}
+:root[data-ui='reload'] #root::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='390' height='844'%3E%3Cg fill='%23ff3b6b'%3E%3Crect x='300' y='150' width='16' height='8' transform='rotate(-30 308 154)'/%3E%3Crect x='40' y='520' width='12' height='7' transform='rotate(25 46 523)'/%3E%3Crect x='330' y='700' width='10' height='6' transform='rotate(40 335 703)'/%3E%3C/g%3E%3Crect x='190' y='380' width='11' height='6' fill='%23d73cff' transform='rotate(60 195 383)'/%3E%3C/svg%3E");
+  background-size: 390px 844px;
+  background-repeat: repeat;
+  opacity: 0.9;
+  animation: rl-drift 40s linear infinite;
+}
+@keyframes rl-drift {
+  to {
+    background-position: 0 -844px;
+  }
+}
+
+/* ── Typographie ───────────────────────────────────────────────────── */
+:root[data-ui='reload'] .font-serif {
+  font-style: italic;
+  letter-spacing: 0;
+}
+:root[data-ui='reload'] h1.font-serif,
+:root[data-ui='reload'] h2.font-serif {
+  font-family: var(--r-display);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  text-shadow: 2px 2px 0 var(--r-shadow);
+}
+/* Surtitres en capitales (Overline) : italique condensé, cyan. */
+:root[data-ui='reload'] .uppercase.tracking-\[0\.12em\] {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-style: italic;
+  letter-spacing: 0.06em;
+  color: var(--r-cyan-soft);
+  text-shadow: 1px 1px 0 var(--r-shadow);
+}
+:root[data-ui='reload'] ::selection {
+  background: var(--r-cyan);
+  color: var(--r-navy);
+}
+
+/* ── Boutons ───────────────────────────────────────────────────────── */
+:root[data-ui='reload'] .k-btn {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-style: italic;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  transition:
+    transform 120ms var(--r-out),
+    filter 120ms;
+}
+:root[data-ui='reload'] .k-btn--primary,
+:root[data-ui='reload'] .k-btn--ink,
+:root[data-ui='reload'] .k-btn--line {
+  clip-path: polygon(4% 0, 100% 0, 96% 100%, 0 100%);
+  padding-inline: 1.5rem;
+}
+:root[data-ui='reload'] .k-btn--primary {
+  background: #ffffff;
+  color: var(--r-navy);
+  box-shadow: inset 0 3px 0 var(--r-red);
+}
+:root[data-ui='reload'] .k-btn--primary svg {
+  color: var(--r-red);
+}
+:root[data-ui='reload'] .k-btn--ink {
+  background: var(--r-navy);
+  color: #ffffff;
+  box-shadow: inset 0 0 0 2px #ffffff;
+}
+:root[data-ui='reload'] .k-btn--line {
+  background: rgba(5, 8, 31, 0.45);
+  color: #ffffff;
+  border: 0;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.75);
+}
+:root[data-ui='reload'] .k-btn--text {
+  color: var(--r-cyan);
+  text-shadow: 1px 1px 0 var(--r-shadow);
+}
+:root[data-ui='reload'] .k-btn--quiet {
+  color: var(--k-ink-muted);
+}
+:root[data-ui='reload'] .k-btn:active {
+  transform: translateX(3px);
+  filter: brightness(0.95);
+}
+@media (hover: hover) {
+  :root[data-ui='reload'] .k-btn--primary:hover,
+  :root[data-ui='reload'] .k-btn--ink:hover,
+  :root[data-ui='reload'] .k-btn--line:hover {
+    transform: translateX(3px);
+  }
+}
+:root[data-ui='reload'] .k-iconbtn {
+  color: #ffffff;
+}
+
+/* ── Cartes d'action : panneau marine biseauté, blanc à l'appui ───── */
+:root[data-ui='reload'] .k-card {
+  border: 0;
+  background: var(--r-panel);
+  clip-path: polygon(0 0, 100% 0, 97% 100%, 0 100%);
+  box-shadow: inset 0 3px 0 var(--r-red);
+  transition:
+    background 120ms,
+    color 120ms,
+    transform 160ms var(--r-out);
+}
+:root[data-ui='reload'] .k-card b {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-style: italic;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--r-cyan-soft);
+}
+:root[data-ui='reload'] .k-card:active,
+:root[data-ui='reload'] .k-card:focus-visible {
+  background: #ffffff;
+  color: var(--r-navy);
+  transform: translateX(4px);
+}
+:root[data-ui='reload'] .k-card:active b,
+:root[data-ui='reload'] .k-card:focus-visible b,
+:root[data-ui='reload'] .k-card:active small,
+:root[data-ui='reload'] .k-card:focus-visible small {
+  color: var(--r-navy);
+}
+@media (hover: hover) {
+  :root[data-ui='reload'] .k-card:hover {
+    background: #ffffff;
+    color: var(--r-navy);
+  }
+  :root[data-ui='reload'] .k-card:hover b,
+  :root[data-ui='reload'] .k-card:hover small {
+    color: var(--r-navy);
+  }
+}
+
+/* ── Réponses à choix : rangées de liste ─────────────────────────── */
+:root[data-ui='reload'] .k-choice {
+  border: 0;
+  background: var(--r-panel);
+  color: var(--r-cyan-soft);
+  clip-path: polygon(3% 0, 100% 0, 97% 100%, 0 100%);
+  font-style: italic;
+  text-shadow: 1px 1px 0 var(--r-shadow);
+}
+:root[data-ui='reload'] .k-choice--correct {
+  background: #ffffff;
+  color: var(--r-navy);
+  text-shadow: none;
+  box-shadow: inset 0 3px 0 var(--color-correct);
+  animation: rl-wipe 220ms var(--r-out) both;
+}
+:root[data-ui='reload'] .k-choice--wrong {
+  background: rgba(5, 8, 31, 0.5);
+  color: var(--k-error-ink);
+  text-shadow: none;
+}
+:root[data-ui='reload'] .k-choice--revealed {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--r-navy);
+  text-shadow: none;
+  box-shadow: inset 0 0 0 2px var(--r-cyan);
+}
+:root[data-ui='reload'] .k-choice > .absolute {
+  /* Le badge sort du cadre : le biseau le couperait. */
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+}
+
+/* ── Cases de kana ─────────────────────────────────────────────────── */
+:root[data-ui='reload'] .k-tile {
+  border: 0;
+  background: var(--r-panel);
+  color: #ffffff;
+  clip-path: polygon(7% 0, 100% 0, 93% 100%, 0 100%);
+}
+:root[data-ui='reload'] .k-tile--done,
+:root[data-ui='reload'] .k-tile--heat-4 {
+  background: var(--r-cyan) !important;
+  color: var(--r-navy);
+}
+:root[data-ui='reload'] .k-tile--current {
+  /* Fond en ligne (remplissage cyan depuis le bas) gardé ; contour blanc. */
+  box-shadow: inset 0 0 0 2px #ffffff;
+}
+:root[data-ui='reload'] .k-tile--locked,
+:root[data-ui='reload'] .k-tile--heat-0 {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: rgba(255, 255, 255, 0.5);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.28);
+}
+:root[data-ui='reload'] .k-tile--heat-1 {
+  background: var(--k-heat-1) !important;
+}
+:root[data-ui='reload'] .k-tile--heat-2 {
+  background: var(--k-heat-2) !important;
+}
+:root[data-ui='reload'] .k-tile--heat-3 {
+  background: var(--k-heat-3) !important;
+  color: var(--r-navy);
+}
+:root[data-ui='reload'] .k-tile--selected {
+  background: #ffffff !important;
+  color: var(--r-navy) !important;
+  box-shadow: inset 0 3px 0 var(--r-red) !important;
+}
+:root[data-ui='reload'] button.k-tile:active {
+  transform: translateX(2px);
+}
+
+/* ── Contrôles ─────────────────────────────────────────────────────── */
+:root[data-ui='reload'] .k-seg {
+  border: 0;
+  background: var(--r-navy);
+  clip-path: polygon(3% 0, 100% 0, 97% 100%, 0 100%);
+  padding: 3px 10px;
+}
+:root[data-ui='reload'] .k-seg__opt {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--r-cyan-soft);
+  clip-path: polygon(6% 0, 100% 0, 94% 100%, 0 100%);
+  transition:
+    background 160ms,
+    color 160ms;
+}
+:root[data-ui='reload'] .k-seg__opt[aria-checked='true'],
+:root[data-ui='reload'] .k-seg__opt[aria-selected='true'],
+:root[data-ui='reload'] .k-seg__opt.bg-paper,
+:root[data-ui='reload'] .k-seg__opt.bg-ink {
+  background: #ffffff;
+  color: var(--r-navy);
+}
+:root[data-ui='reload'] .k-switch {
+  border: 0;
+  border-radius: 0;
+  background: rgba(5, 8, 31, 0.6);
+  box-shadow: inset 0 0 0 2px var(--r-cyan-soft);
+  transform: skewX(-12deg);
+}
+:root[data-ui='reload'] .k-switch[aria-checked='true'] {
+  background: var(--r-cyan);
+  box-shadow: none;
+}
+:root[data-ui='reload'] .k-switch__thumb {
+  border-radius: 0;
+  background: #ffffff;
+  color: var(--r-navy);
+}
+:root[data-ui='reload'] .k-chip {
+  border: 0;
+  background: var(--r-panel);
+  color: #ffffff;
+  clip-path: polygon(8% 0, 100% 0, 92% 100%, 0 100%);
+  padding-inline: 1rem;
+}
+:root[data-ui='reload'] .k-chip--on {
+  background: #ffffff;
+  color: var(--r-navy);
+}
+:root[data-ui='reload'] .k-chip--on small {
+  color: var(--r-navy);
+}
+
+/* ── Progression ───────────────────────────────────────────────────── */
+:root[data-ui='reload'] .k-tick {
+  transform: skewX(-20deg);
+  height: 7px;
+}
+:root[data-ui='reload'] .k-tick--done {
+  background: var(--r-cyan);
+}
+:root[data-ui='reload'] .k-tick--current {
+  background: #ffffff;
+}
+:root[data-ui='reload'] .k-tick--missed {
+  background: var(--color-error);
+}
+:root[data-ui='reload'] .k-tick--todo {
+  background: rgba(255, 255, 255, 0.22);
+}
+:root[data-ui='reload'] .k-bar {
+  height: 9px;
+  background: rgba(5, 8, 31, 0.6);
+  transform: skewX(-24deg);
+}
+:root[data-ui='reload'] .k-bar__fill {
+  background: var(--r-cyan);
+  box-shadow: 4px 0 0 var(--r-red);
+}
+
+/* ── Retours ───────────────────────────────────────────────────────── */
+:root[data-ui='reload'] .k-feedback {
+  border: 0;
+  background: var(--r-panel-deep);
+  color: #ffffff;
+  clip-path: polygon(0 0, 100% 0, 98% 100%, 0 100%);
+  box-shadow: inset 4px 0 0 var(--k-ink-muted);
+}
+:root[data-ui='reload'] .k-feedback--correct {
+  box-shadow: inset 4px 0 0 var(--color-correct);
+}
+:root[data-ui='reload'] .k-feedback strong {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-style: italic;
+  font-size: 17px;
+  color: #ffffff;
+}
+:root[data-ui='reload'] .k-banner {
+  border: 0;
+  background: var(--r-panel);
+  clip-path: polygon(0 0, 100% 0, 97% 100%, 0 100%);
+  box-shadow: inset 0 3px 0 var(--r-red);
+}
+:root[data-ui='reload'] .k-word {
+  border: 0;
+  background: var(--r-panel);
+  clip-path: polygon(6% 0, 100% 0, 94% 100%, 0 100%);
+}
+:root[data-ui='reload'] .k-field {
+  border: 0;
+  border-bottom: 2px solid #ffffff;
+  background: rgba(5, 8, 31, 0.55);
+  color: #ffffff;
+}
+:root[data-ui='reload'] .k-field:focus-within,
+:root[data-ui='reload'] .k-field:focus {
+  border-bottom-color: var(--r-cyan);
+  box-shadow: 0 3px 0 var(--r-cyan);
+}
+
+/* ── Feuilles et fenêtres ─────────────────────────────────────────── */
+:root[data-ui='reload'] .k-sheet {
+  border: 0;
+  background: var(--k-paper-raised);
+  color: #ffffff;
+  box-shadow:
+    inset 0 3px 0 var(--r-red),
+    0 -10px 0 rgba(3, 6, 30, 0.4);
+  animation: rl-sheet 300ms var(--r-out) both;
+}
+:root[data-ui='reload'] .k-sheet h2 {
+  color: var(--r-cyan);
+}
+/* Fenêtre : bandeau « INFO » pleine largeur, comme les messages du jeu. */
+:root[data-ui='reload'] .k-dialog {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  border: 0;
+  background: #0a0f5a;
+  color: #ffffff;
+  padding-left: 104px;
+  overflow: hidden;
+  box-shadow: 0 10px 0 rgba(3, 6, 30, 0.6);
+  animation: rl-band 260ms var(--r-out) both;
+}
+:root[data-ui='reload'] .k-dialog::before {
+  content: 'INFO';
+  position: absolute;
+  left: -18px;
+  top: 50%;
+  translate: 0 -50%;
+  rotate: -14deg;
+  font-family: var(--r-display);
+  font-weight: 900;
+  font-size: 92px;
+  line-height: 1;
+  color: #1a3ad8;
+  pointer-events: none;
+}
+:root[data-ui='reload'] .k-dialog > * {
+  position: relative;
+}
+:root[data-ui='reload'] .k-dialog h2 {
+  font-size: 20px;
+}
+@media (min-width: 640px) {
+  :root[data-ui='reload'] .k-dialog {
+    max-width: 640px;
+    margin-inline: auto;
+  }
+}
+
+/* ── Clavier intégré ───────────────────────────────────────────────── */
+:root[data-ui='reload'] .k-keyboard {
+  background: rgba(5, 8, 31, 0.86);
+}
+:root[data-ui='reload'] .k-key {
+  background: var(--k-paper-raised);
+  color: #ffffff;
+  border-color: transparent;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-style: italic;
+  font-weight: 700;
+}
+:root[data-ui='reload'] .k-key--enter {
+  background: #ffffff;
+  color: var(--r-navy);
+}
+
+/* ── Case de tracé ─────────────────────────────────────────────────── */
+:root[data-ui='reload'] .k-pad {
+  border: 3px solid #ffffff;
+  background: #070d40;
+  box-shadow: 8px 8px 0 var(--r-cyan);
+}
+:root[data-ui='reload'] .k-pad .stroke-hairline {
+  stroke: rgba(92, 225, 255, 0.35);
+}
+:root[data-ui='reload'] .k-padtool {
+  color: #ffffff;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-style: italic;
+  font-weight: 700;
+}
+:root[data-ui='reload'] .k-padtool > svg {
+  box-sizing: content-box;
+  padding: 11px;
+  border-radius: 999px;
+  background: var(--r-navy);
+  box-shadow: inset 0 0 0 2px var(--r-cyan);
+  color: var(--r-cyan);
+}
+
+/* ── Les onglets n'existent pas en Reload : le menu de l'Accueil les remplace. ── */
+:root[data-ui='reload'] .k-tabbar,
+:root[data-ui='reload'] .k-rail {
+  display: none;
+}
+
+/* ── Mouvement ─────────────────────────────────────────────────────── */
+@keyframes rl-wipe {
+  from {
+    clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+  }
+}
+@keyframes rl-sheet {
+  from {
+    transform: translateY(100%) skewY(-3deg);
+  }
+}
+@keyframes rl-band {
+  from {
+    transform: scaleY(0.2);
+    opacity: 0;
+  }
+}
+/* Entrée d'écran : glisse depuis la gauche, légèrement penché. */
+@keyframes rl-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-28px) skewX(-4deg);
+  }
+}
+@keyframes rl-slide {
+  from {
+    opacity: 0;
+    transform: translateX(-36px);
+  }
+}
+@keyframes rl-pop {
+  0% {
+    transform: scale(0.2) rotate(8deg);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+@keyframes rl-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px) rotate(6deg);
+  }
+}
+@keyframes rl-float {
+  50% {
+    transform: translateY(-8px) rotate(-1deg);
+  }
+}
+@keyframes rl-ping {
+  to {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+@keyframes rl-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes rl-burst {
+  from {
+    transform: scale(0.4) rotate(-20deg);
+    opacity: 0;
+  }
+}
+:root[data-ui='reload'] .rl-enter {
+  animation: rl-enter 280ms var(--r-out) both;
+}
+:root[data-ui='reload'] .rl-stagger > * {
+  animation: rl-slide 300ms var(--r-out) both;
+}
+:root[data-ui='reload'] .rl-stagger > :nth-child(2) {
+  animation-delay: 30ms;
+}
+:root[data-ui='reload'] .rl-stagger > :nth-child(3) {
+  animation-delay: 60ms;
+}
+:root[data-ui='reload'] .rl-stagger > :nth-child(4) {
+  animation-delay: 90ms;
+}
+:root[data-ui='reload'] .rl-stagger > :nth-child(5) {
+  animation-delay: 120ms;
+}
+:root[data-ui='reload'] .rl-stagger > :nth-child(6) {
+  animation-delay: 150ms;
+}
+:root[data-ui='reload'] .rl-stagger > :nth-child(7) {
+  animation-delay: 180ms;
+}
+:root[data-ui='reload'] .rl-stagger > :nth-child(8) {
+  animation-delay: 210ms;
+}
+:root[data-ui='reload'] .rl-stagger > :nth-child(n + 9) {
+  animation-delay: 240ms;
+}
+:root[data-ui='reload'] .rl-pop {
+  animation: rl-pop 280ms var(--r-spring) both;
+}
+:root[data-ui='reload'] .rl-wipe {
+  animation: rl-wipe 240ms var(--r-out) both;
+}
+:root[data-ui='reload'] .rl-rise {
+  animation: rl-rise 380ms var(--r-out) both;
+}
+:root[data-ui='reload'] .rl-float {
+  animation: rl-float 6s ease-in-out infinite;
+}
+:root[data-ui='reload'] .rl-ping {
+  animation: rl-ping 1.1s ease-out infinite;
+}
+:root[data-ui='reload'] .rl-burst {
+  animation: rl-burst 600ms var(--r-out) both;
+}
+:root[data-ui='reload'] .rl-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: rl-draw 700ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-ui='reload'] *,
+  :root[data-ui='reload'] *::before,
+  :root[data-ui='reload'] *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+  :root[data-ui='reload'] #root::before {
+    animation: none !important;
+  }
+}
+
+/* ── Pièces propres aux écrans Reload (components/reload/) ─────────── */
+.rl-word {
+  display: block;
+  font-family: var(--r-display);
+  font-weight: 900;
+  font-style: italic;
+  line-height: 1;
+  white-space: nowrap;
+  letter-spacing: -0.03em;
+  transform: scaleX(0.86) skewX(-7deg);
+  transform-origin: 0 100%;
+}
+.rl-display {
+  font-family: var(--r-display);
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: -0.03em;
+  line-height: 0.9;
+}
+.rl-cond {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-style: italic;
+}
+/* Grand titre pâle derrière le contenu (« EXERCICES », « HIRAGANA »). */
+.rl-ghost {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+  font-family: var(--r-display);
+  font-weight: 900;
+  font-style: italic;
+  line-height: 0.8;
+  letter-spacing: -0.05em;
+  color: rgba(232, 238, 250, 0.62);
+}
+.dark .rl-ghost {
+  color: rgba(120, 150, 255, 0.22);
+}
+.rl-panel {
+  background: var(--r-panel);
+  clip-path: polygon(0 0, 100% 0, 92% 100%, 0 100%);
+}
+.rl-rule {
+  height: 3px;
+  background: var(--r-red);
+}
+.rl-sel {
+  background: #ffffff;
+  color: var(--r-navy);
+  box-shadow: inset 0 3px 0 var(--r-red);
+}
+.rl-kbd {
+  display: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .rl-kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 20px;
+    padding: 0 6px;
+    box-sizing: border-box;
+    border: 1.5px solid currentColor;
+    border-radius: 4px;
+    font-family: 'Barlow Semi Condensed', sans-serif;
+    font-style: normal;
+    font-weight: 700;
+    font-size: 11px;
+    line-height: 1;
+  }
+}
+.rl-shadow {
+  text-shadow: 2px 2px 0 var(--r-shadow);
+}
+.rl-art {
+  font-family: 'Zen Kaku Kana', 'Klee One Kana', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  font-weight: 900;
+  line-height: 1;
+  color: #f4fdff;
+  pointer-events: none;
+  user-select: none;
+  text-shadow:
+    -7px 7px 0 var(--r-cyan),
+    -14px 14px 0 rgba(10, 30, 120, 0.5);
+}
+.rl-shadow-soft {
+  text-shadow: 1px 1px 0 rgba(5, 8, 31, 0.55);
+}
+.rl-guide-fade {
+  background: linear-gradient(to bottom, rgba(9, 16, 70, 0), rgba(9, 16, 70, 0.82) 38%, rgba(9, 16, 70, 0.9));
+}
+@keyframes rl-panel-in {
+  from {
+    transform: translateX(-104%);
+  }
+}
+:root[data-ui='reload'] .rl-panel-in {
+  animation: rl-panel-in 280ms var(--r-out) both;
+}
+
+/* ── Question : réponses en liste à puces, sujet sur un bloc sombre ── */
+:root[data-ui='reload'] .k-choices:not(:has(> :nth-child(5))) {
+  grid-template-columns: 1fr;
+  gap: 6px;
+  margin-inline: -1rem;
+  padding-right: 1.5rem;
+}
+:root[data-ui='reload'] .k-choices:not(:has(> :nth-child(5))) .k-choice {
+  min-height: 54px;
+  height: auto;
+  justify-content: flex-start;
+  padding-left: 2.6rem;
+  text-align: left;
+  clip-path: polygon(0 0, 100% 0, 96% 100%, 0 100%);
+}
+:root[data-ui='reload'] .k-choices:not(:has(> :nth-child(5))) .k-choice::before {
+  content: '';
+  position: absolute;
+  left: 1.1rem;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin-top: -3.5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+:root[data-ui='reload'] .k-prompt {
+  border: 0;
+  background: #0a0f5a;
+  color: #ffffff;
+  overflow: hidden;
+  clip-path: polygon(4% 0, 100% 0, 96% 100%, 0 100%);
+  text-shadow: -6px 6px 0 var(--r-cyan);
+}
+:root[data-ui='reload'] .k-prompt::before {
+  content: 'KANA';
+  position: absolute;
+  left: -10%;
+  top: 58%;
+  rotate: -14deg;
+  font-family: var(--r-display);
+  font-weight: 900;
+  font-size: 0.42em;
+  line-height: 1;
+  color: #111c74;
+  text-shadow: none;
+  pointer-events: none;
+}
+:root[data-ui='reload'] .k-prompt > span:not(.relative) {
+  border-color: rgba(92, 225, 255, 0.3);
+}
+
+/* ── Fin de session : en-têtes « SCORE », « MAÎTRISE »… ─────────── */
+:root[data-ui='reload'] .k-recap > :not(span) {
+  position: relative;
+}
+:root[data-ui='reload'] .k-recap .uppercase.tracking-\[0\.12em\] {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  font-family: var(--r-display);
+  font-weight: 900;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: #40e0ff;
+  text-shadow: 2px 2px 0 #062a7a;
+}
+:root[data-ui='reload'] .k-recap .uppercase.tracking-\[0\.12em\]::before {
+  content: '';
+  width: 14px;
+  height: 22px;
+  background: #40e0ff;
+  transform: skewX(-14deg);
+  flex-shrink: 0;
+}
+:root[data-ui='reload'] .k-recap .text-\[64px\] {
+  font-family: var(--r-display);
+  font-weight: 900;
+}
+
+/* Boutons collés en bas (Commencer, Terminer…) : pas de bandeau plein, un fondu vers la mer. */
+:root[data-ui='reload'] .sticky.bg-paper {
+  background: linear-gradient(to bottom, rgba(9, 16, 70, 0), rgba(9, 16, 70, 0.85) 40%);
+}
+
+/* Haut d'écran : encre sur la mer claire, blanc la nuit. */
+.rl-topink {
+  color: #05081f;
+}
+.dark .rl-topink {
+  color: #ffffff;
+}
+.rl-topfill {
+  background: #05081f;
+}
+.dark .rl-topfill {
+  background: #5ce1ff;
+}
+/* Grand prénom vertical et éclat blanc des en-têtes : atténués la nuit. */
+.dark .rl-name {
+  color: #1c3bb8 !important;
+  text-shadow: none !important;
+}
+.rl-flash {
+  background: #f2f5fb;
+}
+.dark .rl-flash {
+  background: rgba(40, 70, 200, 0.45);
+}
+.dark .rl-tab-ink {
+  color: #c9d8ff;
+}

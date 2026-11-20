@@ -139,3 +139,39 @@ export function bestChronoRecord(
 export function bestChronoScore(best: Readonly<Record<string, number>>, profileId: number): number | null {
   return bestChronoRecord(best, profileId)?.score ?? null
 }
+
+export type StageStatus = 'new' | 'progress' | 'done'
+
+export interface StageMastery {
+  /** Kana déjà travaillés à cet exercice. */
+  seen: number
+  /** Kana maîtrisés à cet exercice. */
+  mastered: number
+  status: StageStatus
+}
+
+/** Kana à travailler au moins avant de dire un exercice acquis. */
+export const STAGE_DONE_MIN = 20
+
+/** Maîtrise d'un exercice (style Reload, liste des exercices) : Nouveau sans réponse,
+ *  Acquis quand 80 % des kana vus (et au moins STAGE_DONE_MIN) sont maîtrisés, sinon En cours. */
+export function stageMastery(progress: Progress, stage: StageId): StageMastery {
+  let seen = 0
+  let mastered = 0
+  for (const kana of KANA) {
+    const card = progress.get(cardKey(kana.id, stage))
+    if (!card) continue
+    seen++
+    if (isMastered(card)) mastered++
+  }
+  const status: StageStatus =
+    seen === 0 ? 'new' : seen >= STAGE_DONE_MIN && mastered / seen >= 0.8 ? 'done' : 'progress'
+  return { seen, mastered, status }
+}
+
+/** Ligne de détail d'un exercice selon sa maîtrise. */
+export function stageMasteryLine({ seen, mastered, status }: StageMastery): string {
+  if (status === 'new') return 'Pas encore commencé.'
+  const kana = (n: number) => `${n} kana`
+  return `${kana(mastered)} maîtrisé${mastered > 1 ? 's' : ''} sur ${kana(seen)} travaillé${seen > 1 ? 's' : ''}.`
+}

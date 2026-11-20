@@ -4,6 +4,7 @@ import { BackupSettings } from '@/components/BackupSettings'
 import { Icon } from '@/components/Icon'
 import { IconButton } from '@/components/IconButton'
 import { ProfileSettings } from '@/components/ProfileSettings'
+import { ReloadSettings } from '@/components/reload/ReloadSettings'
 import { SegmentedControl } from '@/components/SegmentedControl'
 import { Switch } from '@/components/Switch'
 import { haptic } from '@/lib/haptic'
@@ -20,7 +21,8 @@ import {
 } from '@/stores/settingsStore'
 
 const UI_OPTIONS: { value: UiStyle; label: string }[] = [
-  { value: 'papier', label: 'Papier et encre' },
+  { value: 'reload', label: 'Reload' },
+  { value: 'papier', label: 'Papier' },
   { value: 'wii', label: 'Wii' },
 ]
 
@@ -59,6 +61,90 @@ export function SettingsPage() {
     { value: 'qwertz', label: 'QWERTZ' },
   ]
 
+  const appearance = (
+    <>
+      <SegmentedControl label="Style" options={UI_OPTIONS} value={ui} onChange={setUi} />
+      <div className="mt-4">
+        <SegmentedControl label="Thème" options={THEME_OPTIONS} value={theme} onChange={setTheme} />
+      </div>
+      <div className="mt-2">
+        <Switch
+          label="Vibrations"
+          description="Une vibration brève à chaque réponse (Android)."
+          checked={vibrations}
+          onChange={(on) => {
+            setVibrations(on)
+            // Petite vibration de confirmation à l'activation.
+            if (on) haptic('toggle')
+          }}
+        />
+        {(ui === 'wii' || ui === 'reload') && (
+          <Switch
+            label="Sons"
+            description="Petits sons au toucher et à chaque réponse."
+            checked={sounds}
+            onChange={(on) => {
+              setSounds(on)
+              // Au toucher les sons étaient coupés : on confirme l'activation.
+              if (on) playSound('chipOn')
+            }}
+          />
+        )}
+      </div>
+          </>
+  )
+  const input = (
+    <>
+      <SegmentedControl label="Clavier pour le romaji" options={KEYBOARD_OPTIONS} value={keyboard} onChange={setKeyboard} />
+      <p className="mt-2 text-[13px] leading-[18px] text-ink-muted">
+        {keyboard === 'app'
+          ? 'Un clavier dans l’application : rien ne se décale à l’écran pendant la saisie.'
+          : 'Le clavier du téléphone s’ouvre et l’écran se réduit pendant la saisie.'}
+      </p>
+      {keyboard === 'app' && (
+        <div className="mt-4">
+          <SegmentedControl label="Disposition" options={layoutOptions} value={keyboardLayout} onChange={setKeyboardLayout} />
+          <p className="mt-2 text-[13px] leading-[18px] text-ink-muted">
+            Auto : {LAYOUT_LABELS[detectedLayout()]}, d’après la langue du téléphone.
+          </p>
+        </div>
+      )}
+          </>
+  )
+  const backupContent = (
+    <>
+      <BackupSettings />
+          </>
+  )
+  const application = (
+    <>
+      <ul className="border-t border-hairline">
+        {install && (
+          <Row title="Installer sur l’écran d’accueil" detail="Ouverture plus rapide, en plein écran" onClick={install} />
+        )}
+        <Row
+          title="À propos et crédits"
+          detail="Sans compte, sans publicité · tout fonctionne hors ligne"
+          onClick={() => navigate('/settings/about')}
+        />
+      </ul>
+          </>
+  )
+
+  if (ui === 'reload') {
+    return (
+      <ReloadSettings
+        sections={[
+          { id: 'appearance', word: 'APPARENCE', title: 'Apparence', detail: 'Style, thème, vibrations, sons.', content: appearance },
+          { id: 'input', word: 'SAISIE', title: 'Saisie', detail: 'Clavier pour le romaji et disposition.', content: input },
+          { id: 'profiles', word: 'PROFILS', title: 'Profils', detail: 'Qui apprend sur cet appareil.', content: <ProfileSettings /> },
+          { id: 'backup', word: 'SAUVEGARDE', title: 'Sauvegarde', detail: 'Exporter ou importer toute la progression.', content: backupContent },
+          { id: 'app', word: 'À PROPOS', title: 'Application', detail: 'Installation, crédits, fonctionnement hors ligne.', content: application },
+        ]}
+      />
+    )
+  }
+
   return (
     <div className="pb-6">
       <header className="-ml-2 flex items-center gap-0.5">
@@ -69,51 +155,11 @@ export function SettingsPage() {
       <div className="lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-10">
         <div>
           <Section title="Apparence" first>
-            <SegmentedControl label="Style" options={UI_OPTIONS} value={ui} onChange={setUi} />
-            <div className="mt-4">
-              <SegmentedControl label="Thème" options={THEME_OPTIONS} value={theme} onChange={setTheme} />
-            </div>
-            <div className="mt-2">
-              <Switch
-                label="Vibrations"
-                description="Une vibration brève à chaque réponse (Android)."
-                checked={vibrations}
-                onChange={(on) => {
-                  setVibrations(on)
-                  // Petite vibration de confirmation à l'activation.
-                  if (on) haptic('toggle')
-                }}
-              />
-              {ui === 'wii' && (
-                <Switch
-                  label="Sons"
-                  description="Petits sons au toucher et à chaque réponse."
-                  checked={sounds}
-                  onChange={(on) => {
-                    setSounds(on)
-                    // Au toucher les sons étaient coupés : on confirme l'activation.
-                    if (on) playSound('chipOn')
-                  }}
-                />
-              )}
-            </div>
+            {appearance}
           </Section>
 
           <Section title="Saisie">
-            <SegmentedControl label="Clavier pour le romaji" options={KEYBOARD_OPTIONS} value={keyboard} onChange={setKeyboard} />
-            <p className="mt-2 text-[13px] leading-[18px] text-ink-muted">
-              {keyboard === 'app'
-                ? 'Un clavier dans l’application : rien ne se décale à l’écran pendant la saisie.'
-                : 'Le clavier du téléphone s’ouvre et l’écran se réduit pendant la saisie.'}
-            </p>
-            {keyboard === 'app' && (
-              <div className="mt-4">
-                <SegmentedControl label="Disposition" options={layoutOptions} value={keyboardLayout} onChange={setKeyboardLayout} />
-                <p className="mt-2 text-[13px] leading-[18px] text-ink-muted">
-                  Auto : {LAYOUT_LABELS[detectedLayout()]}, d’après la langue du téléphone.
-                </p>
-              </div>
-            )}
+            {input}
           </Section>
 
           <Section title="Profils">
@@ -123,20 +169,11 @@ export function SettingsPage() {
 
         <div>
           <Section title="Sauvegarde" className="lg:mt-3 lg:border-t-0 lg:pt-0">
-            <BackupSettings />
+            {backupContent}
           </Section>
 
           <Section title="Application">
-            <ul className="border-t border-hairline">
-              {install && (
-                <Row title="Installer sur l’écran d’accueil" detail="Ouverture plus rapide, en plein écran" onClick={install} />
-              )}
-              <Row
-                title="À propos et crédits"
-                detail="Sans compte, sans publicité · tout fonctionne hors ligne"
-                onClick={() => navigate('/settings/about')}
-              />
-            </ul>
+            {application}
           </Section>
         </div>
       </div>

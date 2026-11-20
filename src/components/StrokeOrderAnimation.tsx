@@ -30,7 +30,7 @@ export function StrokeOrderAnimation({ strokes, step, className = '' }: StrokeOr
   return (
     <svg
       viewBox={`0 0 ${STROKE_VIEWBOX} ${STROKE_VIEWBOX}`}
-      className={`aspect-square w-full rounded-sm border-[1.5px] border-ink bg-paper-raised ${className}`}
+      className={`k-pad aspect-square w-full rounded-sm border-[1.5px] border-ink bg-paper-raised ${className}`}
       role="img"
       aria-label={
         step === undefined

@@ -59,7 +59,7 @@ function Panel({
     <figure>
       <svg
         viewBox={`0 0 ${STROKE_VIEWBOX} ${STROKE_VIEWBOX}`}
-        className={`aspect-square w-full rounded-sm bg-paper-raised ${frame}`}
+        className={`k-pad aspect-square w-full rounded-sm bg-paper-raised ${frame}`}
         role="img"
         aria-label={label}
       >

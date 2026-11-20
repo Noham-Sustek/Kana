@@ -15,6 +15,7 @@ import { recordWritingResult } from '@/db/writing'
 import type { Point } from '@/features/writing/geometry'
 import { isWritingSuccess, strokeNote } from '@/features/writing/progress'
 import { haptic } from '@/lib/haptic'
+import { useUiStyle } from '@/lib/useUiStyle'
 import { activeProfileId } from '@/stores/profileStore'
 import { useWritingSettingsStore, type WritingLevel } from '@/stores/writingSettingsStore'
 
@@ -25,7 +26,7 @@ const LEVEL_OPTIONS: { value: WritingLevel; label: string }[] = [
 ]
 
 const TOOL_BUTTON =
-  'flex min-h-[52px] min-w-[68px] flex-col items-center justify-center gap-0.5 rounded-md px-2 text-[12px] leading-[14px] font-semibold text-ink active:brightness-90 disabled:opacity-40'
+  'k-padtool flex min-h-[52px] min-w-[68px] flex-col items-center justify-center gap-0.5 rounded-md px-2 text-[12px] leading-[14px] font-semibold text-ink active:brightness-90 disabled:opacity-40'
 
 const PAD_WIDTH = 'mx-auto w-[min(296px,100%)]'
 
@@ -38,6 +39,7 @@ export function WritingExercisePage() {
   const kana = getKana(kanaId)
   // Le kana est caché au niveau 3 tant que le tracé n'est pas terminé.
   const [revealedChar, setRevealedChar] = useState(false)
+  const reload = useUiStyle() === 'reload'
 
   if (!kana || !isWritable(kana)) return <Navigate to="/kana?lens=ecriture" replace />
 
@@ -70,7 +72,22 @@ export function WritingExercisePage() {
   const showChar = level !== 3 || revealedChar
 
   return (
-    <div className="flex min-h-full flex-col">
+    <div className={`flex min-h-full flex-col ${reload ? 'relative flex-1' : ''}`}>
+      {reload ? (
+        <ReloadWritingHeader
+          char={showChar ? kana.char : null}
+          romaji={kana.romaji[0]!}
+          line={groupGlyph(group)}
+          position={`${inLine + 1} / ${group.kanaIds.length}`}
+          strokeCount={strokes.length}
+          level={level}
+          onLevel={changeLevel}
+          onBack={goBack}
+          onPrev={prev ? () => goTo(prev) : undefined}
+          onNext={next ? () => goTo(next) : undefined}
+        />
+      ) : (
+        <>
       <header className="-mx-2 flex items-center justify-between gap-1">
         <div className="flex min-w-0 items-center gap-0.5">
           <IconButton icon="chevronLeft" label="Retour" onClick={goBack} />
@@ -91,6 +108,8 @@ export function WritingExercisePage() {
       <div className="mt-2">
         <SegmentedControl label="Niveau" options={LEVEL_OPTIONS} value={level} onChange={changeLevel} />
       </div>
+        </>
+      )}
 
       {level === 1 ? (
         <ObserveStep key={kana.id} strokes={strokes} onPractice={() => changeLevel(2)} />
@@ -281,5 +300,95 @@ function resultDetail(level: 2 | 3, result: WritingResult, success: boolean): st
 }
 
 function Dock({ children }: { children: ReactNode }) {
-  return <div className="sticky -bottom-4 z-10 -mx-4 mt-auto bg-paper px-4 pt-3 pb-5">{children}</div>
+  const reload = useUiStyle() === 'reload'
+  return (
+    <div
+      className={`sticky z-10 -mx-4 mt-auto px-4 pt-3 ${
+        reload ? 'bottom-0 pb-[max(16px,env(safe-area-inset-bottom))] rl-guide-fade' : '-bottom-4 bg-paper pb-5'
+      }`}
+    >
+      {children}
+    </div>
+  )
+}
+
+interface ReloadWritingHeaderProps {
+  /** null au niveau 3 tant que le tracé n'est pas terminé (le kana reste caché). */
+  char: string | null
+  romaji: string
+  line: string
+  position: string
+  strokeCount: number
+  level: WritingLevel
+  onLevel: (l: WritingLevel) => void
+  onBack: () => void
+  onPrev?: () => void
+  onNext?: () => void
+}
+
+/** En-tête de l'exercice, style Reload : bandeau blanc (kana, lecture, ligne), nombre de traits,
+ *  étapes en flèches (Observer, Calque, De mémoire ; les étapes passées portent une coche). */
+function ReloadWritingHeader({ char, romaji, line, position, strokeCount, level, onLevel, onBack, onPrev, onNext }: ReloadWritingHeaderProps) {
+  return (
+    <>
+      <span aria-hidden="true" className="absolute -inset-x-4 -top-4 bottom-0 -z-10 bg-[linear-gradient(165deg,#1d49d8_0%,#1430ae_38%,#0c1c78_70%,#070f45_100%)]" />
+      <span aria-hidden="true" className="absolute top-[250px] -left-24 -z-10 h-[300px] w-[620px] -rotate-[14deg] bg-[#1838d8]" />
+      <div className="relative flex items-start justify-between">
+        <button
+          type="button"
+          onClick={onBack}
+          aria-label="Retour"
+          data-tap-sound="tapBack"
+          className="grid size-11 place-items-center bg-[#05081f] text-white shadow-[inset_0_0_0_2px_#ffffff] [clip-path:polygon(12%_0,100%_0,88%_100%,0_100%)]"
+        >
+          <Icon name="chevronLeft" className="size-5" />
+        </button>
+        <div className="flex flex-col items-end">
+          <span className="rl-cond text-[12px] font-extrabold tracking-[0.06em] text-[#8fb4ff]">TRAITS</span>
+          <span className="rl-display text-[44px] leading-[0.85] text-white [text-shadow:3px_3px_0_#1838d8]">{strokeCount}</span>
+        </div>
+      </div>
+      <div className="relative -mx-4 -mt-3 flex h-[66px] w-[290px] items-center gap-2.5 bg-white pl-4 text-[#05081f] [clip-path:polygon(0_0,100%_0,88%_100%,0_100%)]">
+        <h1 className="flex items-center gap-2.5">
+          {char ? <span className="font-jp text-[44px] leading-none">{char}</span> : <span className="rl-display text-[40px]">?</span>}
+          <span className="flex flex-col leading-[1.05]">
+            <span className="rl-cond text-[26px] font-extrabold">{romaji}</span>
+            <span className="rl-cond text-[13px] font-bold">
+              Ligne <span className="font-jp not-italic">{line}</span> · {position}
+            </span>
+          </span>
+        </h1>
+      </div>
+      <div className="relative mt-3 flex items-center gap-0.5">
+        {LEVEL_OPTIONS.map((o, i) => {
+          const on = o.value === level
+          const done = o.value < level
+          return (
+            <button
+              key={o.value}
+              type="button"
+              aria-pressed={on}
+              onClick={() => onLevel(o.value)}
+              data-tap-sound="tabSwitch"
+              className={`rl-display flex h-[38px] flex-1 items-center justify-center gap-1 text-[12.5px] uppercase ${
+                on ? 'bg-white text-[#05081f]' : done ? 'bg-[#5ce1ff] text-[#05081f]' : 'bg-white/12 text-[#8fb4ff]'
+              }`}
+              style={{ clipPath: i === 0 ? 'polygon(0 0,88% 0,100% 50%,88% 100%,0 100%)' : 'polygon(0 0,88% 0,100% 50%,88% 100%,0 100%,11% 50%)' }}
+            >
+              {done && '✓ '}
+              {o.value} {['Observer', 'Calque', 'Mémoire'][i]}
+            </button>
+          )
+        })}
+      </div>
+      <div className="relative mt-1 flex justify-between">
+        <button type="button" onClick={onPrev} disabled={!onPrev} className="rl-cond min-h-11 px-1 text-[15px] font-bold text-white disabled:opacity-30" data-tap-sound="prev">
+          ‹ Kana précédent
+        </button>
+        <button type="button" onClick={onNext} disabled={!onNext} className="rl-cond min-h-11 px-1 text-[15px] font-bold text-white disabled:opacity-30" data-tap-sound="next">
+          Kana suivant ›
+        </button>
+      </div>
+    </>
+  )
 }

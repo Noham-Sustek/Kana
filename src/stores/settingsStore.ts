@@ -2,8 +2,9 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 export type Theme = 'light' | 'dark' | 'system'
-/** Habillage de l'interface : « Papier et encre » (par défaut) ou « Wii » (rond, brillant, flottant). */
-export type UiStyle = 'papier' | 'wii'
+/** Habillage de l'interface : « Reload » (par défaut : menus de jeu de rôle, mer bleue), « Papier et encre »
+ *  ou « Wii » (rond, brillant, flottant). */
+export type UiStyle = 'reload' | 'papier' | 'wii'
 /** Saisie du romaji : clavier intégré à l'application (écrans tactiles) ou clavier du système. */
 export type KeyboardMode = 'app' | 'system'
 /** Disposition du clavier intégré ; `auto` = d'après la langue du système. */
@@ -14,7 +15,7 @@ interface SettingsState {
   ui: UiStyle
   /** Retour haptique (Android ; sans effet sur iPhone). */
   vibrations: boolean
-  /** Sons de l'interface et des réponses (style Wii seulement). */
+  /** Sons de l'interface et des réponses (styles Wii et Reload). */
   sounds: boolean
   keyboard: KeyboardMode
   keyboardLayout: KeyboardLayoutSetting
@@ -42,7 +43,7 @@ export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
       theme: 'system',
-      ui: 'papier',
+      ui: 'reload',
       vibrations: true,
       sounds: true,
       keyboard: 'app',

@@ -5,12 +5,16 @@ import { Button } from '@/components/Button'
 import { KanaTile } from '@/components/KanaTile'
 import { SegmentText } from '@/components/SegmentText'
 import { WeekStrip } from '@/components/WeekStrip'
-import { getKana } from '@/data/kana'
+import { ReloadHome } from '@/components/reload/ReloadHome'
+import { KANA_GROUPS, getKana } from '@/data/kana'
 import { backupReminder, sessionCta, type PathTile } from '@/features/home/home'
 import { useHome } from '@/features/home/useHome'
+import { freeSessionLine } from '@/features/learn/learn'
 import { AUTO_STAGES } from '@/features/quiz/auto'
+import { useCustomGroups } from '@/features/quiz/useQuizPool'
 import { downloadBackup } from '@/lib/backupFile'
 import { useStartDailySession } from '@/lib/useStartDailySession'
+import { useUiStyle } from '@/lib/useUiStyle'
 import { useQuizSettingsStore } from '@/stores/quizSettingsStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 
@@ -24,6 +28,9 @@ export function HomePage() {
   const lastBackupAt = useSettingsStore((s) => s.lastBackupAt)
   const dismissedAt = useSettingsStore((s) => s.backupReminderDismissedAt)
   const dismissReminder = useSettingsStore((s) => s.dismissBackupReminder)
+  const reload = useUiStyle() === 'reload'
+  const quiz = useQuizSettingsStore()
+  const lists = useCustomGroups()
 
   // Rien tant que la base n'est pas lue (un instant au démarrage) : pas d'état vide trompeur.
   if (!home) return null
@@ -39,6 +46,23 @@ export function HomePage() {
   const reminder = home.doneToday
     ? backupReminder({ now: Date.now(), firstAnswerAt: home.firstAnswerAt, lastBackupAt, dismissedAt })
     : null
+
+  if (reload) {
+    const groupCount = KANA_GROUPS.filter((g) => quiz.groupIds.includes(g.id)).length
+    const listCount = lists.filter((l) => quiz.customGroupIds.includes(l.id)).length
+    return (
+      <ReloadHome
+        home={home}
+        script={script}
+        cta={cta}
+        freeLine={freeSessionLine(quiz.stage, groupCount, listCount, quiz.questionCount)}
+        reminder={reminder}
+        onStartDaily={startDaily}
+        onExport={() => void downloadBackup()}
+        onDismissReminder={() => dismissReminder(Date.now())}
+      />
+    )
+  }
 
   return (
     // Grand écran : parcours et kana à consolider à gauche, série et action du jour à droite.

@@ -1,6 +1,8 @@
 import { Button } from '@/components/Button'
 import { KanaTile } from '@/components/KanaTile'
+import { ReloadUnlock } from '@/components/reload/ReloadUnlock'
 import { getKana, groupGlyph, type KanaGroup } from '@/data/kana'
+import { useUiStyle } from '@/lib/useUiStyle'
 
 interface UnlockCelebrationProps {
   /** Lignes débloquées pendant la session ; la dernière est présentée. */
@@ -10,6 +12,8 @@ interface UnlockCelebrationProps {
 
 /** Ligne débloquée : un moment bref, en or, avant le récapitulatif. */
 export function UnlockCelebration({ groups, onContinue }: UnlockCelebrationProps) {
+  const reload = useUiStyle() === 'reload'
+  if (reload) return <ReloadUnlock groups={groups} onContinue={onContinue} />
   const group = groups.at(-1)!
   const kana = group.kanaIds.map((id) => getKana(id)!)
   const count = kana.length

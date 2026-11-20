@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { HAPTIC } from '@/lib/haptic'
+import { RELOAD_SAMPLES } from '@/lib/reloadSound'
 import { SOUNDS, penta, tapKind } from '@/lib/sound'
 
 describe('SOUNDS', () => {
@@ -21,6 +22,12 @@ describe('SOUNDS', () => {
         }
       }
     }
+  })
+})
+
+describe('RELOAD_SAMPLES', () => {
+  it('donne un échantillon à chaque son', () => {
+    for (const kind of Object.keys(SOUNDS)) expect(RELOAD_SAMPLES[kind as keyof typeof RELOAD_SAMPLES]).toBeTruthy()
   })
 })
 
@@ -47,6 +54,9 @@ describe('tapKind', () => {
     expect(tapKind(t('k-iconbtn', { 'aria-label': 'Retour' }))).toBe('tapBack')
     expect(tapKind(t('', { role: 'switch', 'aria-checked': 'true' }))).toBe('chipOff')
     expect(tapKind(t('k-card'))).toBe('tap')
+    // Menus du style Reload : le son est donné par l'élément.
+    expect(tapKind(t('', { 'data-tap-sound': 'launch' }))).toBe('launch')
+    expect(tapKind(t('k-btn', { 'data-tap-sound': 'inconnu' }))).toBe('tap')
   })
   it('se tait sans contrôle ou sur un contrôle désactivé', () => {
     expect(tapKind(null)).toBeNull()

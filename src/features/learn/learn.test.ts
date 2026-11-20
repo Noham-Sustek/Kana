@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { groupsOfScript } from '@/data/kana'
+import { KANA, groupsOfScript } from '@/data/kana'
 import { cardKey, type CardState } from '@/engine/scheduler'
 import {
   applicableOptions,
@@ -10,6 +10,8 @@ import {
   optionsSummary,
   reviewDetail,
   reviewSelection,
+  stageMastery,
+  stageMasteryLine,
   startDetail,
   unavailableReason,
   type FreeSessionInput,
@@ -90,4 +92,24 @@ it('record de lecture chronométrée du profil', () => {
   expect(bestChronoScore(best, 1)).toBe(42)
   expect(bestChronoScore(best, 3)).toBeNull()
   expect(bestChronoRecord(best, 1)).toEqual({ score: 42, duration: 120 })
+})
+
+describe('maîtrise d’un exercice', () => {
+  const card = (mastery: number): CardState => ({
+    reps: 2, lapses: 0, ease: 2.5, intervalMs: 60_000, lastAt: 0, dueAt: 0, mastery, answers: 3,
+  })
+
+  it('Nouveau sans réponse, En cours, puis Acquis à 80 % d’au moins 20 kana', () => {
+    expect(stageMastery(new Map(), 1)).toEqual({ seen: 0, mastered: 0, status: 'new' })
+    expect(stageMasteryLine(stageMastery(new Map(), 1))).toBe('Pas encore commencé.')
+
+    const few = new Map(KANA.slice(0, 5).map((k) => [cardKey(k.id, 1), card(0.95)]))
+    expect(stageMastery(few, 1)).toEqual({ seen: 5, mastered: 5, status: 'progress' })
+    expect(stageMastery(few, 2).status).toBe('new')
+
+    const many = new Map(KANA.slice(0, 25).map((k, i) => [cardKey(k.id, 1), card(i < 21 ? 0.95 : 0.2)]))
+    const m = stageMastery(many, 1)
+    expect(m).toEqual({ seen: 25, mastered: 21, status: 'done' })
+    expect(stageMasteryLine(m)).toBe('21 kana maîtrisés sur 25 kana travaillés.')
+  })
 })

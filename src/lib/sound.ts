@@ -1,4 +1,5 @@
 import type { HapticKind } from '@/lib/haptic'
+import { playSample } from '@/lib/reloadSound'
 import { useSettingsStore } from '@/stores/settingsStore'
 
 /** Timbres synthétisés, dans l'esprit des menus Wii (aucun échantillon : tout est calculé,
@@ -26,6 +27,17 @@ export type SoundKind =
   | 'chipOff'
   | 'open'
   | 'close'
+  // Style Reload : déplacement dans un menu, lancement d'une session, entrée / sortie d'écran,
+  // panneau latéral, changement d'onglet (L / R).
+  | 'select'
+  | 'launch'
+  | 'forward'
+  | 'backward'
+  | 'panelIn'
+  | 'panelOut'
+  | 'tabSwitch'
+  | 'prev'
+  | 'next'
 
 // Gamme pentatonique (do majeur) : toutes les notes vont ensemble, le hasard reste mélodieux.
 const PENTA = [0, 2, 4, 7, 9]
@@ -98,6 +110,16 @@ export const SOUNDS: Record<SoundKind, readonly (readonly Note[])[]> = {
   ],
   record: [[n(0, penta(4), 0.14), n(0.08, penta(7), 0.14), n(0.16, penta(9), 0.14), n(0.24, penta(12), 0.45)]],
   timeout: [[n(0, 700, 0.32, 'soft', 0.7, 330)]],
+  // Sons propres au style Reload (échantillons, cf. reloadSound.ts) : équivalents synthétisés en Wii.
+  select: [[n(0, C6, 0.07, 'bubble', 0.55, C6 * 1.5)]],
+  launch: [[n(0, penta(0), 0.1, 'marimba', 0.8), n(0.07, penta(2), 0.1, 'marimba', 0.8), n(0.14, penta(5), 0.22)]],
+  forward: [[n(0, 520, 0.18, 'soft', 0.5, 1040)]],
+  backward: [[n(0, 1040, 0.18, 'soft', 0.5, 520)]],
+  panelIn: [[n(0, 520, 0.18, 'soft', 0.5, 1040)]],
+  panelOut: [[n(0, 1040, 0.18, 'soft', 0.5, 520)]],
+  tabSwitch: [[n(0, penta(2), 0.09, 'marimba', 0.8), n(0.055, penta(4), 0.12, 'marimba', 0.7)]],
+  prev: [[n(0, penta(3), 0.08, 'marimba', 0.7), n(0.05, penta(1), 0.1, 'marimba', 0.6)]],
+  next: [[n(0, penta(1), 0.08, 'marimba', 0.7), n(0.05, penta(3), 0.1, 'marimba', 0.6)]],
 }
 
 const MASTER = 0.2
@@ -179,10 +201,10 @@ function voice({ ctx, out }: Engine, note: Note, t0: number, ratio: number) {
   carrier.stop(end + 0.02)
 }
 
-/** Les sons sont-ils actifs (style Wii et réglage Sons) ? */
+/** Les sons sont-ils actifs (style Wii ou Reload, et réglage Sons) ? */
 export function soundsEnabled(): boolean {
   const { ui, sounds } = useSettingsStore.getState()
-  return ui === 'wii' && sounds
+  return (ui === 'wii' || ui === 'reload') && sounds
 }
 
 // Séries : chaque bonne réponse d'affilée (moins de 20 s d'écart) monte d'un degré, jusqu'à 7 ;
@@ -208,9 +230,23 @@ function ratioFor(kind: SoundKind, now: number): number {
 }
 
 /** Joue un son du style Wii si le réglage le permet. Rien ne doit en dépendre. */
+let lastPlayedAt = 0
+
+/** Un son vient-il d'être joué (moins de `ms`) ? Évite de doubler un retour déjà sonorisé au toucher. */
+export function playedWithin(ms: number): boolean {
+  return Date.now() - lastPlayedAt < ms
+}
+
 export function playSound(kind: SoundKind) {
   if (!soundsEnabled()) return
+  lastPlayedAt = Date.now()
   try {
+    if (useSettingsStore.getState().ui === 'reload') {
+      // Échantillons : la série de bonnes réponses (ou de traits) monte d'un demi-ton à chaque fois.
+      const ratio = ratioFor(kind, Date.now())
+      playSample(kind, kind === 'correct' || kind === 'strokeOk' ? Math.min(ratio, 1.5) ** 0.5 : 1)
+      return
+    }
     const e = audio()
     if (!e) return
     const variants = SOUNDS[kind]
@@ -239,6 +275,9 @@ export interface TapTarget {
 /** Son du contrôle trouvé par tapSoundFor (pur). */
 export function tapKind(target: TapTarget | null): SoundKind | null {
   if (!target || target.disabled) return null
+  // Son explicite (menus du style Reload) : data-tap-sound="select", "launch"…
+  const explicit = target.getAttribute('data-tap-sound')
+  if (explicit && explicit in SOUNDS) return explicit as SoundKind
   if (target.classList.contains('k-tab')) return 'tapTab'
   if (target.classList.contains('k-chip')) return target.getAttribute('aria-pressed') === 'true' ? 'chipOff' : 'chipOn'
   if (target.classList.contains('k-btn--primary')) return 'tapPrimary'

@@ -8,6 +8,7 @@ const DARK_QUERY = '(prefers-color-scheme: dark)'
 const THEME_COLORS = {
   papier: { light: '#f5f0e6', dark: '#000000' },
   wii: { light: '#ffffff', dark: '#0e1a26' },
+  reload: { light: '#2fa8f3', dark: '#12309e' },
 } as const
 
 /** Synchronise la classe .dark, l'attribut data-ui (style) de <html> et la meta theme-color avec les réglages. */

@@ -19,6 +19,7 @@ import { FAMILIES, stageKindLabel, stagePresentation } from '@/features/quiz/sta
 import type { ChoiceQuestion, ComposeQuestion, InputQuestion, Question, StageId } from '@/features/quiz/types'
 import { useAppKeyboard } from '@/lib/useAppKeyboard'
 import { useQuizOrigin } from '@/lib/useQuizOrigin'
+import { useUiStyle } from '@/lib/useUiStyle'
 import { QuizSummary } from '@/pages/QuizSummary'
 import { useQuizSessionStore } from '@/stores/quizSessionStore'
 
@@ -80,6 +81,7 @@ function QuizRunner({ session }: { session: SessionState }) {
   // quelque chose à regarder (comparaison d'un dessin, traduction d'un mot ou
   // d'une phrase).
   const isDrawing = question.kind === 'draw'
+  const reload = useUiStyle() === 'reload'
   const { prompt } = question
   const stayAfterAnswer =
     isDrawing || prompt.type === 'word' || prompt.type === 'sentence' || prompt.type === 'romajiSentence'
@@ -123,8 +125,13 @@ function QuizRunner({ session }: { session: SessionState }) {
   })
 
   return (
-    <div className="flex min-h-full flex-col" data-app-keyboard={appKeyboard ? '' : undefined}>
-      <header className="-ml-2.5 flex items-center gap-1.5">
+    <div className="k-quiz relative flex min-h-full flex-col" data-app-keyboard={appKeyboard ? '' : undefined}>
+      {reload && (
+        <span aria-hidden="true" className="rl-ghost top-5 -left-6 text-[72px] opacity-45">
+          {stagePresentation(question.stage).name.toLocaleUpperCase('fr-FR').replace(' ?', '\u00a0?')}
+        </span>
+      )}
+      <header className="relative -ml-2.5 flex items-center gap-1.5">
         <IconButton icon="close" label="Quitter la session" onClick={askQuit} />
         <SessionProgress ticks={sessionTicks(session)} />
       </header>
@@ -466,7 +473,7 @@ function ChoiceAnswers({ question, session, onPick }: ChoiceAnswersProps) {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-2.5">
+    <div className="k-choices grid grid-cols-2 gap-2.5">
       {question.choices.map((choice) => {
         const state = stateOf(choice.id)
         return (

@@ -15,16 +15,20 @@ import {
 } from '@/features/writing/session'
 import { evaluateStroke, prepareStroke, type MatchMode } from '@/features/writing/strokeMatch'
 import { useIsDark } from '@/lib/useIsDark'
+import { useUiStyle } from '@/lib/useUiStyle'
 
 const INK_WIDTH = 4.5
 // Le canvas ne lit pas les classes : valeurs des jetons ink (clair / sombre) et error.
 const INK_LIGHT = '#1e1b17'
 const INK_DARK = '#ede6d8'
 const ERROR_COLOR = '#c8321f'
+// Style Reload (skin-reload.css) : encre blanche sur la case marine, trait refusé en rose.
+const INK_RELOAD = '#ffffff'
+const ERROR_RELOAD = '#ff6fa0'
 const FLASH_MS = 500
 // Outils sous la zone : icône au-dessus du libellé ; l'action du niveau porte un contour.
 const TOOL_BUTTON =
-  'flex min-h-[52px] min-w-[68px] flex-col items-center justify-center gap-0.5 rounded-md px-2 text-[12px] leading-[14px] font-semibold text-ink active:brightness-90 disabled:opacity-40'
+  'k-padtool flex min-h-[52px] min-w-[68px] flex-col items-center justify-center gap-0.5 rounded-md px-2 text-[12px] leading-[14px] font-semibold text-ink active:brightness-90 disabled:opacity-40'
 const MAIN_TOOL = 'border-[1.5px] border-control bg-paper-raised'
 /** Écart minimal entre deux points enregistrés (unités KanjiVG) : évite d'accumuler du bruit. */
 const MIN_POINT_GAP = 0.4
@@ -76,7 +80,9 @@ export function WritingPad({ strokes, mode, onComplete, showCompare = true, vali
   const activePointer = useRef<number | null>(null)
 
   const dark = useIsDark()
-  const ink = dark ? INK_DARK : INK_LIGHT
+  const reload = useUiStyle() === 'reload'
+  const ink = reload ? INK_RELOAD : dark ? INK_DARK : INK_LIGHT
+  const errorColor = reload ? ERROR_RELOAD : ERROR_COLOR
   const complete = validate && isComplete(session)
   const showHint = validate && !complete && (hintFor === session.done || shouldShowHint(session))
   const hinted = useRef(false)
@@ -103,9 +109,9 @@ export function WritingPad({ strokes, mode, onComplete, showCompare = true, vali
     const ctx = context(canvas)
     if (!ctx) return
     clear(ctx)
-    if (errorStroke) drawPolyline(ctx, errorStroke, ERROR_COLOR)
+    if (errorStroke) drawPolyline(ctx, errorStroke, errorColor)
     if (current.current) drawPolyline(ctx, current.current, ink)
-  }, [size, ink, errorStroke])
+  }, [size, ink, errorColor, errorStroke])
 
   useEffect(() => {
     if (flash === null) return
@@ -232,7 +238,7 @@ export function WritingPad({ strokes, mode, onComplete, showCompare = true, vali
 
   return (
     <div>
-      <div className="relative aspect-square w-full overflow-hidden rounded-sm border-[1.5px] border-ink bg-paper-raised">
+      <div className="k-pad relative aspect-square w-full overflow-hidden rounded-sm border-[1.5px] border-ink bg-paper-raised">
         <svg
           viewBox={`0 0 ${STROKE_VIEWBOX} ${STROKE_VIEWBOX}`}
           className="pointer-events-none absolute inset-0 size-full"

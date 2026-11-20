@@ -22,7 +22,7 @@
       try {
         var s = JSON.parse(localStorage.getItem('kana-settings') || '{}').state || {}
         var t = s.theme || 'system'
-        document.documentElement.dataset.ui = s.ui || 'papier'
+        document.documentElement.dataset.ui = s.ui || 'reload'
         var dark = t === 'dark' || (t === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
         document.documentElement.classList.toggle('dark', dark)
       } catch (e) {}

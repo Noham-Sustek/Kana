@@ -1,10 +1,11 @@
-import { Suspense, lazy, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { Suspense, lazy, useEffect, useMemo, useRef, useState, type ReactNode, type TouchEvent } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router'
 import { Button } from '@/components/Button'
 import { Icon } from '@/components/Icon'
 import { IconButton } from '@/components/IconButton'
 import { KanaTile } from '@/components/KanaTile'
 import { MASTERY_LABELS, MasterySteps } from '@/components/MasterySteps'
+import { ReloadKanaDetail } from '@/components/reload/ReloadKanaDetail'
 import { counterpartOf, getGroup, getKana, groupGlyph, kanaOfScript, type Kana } from '@/data/kana'
 import { buildProgress } from '@/engine/scheduler'
 import { confusablesOf, familyMastery, wordsWithKana } from '@/features/kana/detail'
@@ -14,6 +15,7 @@ import { formatResponseTime } from '@/features/quiz/summary'
 import { FAMILIES, type StageFamily } from '@/features/quiz/stages'
 import { summarize } from '@/features/stats/stats'
 import { WRITABLE_KINDS, writingStatus } from '@/features/writing/progress'
+import { useUiStyle } from '@/lib/useUiStyle'
 
 // Les tracés KanjiVG restent hors du bundle principal.
 const strokeModule = () => import('@/components/KanaStrokeCase')
@@ -31,6 +33,7 @@ export function KanaDetailPage() {
   const kana = getKana(kanaId)
   const touchStartX = useRef<number | null>(null)
   const [replay, setReplay] = useState(0)
+  const reload = useUiStyle() === 'reload'
 
   const group = kana ? getGroup(kana.groupId) : undefined
   const siblings = group?.kanaIds ?? []
@@ -67,20 +70,38 @@ export function KanaDetailPage() {
   const [primary, ...variants] = kana.romaji
   const writable = WRITABLE_KINDS.includes(group.kind) && [...kana.char].length === 1
 
+  const swipe = {
+    onTouchStart: (e: TouchEvent) => (touchStartX.current = e.touches[0]?.clientX ?? null),
+    onTouchEnd: (e: TouchEvent) => {
+      const start = touchStartX.current
+      const end = e.changedTouches[0]?.clientX
+      touchStartX.current = null
+      if (start == null || end == null) return
+      const dx = end - start
+      if (dx > SWIPE_THRESHOLD_PX) goTo(prev)
+      else if (dx < -SWIPE_THRESHOLD_PX) goTo(next)
+    },
+  }
+
+  if (reload) {
+    return (
+      <div className="flex flex-1 flex-col" {...swipe}>
+        <ReloadKanaDetail
+          kana={kana}
+          group={group}
+          prev={prev}
+          next={next}
+          counterpart={counterpart}
+          writable={writable}
+          onGoTo={goTo}
+          onBack={() => goBack(kana)}
+        />
+      </div>
+    )
+  }
+
   return (
-    <div
-      className="flex min-h-full flex-col pb-6"
-      onTouchStart={(e) => (touchStartX.current = e.touches[0]?.clientX ?? null)}
-      onTouchEnd={(e) => {
-        const start = touchStartX.current
-        const end = e.changedTouches[0]?.clientX
-        touchStartX.current = null
-        if (start == null || end == null) return
-        const dx = end - start
-        if (dx > SWIPE_THRESHOLD_PX) goTo(prev)
-        else if (dx < -SWIPE_THRESHOLD_PX) goTo(next)
-      }}
-    >
+    <div className="flex min-h-full flex-col pb-6" {...swipe}>
       <header className="-mx-2 flex items-center justify-between">
         <IconButton icon="chevronLeft" label="Retour à la grille" onClick={() => goBack(kana)} />
         <div className="flex items-center">

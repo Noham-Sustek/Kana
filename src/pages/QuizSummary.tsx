@@ -30,6 +30,7 @@ import { useQuizPool } from '@/features/quiz/useQuizPool'
 import { computeStreak } from '@/features/stats/stats'
 import { jp, t, type Line } from '@/lib/segments'
 import { useQuizOrigin } from '@/lib/useQuizOrigin'
+import { useUiStyle } from '@/lib/useUiStyle'
 import { useQuizSettingsStore } from '@/stores/quizSettingsStore'
 import { useQuizSessionStore } from '@/stores/quizSessionStore'
 
@@ -49,6 +50,7 @@ function Recap({ session }: { session: SessionState }) {
   const pool = useQuizPool()
   const navigate = useNavigate()
   const origin = useQuizOrigin()
+  const reload = useUiStyle() === 'reload'
   const answers = useLiveQuery(() => loadProfileAnswers(profileId), [profileId])
 
   const kind: SessionKind = autoParams ? (autoParams.kanaIds ? 'targeted' : 'daily') : 'free'
@@ -104,8 +106,17 @@ function Recap({ session }: { session: SessionState }) {
   const missedKanaIds = [...new Set(session.questions.filter((_, i) => !session.outcomes[i]?.correct).flatMap((q) => q.kanaIds))]
 
   return (
-    <div className="flex min-h-full flex-col">
-      <header className="-mr-2 flex items-center justify-between">
+    <div className="k-recap relative isolate flex min-h-full flex-col">
+      {reload && (
+        <>
+          <span aria-hidden="true" className="absolute -inset-x-4 -top-4 -bottom-4 -z-10 bg-[radial-gradient(ellipse_340px_260px_at_70%_30%,rgba(40,80,255,0.35),rgba(40,80,255,0)_70%),linear-gradient(170deg,#0a1460_0%,#060b38_45%,#03061f_100%)]" />
+          <span aria-hidden="true" className="absolute top-[260px] left-[120px] -z-10 h-[640px] w-[360px] -rotate-12 bg-[#1838d8]" />
+          <p aria-hidden="true" className="rl-display relative -mx-3 -mb-2 -rotate-[8deg] text-[84px] text-[#2259ff] [text-shadow:4px_4px_0_#0b1f8a]">
+            RÉSULTATS
+          </p>
+        </>
+      )}
+      <header className="relative -mr-2 flex items-center justify-between">
         <Overline>{title} · terminée</Overline>
         <IconButton icon="close" label="Fermer le récapitulatif" onClick={finish} />
       </header>

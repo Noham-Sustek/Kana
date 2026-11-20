@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router'
 import { ActionCard } from '@/components/ActionCard'
 import { Button } from '@/components/Button'
 import { EmptyState } from '@/components/EmptyState'
+import { ReloadLearn } from '@/components/reload/ReloadLearn'
 import { KANA_GROUPS, getKana, groupGlyph } from '@/data/kana'
 import { bestChronoScore, freeSessionLine, reviewDetail } from '@/features/learn/learn'
 import { useLearnHub } from '@/features/learn/useLearnHub'
 import { AUTO_STAGES } from '@/features/quiz/auto'
 import { useCustomGroups } from '@/features/quiz/useQuizPool'
+import { useUiStyle } from '@/lib/useUiStyle'
 import { useChronoSettingsStore } from '@/stores/chronoSettingsStore'
 import { useProfileStore } from '@/stores/profileStore'
 import { useQuizSettingsStore } from '@/stores/quizSettingsStore'
@@ -22,6 +24,7 @@ export function LearnPage() {
   const profileId = useProfileStore((s) => s.profileId)
   const record = useChronoSettingsStore((s) => bestChronoScore(s.best, profileId))
   const startAuto = useQuizSessionStore((s) => s.startAuto)
+  const reload = useUiStyle() === 'reload'
 
   const groupCount = KANA_GROUPS.filter((g) => settings.groupIds.includes(g.id)).length
   const listCount = lists.filter((l) => settings.customGroupIds.includes(l.id)).length
@@ -42,6 +45,8 @@ export function LearnPage() {
   // Écriture enchaînée : depuis la ligne en cours du parcours, kana après kana.
   const focus = hub?.focus
   const writingStart = focus?.kanaIds[0] ?? (settings.autoScript === 'katakana' ? 'k-a' : 'h-a')
+
+  if (reload) return <ReloadLearn />
 
   return (
     <div className="flex flex-col gap-2.5 pb-4">

@@ -10,6 +10,9 @@ const FONTS = [
   { name: 'Newsreader', copyright: '© 2020 The Newsreader Project Authors (Production Type)', license: './licenses/newsreader-OFL.txt' },
   { name: 'Figtree', copyright: '© 2022 The Figtree Project Authors (Erik Kennedy)', license: './licenses/figtree-OFL.txt' },
   { name: 'M PLUS Rounded 1c', copyright: '© 2016 The Rounded M+ Project Authors', license: './licenses/mplusrounded1c-OFL.txt' },
+  { name: 'Montserrat', copyright: '© 2011 The Montserrat Project Authors', license: './licenses/montserrat-OFL.txt' },
+  { name: 'Barlow', copyright: '© 2017 The Barlow Project Authors', license: './licenses/barlow-OFL.txt' },
+  { name: 'Zen Kaku Gothic New', copyright: '© 2022 The Zen Project Authors', license: './licenses/zenkakugothicnew-OFL.txt' },
 ]
 
 export function AboutPage() {
@@ -124,7 +127,16 @@ export function AboutPage() {
           ))}
         </ul>
         <p className="mt-2 text-ink-muted">
-          Modification : Klee One est réduite aux seuls kana, Newsreader, Figtree et M PLUS Rounded 1c (style Wii) aux caractères latins.
+          Modification : Klee One et Zen Kaku Gothic New (style Reload) sont réduites aux seuls kana ; Newsreader, Figtree,
+          M PLUS Rounded 1c (style Wii), Montserrat et Barlow (style Reload) aux caractères latins.
+        </p>
+      </section>
+
+      <section className="mt-4 rounded-md border border-hairline p-4 text-sm leading-relaxed">
+        <h2 className="mb-2 font-semibold">Sons</h2>
+        <p className="text-ink-muted">
+          Style Reload : sons d’interface du Steam Deck (Valve), convertis en MP3. Style Wii : sons synthétisés par
+          l’application.
         </p>
       </section>
     </>
