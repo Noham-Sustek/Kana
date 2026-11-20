@@ -563,7 +563,7 @@
   font-weight: 700;
   transition: transform 260ms var(--w-spring), box-shadow 120ms ease-out;
 }
-[data-ui='wii'] .k-key:active {
+[data-ui='wii'] .k-key[data-pressed] {
   transform: translateY(2px);
   box-shadow: 0 1px 0 var(--w-pill-drop);
   transition-duration: 50ms;

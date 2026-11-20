@@ -2,6 +2,7 @@ import { useEffect, useRef, type PointerEvent as ReactPointerEvent, type ReactNo
 import { Icon } from '@/components/Icon'
 import { haptic } from '@/lib/haptic'
 import { LAYOUT_ROWS, editValue, type KeyboardLayout } from '@/lib/keyboard'
+import { UNLIKELY_WEIGHT, plausibleKeys, resolveKey } from '@/lib/keyTargeting'
 
 interface AppKeyboardProps {
   /** id du champ qui reçoit la saisie (il garde le focus et son curseur). */
@@ -38,24 +39,95 @@ function enter(target: Field) {
   if (!handled) target.form?.requestSubmit()
 }
 
+/** Touches spéciales (les lettres ont pour id leur lettre). */
+const ENTER = 'enter'
+const BACKSPACE = 'back'
+
 /** Clavier romaji intégré (docs/design/components) : lettres selon la disposition du système,
- *  tiret (ー), apostrophe (n'), espace, effacer, Entrée. Ne prend jamais le focus. */
+ *  tiret (ー), apostrophe (n'), espace, effacer, Entrée. Ne prend jamais le focus.
+ *  Un toucher est attribué par le clavier entier (`resolveKey`) : le bord d'une touche et les
+ *  espaces entre touches reviennent à la touche la plus plausible d'après ce qui précède. */
 export function AppKeyboard({ targetId, layout, enterLabel }: AppKeyboardProps) {
   const rows = LAYOUT_ROWS[layout]
+  const root = useRef<HTMLDivElement>(null)
+  const timers = useRef<{ delay?: number; tick?: number }>({})
+  const pressed = useRef(new Map<number, HTMLElement>())
   const target = () => document.getElementById(targetId) as Field | null
 
-  const press = (text: string | null) => {
+  const stopRepeat = () => {
+    window.clearTimeout(timers.current.delay)
+    window.clearInterval(timers.current.tick)
+  }
+  useEffect(() => stopRepeat, [])
+
+  const press = (id: string) => {
     const el = target()
     if (!el) return
+    if (id === ENTER) {
+      enter(el)
+      return
+    }
     el.focus({ preventScroll: true })
-    type(el, text)
+    type(el, id === BACKSPACE ? null : id)
     haptic('key')
+  }
+
+  const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    // Le geste ne doit jamais retirer le focus au champ (le curseur clignoterait ailleurs).
+    e.preventDefault()
+    const buttons = [...(root.current?.querySelectorAll<HTMLElement>('[data-key]') ?? [])]
+    const el = target()
+    const plausible = plausibleKeys(el ? el.value.slice(0, el.selectionStart ?? el.value.length) : '')
+    const id = resolveKey(
+      e.clientX,
+      e.clientY,
+      buttons.map((b) => {
+        const r = b.getBoundingClientRect()
+        const key = b.dataset.key!
+        const scored = key !== ENTER && key !== BACKSPACE && plausible !== null
+        return {
+          id: key,
+          left: r.left,
+          top: r.top,
+          width: r.width,
+          height: r.height,
+          weight: scored && !plausible.has(key) ? UNLIKELY_WEIGHT : 1,
+        }
+      }),
+    )
+    if (id === null) return
+    const button = buttons.find((b) => b.dataset.key === id)
+    if (button) {
+      // État appuyé sur la touche retenue, qui n'est pas forcément celle sous le doigt.
+      button.dataset.pressed = ''
+      pressed.current.set(e.pointerId, button)
+    }
+    // Action au toucher (pas au relâché) : la frappe suit le doigt. Effacer se répète si l'on reste appuyé.
+    press(id)
+    if (id === BACKSPACE) {
+      stopRepeat()
+      timers.current.delay = window.setTimeout(() => {
+        timers.current.tick = window.setInterval(() => press(BACKSPACE), 70)
+      }, 420)
+    }
+  }
+
+  const release = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const button = pressed.current.get(e.pointerId)
+    if (button) delete button.dataset.pressed
+    pressed.current.delete(e.pointerId)
+    if (pressed.current.size === 0) stopRepeat()
   }
 
   return (
     <div
+      ref={root}
+      onPointerDown={onPointerDown}
+      onPointerUp={release}
+      onPointerCancel={release}
+      onPointerLeave={release}
       // L'ombre pleine prolonge le fond dans la marge basse de <main> : le clavier touche le bord.
-      className="k-keyboard -mx-4 mt-2 grid gap-[7px] border-t border-hairline bg-paper-raised shadow-[0_1rem_0_0_var(--k-paper-raised)] px-[5px] pt-2 pb-[max(6px,env(safe-area-inset-bottom))] select-none"
+      className="k-keyboard -mx-4 mt-2 grid touch-manipulation gap-[7px] border-t border-hairline bg-paper-raised shadow-[0_1rem_0_0_var(--k-paper-raised)] px-[5px] pt-2 pb-[max(6px,env(safe-area-inset-bottom))] select-none"
       role="group"
       aria-label="Clavier romaji"
     >
@@ -69,36 +141,33 @@ export function AppKeyboard({ targetId, layout, enterLabel }: AppKeyboardProps) 
             {[...row].map((letter, i) => (
               <Key
                 key={letter}
+                id={letter}
                 label={letter}
-                onPress={() => press(letter)}
+                onPress={press}
                 className={last ? (i === 0 ? 'ml-auto' : i === row.length - 1 ? 'mr-auto' : '') : ''}
               >
                 {letter}
               </Key>
             ))}
-            {last && <Backspace onPress={() => press(null)} />}
+            {last && (
+              <Key id={BACKSPACE} label="effacer" onPress={press} wide={SIDE_WIDTH}>
+                <Icon name="backspace" className="size-[22px]" />
+              </Key>
+            )}
           </div>
         )
       })}
       <div className="flex justify-center gap-[5px]">
-        <Key label="tiret, voyelle longue" onPress={() => press('-')} wide={1.2}>
+        <Key id="-" label="tiret, voyelle longue" onPress={press} wide={1.2}>
           -
         </Key>
-        <Key label="apostrophe" onPress={() => press("'")} wide={1.2}>
+        <Key id="'" label="apostrophe" onPress={press} wide={1.2}>
           ’
         </Key>
-        <Key label="espace" onPress={() => press(' ')} wide={4.6}>
+        <Key id=" " label="espace" onPress={press} wide={4.6}>
           <span className="sr-only">espace</span>
         </Key>
-        <Key
-          label={enterLabel}
-          onPress={() => {
-            const el = target()
-            if (el) enter(el)
-          }}
-          wide={2.6}
-          accent
-        >
+        <Key id={ENTER} label={enterLabel} onPress={press} wide={2.6} accent>
           {enterLabel}
         </Key>
       </div>
@@ -113,65 +182,39 @@ const keyFlex = (wide: number) => ({ flex: `0 1 calc(${wide} * (100% - 45px) / 1
 const SIDE_WIDTH = 1.5
 
 interface KeyProps {
+  id: string
   label: string
-  onPress: () => void
+  onPress: (id: string) => void
   /** Largeur relative (1 = une lettre). */
   wide?: number
   accent?: boolean
-  repeat?: boolean
   className?: string
   children: ReactNode
 }
 
-// Le geste ne doit jamais retirer le focus au champ (le curseur clignoterait ailleurs).
-const keepFocus = (e: ReactPointerEvent) => e.preventDefault()
-
-function Key({ label, onPress, wide = 1, accent, repeat, className = '', children }: KeyProps) {
-  const timers = useRef<{ delay?: number; tick?: number }>({})
-  const stop = () => {
-    window.clearTimeout(timers.current.delay)
-    window.clearInterval(timers.current.tick)
-  }
-  useEffect(() => stop, [])
-
+/** Touche : le toucher est géré par le clavier ; ici, seulement le clavier physique et les
+ *  lecteurs d'écran (clic sans pointeur, `detail === 0`). */
+function Key({ id, label, onPress, wide = 1, accent, className = '', children }: KeyProps) {
   return (
     <button
       type="button"
       aria-label={label}
-      onPointerDown={(e) => {
-        keepFocus(e)
-        // Action au toucher (pas au relâché) : la frappe suit le doigt. Effacer se répète si l'on reste appuyé.
-        onPress()
-        if (repeat) {
-          stop()
-          timers.current.delay = window.setTimeout(() => {
-            timers.current.tick = window.setInterval(onPress, 70)
-          }, 420)
-        }
+      data-key={id}
+      onClick={(e) => {
+        if (e.detail === 0) onPress(id)
       }}
-      onPointerUp={stop}
-      onPointerLeave={stop}
-      onPointerCancel={stop}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault()
-          onPress()
+          onPress(id)
         }
       }}
       style={keyFlex(wide)}
-      className={`k-key ${accent ? 'k-key--enter bg-accent text-on-accent' : 'bg-paper text-ink'} grid h-[46px] min-w-0 place-items-center rounded-sm border border-control text-[19px] leading-none font-medium touch-manipulation active:brightness-90 ${
+      className={`k-key ${accent ? 'k-key--enter bg-accent text-on-accent' : 'bg-paper text-ink'} grid h-[46px] min-w-0 place-items-center rounded-sm border border-control text-[19px] leading-none font-medium data-[pressed]:brightness-90 ${
         accent ? 'text-[15px] font-semibold' : ''
       } ${className}`}
     >
       {children}
     </button>
-  )
-}
-
-function Backspace({ onPress }: { onPress: () => void }) {
-  return (
-    <Key label="effacer" onPress={onPress} wide={SIDE_WIDTH} repeat>
-      <Icon name="backspace" className="size-[22px]" />
-    </Key>
   )
 }
