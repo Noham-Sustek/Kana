@@ -897,3 +897,7 @@
 .dark .rl-tab-ink {
   color: #c9d8ff;
 }
+:root[data-ui='reload'] .k-padtool {
+  border: 0;
+  background: transparent;
+}

@@ -326,40 +326,33 @@ interface ReloadWritingHeaderProps {
   onNext?: () => void
 }
 
-/** En-tête de l'exercice, style Reload : bandeau blanc (kana, lecture, ligne), nombre de traits,
- *  étapes en flèches (Observer, Calque, De mémoire ; les étapes passées portent une coche). */
+/** En-tête de l'exercice, style Reload, disposé comme les autres styles (une ligne : retour, kana,
+ *  précédent / suivant ; puis les étapes en flèches) pour que la case reste haute sur l'écran. */
 function ReloadWritingHeader({ char, romaji, line, position, strokeCount, level, onLevel, onBack, onPrev, onNext }: ReloadWritingHeaderProps) {
+  const arrow = 'grid size-11 shrink-0 place-items-center bg-[#05081f] text-white shadow-[inset_0_0_0_2px_#ffffff] [clip-path:polygon(12%_0,100%_0,88%_100%,0_100%)] disabled:opacity-30'
   return (
     <>
       <span aria-hidden="true" className="absolute -inset-x-4 -top-4 bottom-0 -z-10 bg-[linear-gradient(165deg,#1d49d8_0%,#1430ae_38%,#0c1c78_70%,#070f45_100%)]" />
-      <span aria-hidden="true" className="absolute top-[250px] -left-24 -z-10 h-[300px] w-[620px] -rotate-[14deg] bg-[#1838d8]" />
-      <div className="relative flex items-start justify-between">
-        <button
-          type="button"
-          onClick={onBack}
-          aria-label="Retour"
-          data-tap-sound="tapBack"
-          className="grid size-11 place-items-center bg-[#05081f] text-white shadow-[inset_0_0_0_2px_#ffffff] [clip-path:polygon(12%_0,100%_0,88%_100%,0_100%)]"
-        >
+      <span aria-hidden="true" className="absolute top-[230px] -left-24 -z-10 h-[300px] w-[620px] -rotate-[14deg] bg-[#1838d8]" />
+      <div className="relative flex items-center gap-1.5">
+        <button type="button" onClick={onBack} aria-label="Retour" data-tap-sound="tapBack" className={arrow}>
           <Icon name="chevronLeft" className="size-5" />
         </button>
-        <div className="flex flex-col items-end">
-          <span className="rl-cond text-[12px] font-extrabold tracking-[0.06em] text-[#8fb4ff]">TRAITS</span>
-          <span className="rl-display text-[44px] leading-[0.85] text-white [text-shadow:3px_3px_0_#1838d8]">{strokeCount}</span>
-        </div>
-      </div>
-      <div className="relative -mx-4 -mt-3 flex h-[66px] w-[290px] items-center gap-2.5 bg-white pl-4 text-[#05081f] [clip-path:polygon(0_0,100%_0,88%_100%,0_100%)]">
-        <h1 className="flex items-center gap-2.5">
-          {char ? <span className="font-jp text-[44px] leading-none">{char}</span> : <span className="rl-display text-[40px]">?</span>}
-          <span className="flex flex-col leading-[1.05]">
-            <span className="rl-cond text-[26px] font-extrabold">{romaji}</span>
-            <span className="rl-cond text-[13px] font-bold">
-              Ligne <span className="font-jp not-italic">{line}</span> · {position}
-            </span>
+        <h1 className="flex h-11 min-w-0 flex-1 items-center gap-2 bg-white pr-5 pl-3 text-[#05081f] [clip-path:polygon(0_0,100%_0,93%_100%,0_100%)]">
+          {char ? <span className="font-jp text-[28px] leading-none">{char}</span> : <span className="rl-display text-[26px]">?</span>}
+          <span className="rl-cond text-[22px] font-extrabold">{romaji}</span>
+          <span className="rl-cond ml-auto truncate text-[13px] font-bold">
+            <span className="font-jp not-italic">{line}</span> · {position} · {strokeCount} trait{strokeCount > 1 ? 's' : ''}
           </span>
         </h1>
+        <button type="button" onClick={onPrev} disabled={!onPrev} aria-label="Kana précédent" data-tap-sound="prev" className={arrow}>
+          <Icon name="chevronLeft" className="size-5" />
+        </button>
+        <button type="button" onClick={onNext} disabled={!onNext} aria-label="Kana suivant" data-tap-sound="next" className={arrow}>
+          <Icon name="chevronRight" className="size-5" />
+        </button>
       </div>
-      <div className="relative mt-3 flex items-center gap-0.5">
+      <div className="relative mt-2 flex items-center gap-0.5">
         {LEVEL_OPTIONS.map((o, i) => {
           const on = o.value === level
           const done = o.value < level
@@ -370,7 +363,7 @@ function ReloadWritingHeader({ char, romaji, line, position, strokeCount, level,
               aria-pressed={on}
               onClick={() => onLevel(o.value)}
               data-tap-sound="tabSwitch"
-              className={`rl-display flex h-[38px] flex-1 items-center justify-center gap-1 text-[12.5px] uppercase ${
+              className={`rl-display flex h-[44px] flex-1 items-center justify-center gap-1 text-[12.5px] uppercase ${
                 on ? 'bg-white text-[#05081f]' : done ? 'bg-[#5ce1ff] text-[#05081f]' : 'bg-white/12 text-[#8fb4ff]'
               }`}
               style={{ clipPath: i === 0 ? 'polygon(0 0,88% 0,100% 50%,88% 100%,0 100%)' : 'polygon(0 0,88% 0,100% 50%,88% 100%,0 100%,11% 50%)' }}
@@ -380,14 +373,6 @@ function ReloadWritingHeader({ char, romaji, line, position, strokeCount, level,
             </button>
           )
         })}
-      </div>
-      <div className="relative mt-1 flex justify-between">
-        <button type="button" onClick={onPrev} disabled={!onPrev} className="rl-cond min-h-11 px-1 text-[15px] font-bold text-white disabled:opacity-30" data-tap-sound="prev">
-          ‹ Kana précédent
-        </button>
-        <button type="button" onClick={onNext} disabled={!onNext} className="rl-cond min-h-11 px-1 text-[15px] font-bold text-white disabled:opacity-30" data-tap-sound="next">
-          Kana suivant ›
-        </button>
       </div>
     </>
   )
