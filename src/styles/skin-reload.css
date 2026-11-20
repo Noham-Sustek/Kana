@@ -490,6 +490,8 @@
 /* ── Clavier intégré ───────────────────────────────────────────────── */
 :root[data-ui='reload'] .k-keyboard {
   background: rgba(5, 8, 31, 0.86);
+  /* Prolongement sous le clavier jusqu'au bord, de la même teinte que lui. */
+  box-shadow: 0 1rem 0 0 rgba(5, 8, 31, 0.86);
 }
 :root[data-ui='reload'] .k-key {
   background: var(--k-paper-raised);
@@ -605,6 +607,11 @@
     opacity: 0;
   }
 }
+/* La page remplit l'écran : clavier intégré et boutons collés en bas restent en bas (son
+   min-h-full ne se résout pas dans ce conteneur flex sans hauteur fixée). */
+:root[data-ui='reload'] .rl-enter > * {
+  flex-grow: 1;
+}
 :root[data-ui='reload'] .rl-enter {
   /* backwards : rien ne reste appliqué après l'entrée (un transform maintenu ferait des
      éléments position: fixed de la page des éléments relatifs à elle). */
@@ -676,6 +683,10 @@
 }
 
 /* ── Pièces propres aux écrans Reload (components/reload/) ─────────── */
+/* Fond d'écran qui remonte sous la marge haute de <main> (encoche et barre d'état comprises). */
+.rl-bleed-top {
+  top: calc(-1 * max(1rem, env(safe-area-inset-top)));
+}
 .rl-word {
   display: block;
   font-family: var(--r-display);

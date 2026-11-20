@@ -19,7 +19,7 @@ export function ReloadUnlock({ groups, onContinue }: ReloadUnlockProps) {
 
   return (
     <div className="relative flex flex-1 flex-col">
-      <span aria-hidden="true" className="absolute -inset-x-4 -top-4 bottom-0 bg-[linear-gradient(165deg,#1d49d8_0%,#1430ae_38%,#0c1c78_70%,#070f45_100%)]" />
+      <span aria-hidden="true" className="rl-bleed-top absolute -inset-x-4 bottom-0 bg-[linear-gradient(165deg,#1d49d8_0%,#1430ae_38%,#0c1c78_70%,#070f45_100%)]" />
       <span
         aria-hidden="true"
         className="rl-burst absolute top-[-120px] left-1/2 size-[790px] -translate-x-1/2 rounded-full"

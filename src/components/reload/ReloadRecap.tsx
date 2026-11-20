@@ -129,9 +129,9 @@ function Backdrop() {
     <>
       <span
         aria-hidden="true"
-        className="absolute -top-4 right-[calc(50%-50vw)] bottom-0 left-[calc(50%-50vw)] -z-10 bg-[radial-gradient(ellipse_360px_280px_at_78%_18%,rgba(60,110,255,0.32),rgba(60,110,255,0)_70%),linear-gradient(172deg,#0a1668_0%,#06104a_42%,#030826_100%)]"
+        className="rl-bleed-top absolute right-[calc(50%-50vw)] bottom-0 left-[calc(50%-50vw)] -z-10 bg-[radial-gradient(ellipse_360px_280px_at_78%_18%,rgba(60,110,255,0.32),rgba(60,110,255,0)_70%),linear-gradient(172deg,#0a1668_0%,#06104a_42%,#030826_100%)]"
       />
-      <span aria-hidden="true" className="absolute -top-4 right-[calc(50%-50vw)] bottom-0 left-[calc(50%-50vw)] -z-10 overflow-hidden">
+      <span aria-hidden="true" className="rl-bleed-top absolute right-[calc(50%-50vw)] bottom-0 left-[calc(50%-50vw)] -z-10 overflow-hidden">
         <span
           className="rl-res-panel absolute top-[150px] left-[calc(50vw-265px)] h-[300px] w-[max(600px,60vw)] -rotate-[13deg] bg-[#12309f]/80"
           style={{ '--d': '120ms' } as CSSProperties}

@@ -54,7 +54,7 @@ export function ReloadSettings({ sections }: { sections: readonly ReloadSettings
   return (
     <div className="relative flex flex-1 flex-col">
       <h1 className="sr-only">Réglages</h1>
-      <div aria-hidden="true" className={`absolute -inset-x-4 -top-4 bottom-0 overflow-hidden ${dark ? 'bg-[#0a0f2e]' : 'bg-[#f3f5fa]'}`}>
+      <div aria-hidden="true" className={`rl-bleed-top absolute -inset-x-4 bottom-0 overflow-hidden ${dark ? 'bg-[#0a0f2e]' : 'bg-[#f3f5fa]'}`}>
       <span
         aria-hidden="true"
         className={`rl-word pointer-events-none absolute text-[150px] ${dark ? 'text-[#1a2a78]' : 'text-[#05081f]'}`}

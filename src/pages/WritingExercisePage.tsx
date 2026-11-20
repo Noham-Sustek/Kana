@@ -332,7 +332,7 @@ function ReloadWritingHeader({ char, romaji, line, position, strokeCount, level,
   const arrow = 'grid size-11 shrink-0 place-items-center bg-[#05081f] text-white shadow-[inset_0_0_0_2px_#ffffff] [clip-path:polygon(12%_0,100%_0,88%_100%,0_100%)] disabled:opacity-30'
   return (
     <>
-      <span aria-hidden="true" className="absolute -inset-x-4 -top-4 bottom-0 -z-10 bg-[linear-gradient(165deg,#1d49d8_0%,#1430ae_38%,#0c1c78_70%,#070f45_100%)]" />
+      <span aria-hidden="true" className="rl-bleed-top absolute -inset-x-4 bottom-0 -z-10 bg-[linear-gradient(165deg,#1d49d8_0%,#1430ae_38%,#0c1c78_70%,#070f45_100%)]" />
       <span aria-hidden="true" className="absolute top-[230px] -left-24 -z-10 h-[300px] w-[620px] -rotate-[14deg] bg-[#1838d8]" />
       <div className="relative flex items-center gap-1.5">
         <button type="button" onClick={onBack} aria-label="Retour" data-tap-sound="tapBack" className={arrow}>
