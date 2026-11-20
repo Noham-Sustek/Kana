@@ -2,18 +2,19 @@
 # Signé si les secrets KANA_KEYSTORE_BASE64 et KANA_KEYSTORE_PASSWORD existent ; l'APK est alors
 # publié dans la release « android » du dépôt (lien fixe à ouvrir depuis le téléphone).
 # Sans secrets : APK de debug, en artefact du workflow seulement.
+# Branche ui-reload : APK (signé si possible) en artefact seulement, la release reste celle de main.
 name: APK Android
 
 on:
   push:
-    branches: [main]
+    branches: [main, ui-reload]
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: android
+  group: android-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -77,7 +78,7 @@ jobs:
           path: ${{ runner.temp }}/kana.apk
 
       - name: Release « android »
-        if: env.HAS_KEY == 'true'
+        if: env.HAS_KEY == 'true' && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
