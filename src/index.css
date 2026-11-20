@@ -258,6 +258,9 @@ body {
   @apply bg-paper font-sans text-ink antialiased;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior-y: none;
+  /* Pas de zoom au double toucher : sinon un toucher juste après la fin d'un tracé est pris pour
+     un double toucher et le bouton qui vient d'apparaître (Suivant) ne reçoit pas le clic. */
+  touch-action: manipulation;
 }
 
 /* Tracé progressif d'une <polyline pathLength="1" stroke-dasharray="1 1"> ; l'opacité

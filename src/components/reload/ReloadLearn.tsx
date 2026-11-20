@@ -216,7 +216,6 @@ export function ReloadLearn() {
   return (
     <div className="relative flex flex-1 flex-col">
       <h1 className="sr-only">S’entraîner</h1>
-      <span aria-hidden="true" className="rl-flash absolute -top-4 -left-4 h-[150px] w-[330px] [clip-path:polygon(0_0,100%_0,62%_100%,0_100%)]" />
       <span aria-hidden="true" className="rl-ghost -top-5 -left-6 text-[92px]">
         EXERCICES
       </span>
@@ -236,7 +235,7 @@ export function ReloadLearn() {
               onClick={() => changeTab(i)}
               data-tap-sound="tabSwitch"
               className={`rl-cond min-h-11 px-2 text-[15.5px] font-bold ${
-                i === tab ? 'rounded-full bg-white text-[#05081f] shadow-[0_0_0_2px_#10206e]' : 'rl-tab-ink text-[#10206e]'
+                i === tab ? 'rounded-full bg-white text-[#05081f] shadow-[0_0_0_2px_#10206e]' : 'rl-shadow text-white'
               }`}
               style={i === tab ? { minHeight: 30, alignSelf: 'center' } : undefined}
             >

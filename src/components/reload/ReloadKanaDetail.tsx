@@ -2,6 +2,7 @@ import { Suspense, lazy, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { Icon } from '@/components/Icon'
 import { MASTERY_LABELS } from '@/components/MasterySteps'
+import { Sheet } from '@/components/Sheet'
 import { ReloadGuide, type GuideAction } from '@/components/reload/ReloadGuide'
 import { ReloadLR } from '@/components/reload/ReloadLR'
 import { getKana, groupGlyph, type Kana, type KanaGroup } from '@/data/kana'
@@ -39,6 +40,7 @@ export function ReloadKanaDetail({ kana, group, prev, next, counterpart, writabl
   const navigate = useNavigate()
   const progress = useKanaProgress()
   const [replay, setReplay] = useState(0)
+  const [strokesOpen, setStrokesOpen] = useState(false)
   const own = useMemo(() => progress?.answers.filter((a) => a.kanaId === kana.id) ?? [], [progress, kana.id])
   const mastery = useMemo(() => familyMastery(buildProgress(own), kana.id), [own, kana.id])
   const stat = progress?.perKana.get(kana.id)
@@ -69,7 +71,7 @@ export function ReloadKanaDetail({ kana, group, prev, next, counterpart, writabl
 
   return (
     <div className="relative flex flex-1 flex-col">
-      <span key={kana.id} aria-hidden="true" className="rl-art rl-rise absolute top-[250px] right-[-50px] rotate-[8deg] text-[250px] opacity-60">
+      <span key={kana.id} aria-hidden="true" className="rl-art rl-rise absolute top-[230px] right-[-40px] rotate-[8deg] text-[230px] opacity-75">
         {kana.char}
       </span>
 
@@ -131,7 +133,7 @@ export function ReloadKanaDetail({ kana, group, prev, next, counterpart, writabl
       </div>
 
       <div className="relative mt-2 flex items-start gap-3">
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <div className="flex min-w-0 flex-1 flex-col gap-2 pr-[30%]">
           <span className="rl-cond text-[11px] font-extrabold tracking-[0.06em] text-[#8fb4ff]">VOS RÉSULTATS</span>
           {bars.map((b) => (
             <div key={b.k} className="flex items-center gap-1.5" aria-label={`${b.label} : ${b.v}`} role="img">
@@ -159,25 +161,23 @@ export function ReloadKanaDetail({ kana, group, prev, next, counterpart, writabl
             ))}
           </ul>
         </div>
-        {writable && (
-          <button
-            type="button"
-            onClick={() => setReplay((n) => n + 1)}
-            aria-label="Rejouer l’ordre des traits"
-            className="relative w-[138px] shrink-0 rotate-[4deg] bg-white p-1 text-[#05081f] shadow-[6px_6px_0_#05081f,0_0_0_3px_#ffffff]"
-          >
-            <Suspense fallback={<div className="aspect-square w-full" />}>
-              <KanaStrokeCase kana={kana} replay={replay} />
-            </Suspense>
-            <span className="rl-cond absolute -bottom-6 left-0 flex items-center gap-1 text-[13px] font-bold text-white">
-              <Icon name="replay" className="size-3.5" />
-              Rejouer
-            </span>
-          </button>
-        )}
       </div>
 
-      <div className="relative mt-7 bg-[rgba(8,14,60,0.9)] px-2 py-2.5">
+      {writable && (
+        <button
+          type="button"
+          onClick={() => {
+            setReplay((n) => n + 1)
+            setStrokesOpen(true)
+          }}
+          className="rl-cond relative mt-3 flex min-h-11 items-center gap-2 self-start bg-[#05081f] pr-5 pl-3 text-[16px] font-bold text-white shadow-[inset_0_0_0_2px_#5ce1ff] [clip-path:polygon(0_0,100%_0,94%_100%,0_100%)]"
+        >
+          <Icon name="writing" className="size-4 text-[#5ce1ff]" />
+          Ordre des traits
+        </button>
+      )}
+
+      <div className="relative mt-4 bg-[rgba(8,14,60,0.9)] px-2 py-2.5">
         <span className="rl-cond mb-1.5 ml-1 block text-[11px] font-extrabold tracking-[0.06em] text-[#8fb4ff]">MOTS AVEC CE KANA</span>
         <ul className="grid grid-cols-2 gap-1">
           {words.map((w, i) => (
@@ -221,6 +221,33 @@ export function ReloadKanaDetail({ kana, group, prev, next, counterpart, writabl
       )}
 
       <ReloadGuide title={'Que voulez-vous travailler ?'} actions={actions} />
+
+      {writable && (
+        <Sheet open={strokesOpen} onClose={() => setStrokesOpen(false)} title="Ordre des traits">
+          <div className="mx-auto w-[min(240px,70vw)] bg-white p-1 text-[#05081f]">
+            <Suspense fallback={<div className="aspect-square w-full" />}>
+              <KanaStrokeCase kana={kana} replay={replay} />
+            </Suspense>
+          </div>
+          <div className="mt-4 flex justify-center gap-2 pb-2">
+            <button
+              type="button"
+              onClick={() => setReplay((n) => n + 1)}
+              className="rl-cond flex min-h-11 items-center gap-1.5 px-4 text-[17px] font-bold text-white"
+            >
+              <Icon name="replay" className="size-4" />
+              Rejouer
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate(`/writing/${kana.id}`)}
+              className="rl-cond flex min-h-11 items-center bg-white px-5 text-[17px] font-extrabold text-[#05081f] [clip-path:polygon(8%_0,100%_0,92%_100%,0_100%)]"
+            >
+              S’entraîner à l’écrire
+            </button>
+          </div>
+        </Sheet>
+      )}
     </div>
   )
 }

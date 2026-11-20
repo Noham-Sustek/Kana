@@ -25,6 +25,8 @@ import { computeStreak, dailyActivity, kanaStats, mostMissed, summarize, type Da
 import { useStartDailySession } from '@/lib/useStartDailySession'
 import { useChronoSettingsStore } from '@/stores/chronoSettingsStore'
 import { useProfileStore } from '@/stores/profileStore'
+import { ReloadGuide } from '@/components/reload/ReloadGuide'
+import { useUiStyle } from '@/lib/useUiStyle'
 
 const ACTIVITY_DAYS = 14
 const MISSED_LIMIT = 5
@@ -39,6 +41,7 @@ export function ProgressPage() {
   const chrono = bestChronoRecord(chronoBest, profileId)
   const startDaily = useStartDailySession('/progress')
   const [period, setPeriod] = useState<Period>(30)
+  const reload = useUiStyle() === 'reload'
 
   const view = useMemo(() => {
     if (!data) return null
@@ -75,6 +78,7 @@ export function ProgressPage() {
         >
           Série, réussite, kana acquis : une première session suffit pour commencer à les suivre.
         </EmptyState>
+        {reload && <ReloadGuide title="Progrès" actions={[{ label: 'Retour', kind: 'back', to: '/home', keyHint: 'Échap' }]} />}
       </div>
     )
   }
@@ -84,7 +88,7 @@ export function ProgressPage() {
   const total = view.scripts.hiragana.total + view.scripts.katakana.total
 
   return (
-    <div className="pb-6">
+    <div className={reload ? 'flex flex-1 flex-col' : 'pb-6'}>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <h1 className="sr-only font-serif text-[28px] leading-tight font-medium lg:not-sr-only">Progrès</h1>
         <div className="lg:w-80">
@@ -199,6 +203,7 @@ export function ProgressPage() {
           </Section>
         </div>
       </div>
+      {reload && <ReloadGuide title="Progrès" actions={[{ label: 'Retour', kind: 'back', to: '/home', keyHint: 'Échap' }]} />}
     </div>
   )
 }

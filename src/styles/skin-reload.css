@@ -606,7 +606,9 @@
   }
 }
 :root[data-ui='reload'] .rl-enter {
-  animation: rl-enter 280ms var(--r-out) both;
+  /* backwards : rien ne reste appliqué après l'entrée (un transform maintenu ferait des
+     éléments position: fixed de la page des éléments relatifs à elle). */
+  animation: rl-enter 280ms var(--r-out) backwards;
 }
 :root[data-ui='reload'] .rl-stagger > * {
   animation: rl-slide 300ms var(--r-out) both;
@@ -862,6 +864,13 @@
 }
 
 /* Haut d'écran : encre sur la mer claire, blanc la nuit. */
+/* Mot choisi d'un menu, hors des triangles : encre sur la mer claire, blanc la nuit. */
+:root[data-ui='reload'] {
+  --r-sel-ink: #05081f;
+}
+:root[data-ui='reload'].dark {
+  --r-sel-ink: #ffffff;
+}
 .rl-topink {
   color: #05081f;
 }

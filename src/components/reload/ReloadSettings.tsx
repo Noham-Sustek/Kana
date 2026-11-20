@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 import { ReloadGuide } from '@/components/reload/ReloadGuide'
 import { ReloadMenu, type ReloadMenuItem } from '@/components/reload/ReloadMenu'
@@ -15,11 +15,11 @@ export interface ReloadSettingsSection {
 }
 
 const LAYOUT: Omit<ReloadMenuItem, 'id' | 'label'>[] = [
-  { size: 20, angle: -8, x: 150, y: 140, color: '#ffffff' },
-  { size: 26, angle: -4, x: 196, y: 192, color: '#b9f4ff' },
-  { size: 24, angle: -6, x: 168, y: 244, color: '#8fe8ff' },
-  { size: 19, angle: 3, x: 186, y: 292, color: '#3fa8ff' },
-  { size: 20, angle: -5, x: 160, y: 342, color: '#ffffff' },
+  { size: 20, angle: -8, x: 124, y: 140, color: '#ffffff' },
+  { size: 26, angle: -4, x: 168, y: 192, color: '#b9f4ff' },
+  { size: 24, angle: -6, x: 140, y: 244, color: '#8fe8ff' },
+  { size: 19, angle: 3, x: 160, y: 292, color: '#3fa8ff' },
+  { size: 20, angle: -5, x: 138, y: 342, color: '#ffffff' },
 ]
 
 /** Réglages du style Reload (menu système) : les rubriques en cercle bleu sur fond blanc ;
@@ -28,7 +28,6 @@ export function ReloadSettings({ sections }: { sections: readonly ReloadSettings
   const navigate = useNavigate()
   const [selected, setSelected] = useState(0)
   const [open, setOpen] = useState(false)
-  const panel = useRef<HTMLDivElement>(null)
   const dark = useIsDark()
   const current = sections[selected]!
 
@@ -41,10 +40,6 @@ export function ReloadSettings({ sections }: { sections: readonly ReloadSettings
     playSound('panelOut')
     setOpen(false)
   }
-
-  useEffect(() => {
-    if (open) panel.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }, [open, selected])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -69,7 +64,7 @@ export function ReloadSettings({ sections }: { sections: readonly ReloadSettings
       </span>
       <span
         aria-hidden="true"
-        className="rl-pop absolute -top-[174px] left-[46px] size-[600px] rounded-full"
+        className="rl-pop absolute -top-[174px] left-[22px] size-[600px] rounded-full"
         style={{
           background:
             'radial-gradient(ellipse 200px 120px at 30% 70%, rgba(80,200,255,0.35), rgba(80,200,255,0) 70%), repeating-linear-gradient(172deg, rgba(255,255,255,0.06) 0 2px, rgba(255,255,255,0) 2px 24px), linear-gradient(170deg, #2a6ff0 0%, #1838c8 40%, #0e1f96 100%)',
@@ -82,7 +77,7 @@ export function ReloadSettings({ sections }: { sections: readonly ReloadSettings
         selected={selected}
         onSelect={choose}
         onActivate={choose}
-        maxRight={372}
+        maxRight={350}
         height={380}
         keyboard={!open}
         silent
@@ -90,11 +85,10 @@ export function ReloadSettings({ sections }: { sections: readonly ReloadSettings
 
       {open && (
         <div
-          ref={panel}
           role="region"
           aria-label={current.title}
           key={current.id}
-          className="rl-panel-in relative -mx-4 mt-2 scroll-mt-4 bg-[#0e1c7c] pt-3 pr-8 pb-5 pl-4 text-white shadow-[inset_0_3px_0_var(--r-red)] [clip-path:polygon(0_0,100%_0,96%_100%,0_100%)]"
+          className="rl-panel-in absolute top-[392px] -left-4 z-30 max-h-[calc(100dvh-392px-150px)] w-[calc(100%+2rem)] overflow-y-auto overscroll-contain bg-[#0e1c7c] pt-3 pr-8 pb-5 pl-4 text-white shadow-[inset_0_3px_0_var(--r-red)] [clip-path:polygon(0_0,100%_0,96%_100%,0_100%)] lg:max-w-[40rem]"
         >
           <h2 className="rl-cond mb-2 text-[24px] font-semibold text-[#4fdcff]">{current.title}</h2>
           {current.content}

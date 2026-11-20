@@ -27,7 +27,7 @@ export function ReloadKanaLines({ script, progress }: ReloadKanaLinesProps) {
 
   return (
     <>
-      <span key={art} aria-hidden="true" className="rl-art rl-rise pointer-events-none absolute top-[400px] right-[-44px] rotate-[10deg] text-[260px] opacity-40">
+      <span key={art} aria-hidden="true" className={`rl-art rl-rise pointer-events-none fixed top-[46%] right-[-44px] z-0 rotate-[10deg] opacity-40 lg:right-[6%] ${[...art].length > 1 ? 'text-[150px]' : 'text-[260px]'}`}>
         {art}
       </span>
       <div className="relative -mx-4 mt-1">

@@ -92,69 +92,85 @@ export function ReloadMenu({
     return () => window.removeEventListener('keydown', onKey)
   }, [keyboard, items.length, onActivate, onSelect, selected])
 
+  // Géométrie de chaque mot (taille, angle, longueur), commune aux deux calques.
+  const geo = items.map((item, i) => {
+    const on = i === selected
+    const w100 = widths[item.label] ?? item.label.length * 62
+    const lengthAt = (h: number) => ((w100 * (h / CAP)) / 100) * SQUEEZE
+    const h = on ? item.size * Math.min(grow, Math.max(1, (maxRight - item.x) / lengthAt(item.size))) : item.size
+    return { on, h, fs: h / CAP, len: lengthAt(h), angle: on ? item.angle - 7 : item.angle }
+  })
+  const place = (item: ReloadMenuItem, angle: number) => ({ transform: `translate(${item.x}px, ${item.y}px) rotate(${angle}deg)` })
+
   return (
     <nav aria-label={label} className={`relative ${className}`} style={{ height }}>
-      <ul>
+      {/* Calque visible : le mot choisi passe devant les autres. */}
+      <div aria-hidden="true" className="pointer-events-none">
         {items.map((item, i) => {
-          const on = i === selected
-          const w100 = widths[item.label] ?? item.label.length * 62
-          const lengthAt = (h: number) => ((w100 * (h / CAP)) / 100) * SQUEEZE
-          const h = on ? item.size * Math.min(grow, Math.max(1, (maxRight - item.x) / lengthAt(item.size))) : item.size
-          const angle = on ? item.angle - 7 : item.angle
-          const fs = h / CAP
-          const len = lengthAt(h)
+          const { on, h, fs, len, angle } = geo[i]!
           const pts = (t: readonly [number, number][]) => t.map(([u, v]) => `${(u * len).toFixed(1)},${(v * h).toFixed(1)}`).join(' ')
           // Cadre des copies découpées : juste autour du mot et des triangles (un cadre trop grand
           // agrandirait la zone de défilement de la page).
           const box = { x: -0.15 * len, y: -1.7 * h, w: 1.7 * len, h: 2.4 * h }
           const poly = (t: readonly [number, number][]) =>
             t.map(([u, v]) => `${(u * len - box.x).toFixed(1)}px ${(v * h - box.y).toFixed(1)}px`).join(', ')
-          const word = (color: string, bottom = -0.2 * fs) => (
-            <span className="rl-word absolute left-0" style={{ fontSize: fs, bottom, color }}>
+          const word = (color: string) => (
+            <span className="rl-word absolute left-0" style={{ fontSize: fs, bottom: -0.2 * fs, color }}>
               {item.label}
             </span>
           )
-          const onPointerEnter = (e: PointerEvent) => {
-            if (e.pointerType === 'mouse' && !on) onSelect(i)
-          }
           return (
-            <li
+            <div
               key={item.id}
               className="absolute top-0 left-0 origin-top-left transition-transform duration-200"
-              style={{ transform: `translate(${item.x}px, ${item.y}px) rotate(${angle}deg)`, zIndex: on ? 3 : 1 }}
+              style={{ ...place(item, angle), zIndex: on ? 3 : 1 }}
             >
               {on && (
-                <svg key={`w${selected}`} aria-hidden="true" width="1" height="1" className="rl-pop absolute top-0 left-0 overflow-visible">
+                <svg key={`w${selected}`} width="1" height="1" className="rl-pop absolute top-0 left-0 overflow-visible">
                   <polygon points={pts(PINK)} fill="var(--r-pink)" />
                   <polygon points={pts(WHITE)} fill="#ffffff" />
                 </svg>
               )}
-              <button
-                type="button"
-                aria-label={item.aria ?? item.label}
-                aria-current={on ? 'true' : undefined}
-                data-tap-sound={silent ? undefined : on ? (item.sound ?? 'forward') : 'select'}
-                onPointerEnter={onPointerEnter}
-                onClick={() => (on ? onActivate(i) : onSelect(i))}
-                className="absolute left-0 cursor-pointer focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-white"
-                style={{ bottom: -0.2 * fs, width: len + 10, height: Math.max(44, fs) }}
-              >
-                {word(on ? 'var(--r-navy)' : item.color, 0)}
-              </button>
+              {word(on ? 'var(--r-sel-ink)' : item.color)}
               {on && (
                 <>
-                  <div aria-hidden="true" className="pointer-events-none absolute" style={clipBox(box, poly(PINK))}>
+                  <div className="absolute" style={clipBox(box, poly(PINK))}>
                     <span className="absolute" style={{ left: -box.x, top: -box.y }}>
                       {word('var(--r-pink)')}
                     </span>
                   </div>
-                  <div aria-hidden="true" className="pointer-events-none absolute" style={clipBox(box, poly(WHITE))}>
+                  <div className="absolute" style={clipBox(box, poly(WHITE))}>
                     <span className="absolute" style={{ left: -box.x, top: -box.y }}>
                       {word('var(--r-red)')}
                     </span>
                   </div>
                 </>
               )}
+            </div>
+          )
+        })}
+      </div>
+      {/* Calque des zones à toucher : celles des autres mots passent devant celle du mot choisi,
+          agrandi et penché, pour qu'il ne recouvre pas ses voisins. */}
+      <ul>
+        {items.map((item, i) => {
+          const { on, h, len, angle } = geo[i]!
+          return (
+            <li
+              key={item.id}
+              className="absolute top-0 left-0 origin-top-left transition-transform duration-200"
+              style={{ ...place(item, angle), zIndex: on ? 4 : 5 }}
+            >
+              <button
+                type="button"
+                aria-label={item.aria ?? item.label}
+                aria-current={on ? 'true' : undefined}
+                data-tap-sound={silent ? undefined : on ? (item.sound ?? 'forward') : 'select'}
+                onPointerEnter={(e: PointerEvent) => e.pointerType === 'mouse' && !on && onSelect(i)}
+                onClick={() => (on ? onActivate(i) : onSelect(i))}
+                className="absolute left-0 cursor-pointer focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-white"
+                style={{ bottom: -0.25 * h, width: len + 8, height: Math.max(40, h * 1.35) }}
+              />
             </li>
           )
         })}
@@ -186,6 +202,11 @@ function useWordWidths(labels: readonly string[]): Record<string, number> {
       setWidths(next)
     }
     measure()
+    // La police n'est téléchargée qu'au premier usage : sans elle, la mesure se fait sur la police
+    // de secours (plus étroite) et le mot choisi grossirait jusqu'à déborder de l'écran.
+    void document.fonts
+      ?.load('italic 900 100px "Montserrat Black Italic"', key.replace(/\|/g, ''))
+      .then(measure, () => {})
     void document.fonts?.ready.then(measure)
     return () => span.remove()
   }, [key])

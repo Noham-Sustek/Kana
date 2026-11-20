@@ -40,7 +40,7 @@ const DAY_NAMES = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 
 const PHONE: Omit<ReloadMenuItem, 'id' | 'label'>[] = [
   { size: 32, angle: -12, x: 24, y: 106, color: '#6de6ff' },
   { size: 30, angle: -8, x: 50, y: 150, color: '#78f6ff' },
-  { size: 24, angle: -14, x: 18, y: 200, color: '#7affff' },
+  { size: 24, angle: -10, x: 18, y: 204, color: '#7affff' },
   { size: 34, angle: -7, x: 56, y: 244, color: '#22ccff' },
   { size: 26, angle: -10, x: 28, y: 288, color: 'rgba(110, 175, 255, 0.92)' },
   { size: 24, angle: 7, x: 46, y: 320, color: '#1fd0ff' },
