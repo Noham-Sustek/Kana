@@ -5,7 +5,7 @@ import { ProfileSheet } from '@/components/ProfileSheet'
 import { SegmentText } from '@/components/SegmentText'
 import { ReloadGuide } from '@/components/reload/ReloadGuide'
 import { ReloadMenu, type ReloadMenuItem } from '@/components/reload/ReloadMenu'
-import { getKana } from '@/data/kana'
+import { getKana, type Script } from '@/data/kana'
 import type { SessionCta } from '@/features/home/home'
 import type { HomeData } from '@/features/home/useHome'
 import { useMediaQuery } from '@/lib/useMediaQuery'
@@ -14,7 +14,8 @@ import { useProfileStore } from '@/stores/profileStore'
 
 interface ReloadHomeProps {
   home: HomeData
-  script: string
+  script: Script
+  onScriptChange: (script: Script) => void
   cta: SessionCta
   freeLine: string
   reminder: string | null
@@ -22,6 +23,11 @@ interface ReloadHomeProps {
   onExport: () => void
   onDismissReminder: () => void
 }
+
+const SCRIPTS: readonly { value: Script; label: string }[] = [
+  { value: 'hiragana', label: 'HIRAGANA' },
+  { value: 'katakana', label: 'KATAKANA' },
+]
 
 interface Entry {
   id: string
@@ -56,7 +62,7 @@ const WIDE: Omit<ReloadMenuItem, 'id' | 'label'>[] = [
 
 /** Accueil du style Reload : profil, série et parcours en haut, menu de pause au centre
  *  (il remplace les onglets), kana à consolider dessous, guide de la commande choisie en bas. */
-export function ReloadHome({ home, script, cta, freeLine, reminder, onStartDaily, onExport, onDismissReminder }: ReloadHomeProps) {
+export function ReloadHome({ home, script, onScriptChange, cta, freeLine, reminder, onStartDaily, onExport, onDismissReminder }: ReloadHomeProps) {
   const navigate = useNavigate()
   const wide = useMediaQuery('(min-width: 1024px)')
   const [selected, setSelected] = useState(0)
@@ -155,8 +161,33 @@ export function ReloadHome({ home, script, cta, freeLine, reminder, onStartDaily
         </div>
 
         <section aria-label="Parcours" className="rl-panel relative z-10 -mx-4 mt-3 py-2 pr-9 pl-4 lg:mx-0">
-          <div className="rl-cond flex justify-between text-[12px] font-extrabold tracking-[0.04em]">
-            <span className="text-[#9af4ff]">PARCOURS · {script.toLocaleUpperCase('fr-FR')}</span>
+          <div className="rl-cond flex items-center justify-between text-[12px] font-extrabold tracking-[0.04em]">
+            {/* Un parcours par écriture, chacun garde sa progression. */}
+            <div role="radiogroup" aria-label="Parcours" className="-my-3 -ml-1.5 flex items-center">
+              <span className="pr-1.5 pl-1.5 text-[#9af4ff]">PARCOURS</span>
+              {SCRIPTS.map((s) => {
+                const selected = s.value === script
+                return (
+                  <button
+                    key={s.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => !selected && onScriptChange(s.value)}
+                    data-tap-sound="tabSwitch"
+                    className="flex min-h-11 items-center px-[3px]"
+                  >
+                    <span
+                      className={`-skew-x-[10deg] px-1.5 py-px ${
+                        selected ? 'bg-white text-[#05081f]' : 'text-white/60 shadow-[inset_0_0_0_1.5px_rgba(255,255,255,0.35)]'
+                      }`}
+                    >
+                      <span className="inline-block skew-x-[10deg]">{s.label}</span>
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
             <span>
               {path.doneCount} ligne{path.doneCount > 1 ? 's' : ''} sur {path.total}
             </span>

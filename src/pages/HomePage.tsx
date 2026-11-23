@@ -4,9 +4,10 @@ import { Banner } from '@/components/Banner'
 import { Button } from '@/components/Button'
 import { KanaTile } from '@/components/KanaTile'
 import { SegmentText } from '@/components/SegmentText'
+import { SegmentedControl } from '@/components/SegmentedControl'
 import { WeekStrip } from '@/components/WeekStrip'
 import { ReloadHome } from '@/components/reload/ReloadHome'
-import { KANA_GROUPS, getKana } from '@/data/kana'
+import { KANA_GROUPS, getKana, type Script } from '@/data/kana'
 import { backupReminder, sessionCta, type PathTile } from '@/features/home/home'
 import { useHome } from '@/features/home/useHome'
 import { freeSessionLine } from '@/features/learn/learn'
@@ -21,6 +22,7 @@ import { useSettingsStore } from '@/stores/settingsStore'
 /** Accueil : où j'en suis (série, parcours, kana à consolider), que faire maintenant (Session du jour). */
 export function HomePage() {
   const script = useQuizSettingsStore((s) => s.autoScript)
+  const setScript = useQuizSettingsStore((s) => s.setAutoScript)
   const questionCount = useQuizSettingsStore((s) => s.questionCount)
   const home = useHome(script, AUTO_STAGES)
   const startDaily = useStartDailySession()
@@ -57,6 +59,7 @@ export function HomePage() {
         cta={cta}
         freeLine={freeSessionLine(quiz.stage, groupCount, listCount, quiz.questionCount)}
         reminder={reminder}
+        onScriptChange={setScript}
         onStartDaily={startDaily}
         onExport={() => void downloadBackup()}
         onDismissReminder={() => dismissReminder(Date.now())}
@@ -86,8 +89,12 @@ export function HomePage() {
       <div className="lg:col-start-1 lg:row-span-2 lg:row-start-1">
         <section>
           <Overline aside={`${path.doneCount} ligne${path.doneCount > 1 ? 's' : ''} sur ${path.total}`}>
-            Parcours · {script}
+            Parcours
           </Overline>
+          {/* Un parcours par écriture, chacun garde sa progression : on passe de l'un à l'autre librement. */}
+          <div className="mt-2.5">
+            <SegmentedControl label="Parcours" options={PATH_OPTIONS} value={script} onChange={setScript} />
+          </div>
         <ul className="mt-2.5 grid grid-cols-5 gap-2 lg:grid-cols-8">
           {path.tiles.map((tile) => (
             <li key={tile.group.id}>
@@ -166,6 +173,11 @@ export function HomePage() {
 }
 
 /** Surtitre de section, avec à droite un compteur ou un lien. */
+const PATH_OPTIONS: readonly { value: Script; label: string }[] = [
+  { value: 'hiragana', label: 'Hiragana' },
+  { value: 'katakana', label: 'Katakana' },
+]
+
 function Overline({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
