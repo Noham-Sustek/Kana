@@ -687,6 +687,11 @@
 .rl-bleed-top {
   top: calc(-1 * max(1rem, env(safe-area-inset-top)));
 }
+/* Bandeau en haut d'écran (206 px visibles sous la marge) qui remonte jusqu'au bord. */
+.rl-bleed-band {
+  margin-top: calc(-1 * max(1rem, env(safe-area-inset-top)));
+  height: calc(190px + max(1rem, env(safe-area-inset-top)));
+}
 .rl-word {
   display: block;
   font-family: var(--r-display);

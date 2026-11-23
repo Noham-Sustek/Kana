@@ -76,29 +76,33 @@ export function ReloadKanaDetail({ kana, group, prev, next, counterpart, writabl
       </span>
 
       {/* Bandeau blanc : ligne, écriture, kana et lecture, niveau. */}
-      <div className="relative -mx-4 -mt-4 h-[206px] bg-white text-[#05081f] [clip-path:polygon(0_0,100%_0,100%_62%,0_100%)]">
-        <span className="absolute top-4 left-0 flex h-[26px] items-center bg-[#0b1352] pr-6 pl-3.5 text-[15px] font-semibold text-[#5ce1ff] [clip-path:polygon(0_0,100%_0,90%_100%,0_100%)]">
-          Ligne <span className="mx-1 font-jp">{groupGlyph(group)}</span> · {index + 1} / {group.kanaIds.length}
-        </span>
-        <span aria-hidden="true" className="rl-display absolute top-[50px] left-[54px] text-[50px] text-[#d9dce6]">
-          {kana.script === 'hiragana' ? 'HIRAGANA' : 'KATAKANA'}
-        </span>
-        <h1 key={kana.id} className="rl-pop absolute top-[60px] left-[104px] flex items-baseline gap-2">
-          <span className="font-jp text-[50px] leading-none">{kana.char}</span>
-          <span className="rl-cond text-[32px] font-bold">{primary}</span>
-        </h1>
-        {variants.length > 0 && (
-          <span className="absolute top-[122px] left-[108px] text-[12.5px] font-semibold">Aussi : {variants.join(', ')}</span>
-        )}
-        <div className="absolute top-[86px] right-5 flex items-end gap-2">
-          <span className="flex flex-col items-end pb-0.5">
-            <span className="rl-cond text-[11px] leading-none font-extrabold">NIVEAU</span>
-            <span className="rl-cond text-[15px] leading-tight font-bold">{MASTERY_LABELS[level]}</span>
+      {/* Remonte sous la marge haute réelle (barre d'état comprise) : pas de bande de mer au-dessus. */}
+      <div className="rl-bleed-band relative -mx-4 bg-white text-[#05081f] [clip-path:polygon(0_0,100%_0,100%_calc(100%-78px),0_100%)]">
+        <div className="absolute inset-x-0 bottom-0 h-[206px]">
+          <span className="absolute top-4 left-[52px] flex h-[26px] items-center bg-[#0b1352] pr-6 pl-3.5 text-[15px] font-semibold text-[#5ce1ff] [clip-path:polygon(7%_0,100%_0,90%_100%,0_100%)]">
+            Ligne <span className="mx-1 font-jp">{groupGlyph(group)}</span> · {index + 1} / {group.kanaIds.length}
           </span>
-          <span className="rl-display text-[60px] leading-[0.8]">{level + 1}</span>
+          <span aria-hidden="true" className="rl-display absolute top-[50px] left-[54px] text-[50px] text-[#d9dce6]">
+            {kana.script === 'hiragana' ? 'HIRAGANA' : 'KATAKANA'}
+          </span>
+          <h1 key={kana.id} className="rl-pop absolute top-[60px] left-[104px] flex items-baseline gap-2">
+            <span className="font-jp text-[50px] leading-none">{kana.char}</span>
+            <span className="rl-cond text-[32px] font-bold">{primary}</span>
+          </h1>
+          {variants.length > 0 && (
+            <span className="absolute top-[122px] left-[108px] text-[12.5px] font-semibold">Aussi : {variants.join(', ')}</span>
+          )}
+          <div className="absolute top-[86px] right-5 flex items-end gap-2">
+            <span className="flex flex-col items-end pb-0.5">
+              <span className="rl-cond text-[11px] leading-none font-extrabold">NIVEAU</span>
+              <span className="rl-cond text-[15px] leading-tight font-bold">{MASTERY_LABELS[level]}</span>
+            </span>
+            <span className="rl-display text-[60px] leading-[0.8]">{level + 1}</span>
+          </div>
+          {/* Les deux gâchettes à la même hauteur, dans les coins, comme sur une manette. */}
+          <ReloadLR side="L" label="Kana précédent" onLight onClick={() => onGoTo(prev)} className="absolute top-3 left-1" />
+          <ReloadLR side="R" label="Kana suivant" onLight onClick={() => onGoTo(next)} className="absolute top-3 right-2" />
         </div>
-        <ReloadLR side="L" label="Kana précédent" onLight onClick={() => onGoTo(prev)} className="absolute top-[120px] left-1" />
-        <ReloadLR side="R" label="Kana suivant" onLight onClick={() => onGoTo(next)} className="absolute top-3 right-2" />
       </div>
 
       {/* Les kana de la ligne, en pastilles. */}
