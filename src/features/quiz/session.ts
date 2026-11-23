@@ -1,4 +1,5 @@
 import type { NewAnswer } from '@/db/answers'
+import { diagnoseReading } from '@/features/quiz/diagnosis'
 import { checkAnswer } from '@/features/quiz/questions'
 import type { Question, QuizOptions } from '@/features/quiz/types'
 
@@ -146,12 +147,20 @@ export function score(state: SessionState): { correct: number; total: number } {
   }
 }
 
-/** Lignes à enregistrer en base pour un résultat (une par kana évalué). */
+/**
+ * Lignes à enregistrer en base pour un résultat (une par kana évalué). Saisie fausse : seuls
+ * les kana mal lus comptent faux (`diagnoseReading`), une erreur sur un mot ne pénalise pas
+ * toute la phrase.
+ */
 export function toAnswerRecords(question: Question, outcome: Outcome, answeredAt: number): NewAnswer[] {
+  const diagnosis =
+    question.kind === 'input' && !outcome.correct && !outcome.revealed && outcome.given !== undefined
+      ? diagnoseReading(question.reading, outcome.given)
+      : null
   return question.kanaIds.map((kanaId) => ({
     kanaId,
     stage: question.stage,
-    correct: outcome.correct,
+    correct: outcome.correct || (diagnosis?.correctKana.has(kanaId) ?? false),
     responseMs: outcome.responseMs,
     answeredAt,
     revealed: outcome.revealed,

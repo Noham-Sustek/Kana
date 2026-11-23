@@ -88,6 +88,19 @@ describe('session', () => {
     ])
   })
 
+  it('saisie fausse : seuls les kana mal lus comptent faux', () => {
+    const questions = generateQuestions(6, [getKana('h-ne')!, getKana('h-ko')!], 10)
+    const q = questions.find((question) => question.kind === 'input' && question.wordId === 'ねこ')!
+    const wrong = toAnswerRecords(q, { correct: false, responseMs: 900, revealed: false, given: 'niko' }, 42)
+    expect(wrong.map((r) => [r.kanaId, r.correct])).toEqual([
+      ['h-ne', false],
+      ['h-ko', true],
+    ])
+    // Réponse affichée : rien n'a été lu, tout compte faux.
+    const revealed = toAnswerRecords(q, { correct: false, responseMs: 900, revealed: true }, 42)
+    expect(revealed.every((r) => !r.correct)).toBe(true)
+  })
+
   it('dessin : résultat fixé par submitDrawing, sans réessai', () => {
     const questions = generateQuestions(5, [getKana('h-a')!, getKana('h-i')!], 2)
     let state = startSession(questions, { retry: true, timerSeconds: 0 }, 0)

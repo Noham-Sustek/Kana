@@ -682,6 +682,18 @@
   }
 }
 
+/* Saisie fausse, mot ou kana en cause : gris et barré (le rouge ne sert qu'à la sélection). */
+:root[data-ui='reload'] .k-diag--bad {
+  color: #e4e8ff;
+  background: rgba(5, 8, 31, 0.6);
+  padding: 0 0.12em;
+  text-decoration-line: line-through;
+  text-decoration-style: solid;
+  text-decoration-thickness: 2px;
+  text-decoration-color: #9aa3dc;
+  box-decoration-break: clone;
+}
+
 /* ── Pièces propres aux écrans Reload (components/reload/) ─────────── */
 /* Fond d'écran qui remonte sous la marge haute de <main> (encoche et barre d'état comprises). */
 .rl-bleed-top {

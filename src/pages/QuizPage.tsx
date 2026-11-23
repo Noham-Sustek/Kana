@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useRef, useState, type FormEvent } from 'react'
+import { Suspense, lazy, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router'
 import { AppKeyboard } from '@/components/AppKeyboard'
 import { Button } from '@/components/Button'
@@ -9,10 +9,12 @@ import { Icon } from '@/components/Icon'
 import { IconButton } from '@/components/IconButton'
 import { SegmentText } from '@/components/SegmentText'
 import { SessionProgress, type TickState } from '@/components/SessionProgress'
+import { SignalBadge } from '@/components/SignalBadge'
 import { LongTextField, TextField, type FieldState } from '@/components/TextField'
 import { TimerBar } from '@/components/TimerBar'
 import { WordTile, type WordTileState } from '@/components/WordTile'
 import { groupGlyph } from '@/data/kana'
+import { diagnoseReading, type ReadingDiagnosis } from '@/features/quiz/diagnosis'
 import { feedbackFor, type FeedbackContent } from '@/features/quiz/feedback'
 import { currentQuestion, type SessionState } from '@/features/quiz/session'
 import { FAMILIES, stageKindLabel, stagePresentation } from '@/features/quiz/stages'
@@ -117,6 +119,18 @@ function QuizRunner({ session }: { session: SessionState }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [question, settled, next, submit, confirmQuit])
 
+  // Saisie fausse : où est l'erreur (mots ou kana en vert / rouge). D'office une fois la réponse fixée,
+  // sur demande pendant les réessais (chercher soi-même reste possible).
+  const lastWrong = question.kind === 'input' ? session.wrongAnswers.at(-1) : undefined
+  const attemptKey = `${session.index}:${session.wrongAnswers.length}`
+  const [diagnosisFor, setDiagnosisFor] = useState<string | null>(null)
+  const showDiagnosis = lastWrong !== undefined && (status === 'failed' || diagnosisFor === attemptKey)
+  const canLocate = lastWrong !== undefined && status === 'pending' && !showDiagnosis && question.stage !== 4
+  const diagnosis = useMemo(
+    () => (showDiagnosis && question.kind === 'input' ? diagnoseReading(question.reading, lastWrong!) : null),
+    [showDiagnosis, question, lastWrong],
+  )
+
   const feedback = feedbackFor({
     question,
     status,
@@ -153,7 +167,12 @@ function QuizRunner({ session }: { session: SessionState }) {
       <div
         className={`flex min-h-0 flex-1 flex-col items-center justify-center ${isDrawing ? 'py-3' : 'py-5 short:py-2'}`}
       >
-        <PromptView key={session.index} question={question} done={settled || awaitingVerdict} />
+        <PromptView
+          key={session.index}
+          question={question}
+          done={settled || awaitingVerdict}
+          marks={diagnosis && question.stage !== 4 ? diagnosis : null}
+        />
       </div>
 
       {question.kind === 'choice' && <ChoiceAnswers question={question} session={session} onPick={submit} />}
@@ -165,6 +184,7 @@ function QuizRunner({ session }: { session: SessionState }) {
           onSubmit={submit}
           onNext={next}
           appKeyboard={appKeyboard !== null}
+          diagnosis={diagnosis}
         />
       )}
       {question.kind === 'compose' && (
@@ -220,6 +240,15 @@ function QuizRunner({ session }: { session: SessionState }) {
           <Button variant="ink" icon="arrow" onClick={next} className="short:min-h-12">
             {session.index + 1 >= session.plannedCount ? 'Voir le résultat' : 'Suivant'}
           </Button>
+        ) : canLocate ? (
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="text" fullWidth icon="target" iconPosition="start" onClick={() => setDiagnosisFor(attemptKey)}>
+              Voir les erreurs
+            </Button>
+            <Button variant="text" fullWidth icon="eye" iconPosition="start" onClick={() => reveal()}>
+              Afficher la réponse
+            </Button>
+          </div>
         ) : (
           <Button variant="text" fullWidth icon="eye" iconPosition="start" onClick={() => reveal()}>
             Afficher la réponse
@@ -333,7 +362,7 @@ function KanaCase({ children, size }: { children: string; size: 'lg' | 'md' }) {
  * Sujet de la question. La traduction (kanji, sens, provenance) n'apparaît qu'une fois
  * la réponse fixée, sous le texte : c'est la récompense de la question terminée.
  */
-function PromptView({ question, done }: { question: Question; done: boolean }) {
+function PromptView({ question, done, marks }: { question: Question; done: boolean; marks: ReadingDiagnosis | null }) {
   const { prompt } = question
   switch (prompt.type) {
     case 'kana':
@@ -348,7 +377,7 @@ function PromptView({ question, done }: { question: Question; done: boolean }) {
       return (
         <div className="text-center">
           <p className={`font-jp leading-tight tracking-[0.04em] break-keep ${wordSizeClass(prompt.text)}`}>
-            {prompt.text}
+            {marks ? <MarkedText text={prompt.text} marks={marks.marks} /> : prompt.text}
           </p>
           {/* Hauteur réservée : le mot ne saute pas quand la traduction arrive. */}
           <p className="mt-3 min-h-6 text-[15px] leading-6 text-ink-muted short:mt-1 lg:text-base">
@@ -364,7 +393,9 @@ function PromptView({ question, done }: { question: Question; done: boolean }) {
             className={`flex flex-wrap justify-center gap-x-[0.4em] px-1 font-jp leading-relaxed short:leading-snug ${sentenceSizeClass(prompt.text)}`}
           >
             {prompt.text.split(' ').map((word, i) => (
-              <span key={i}>{word}</span>
+              <span key={i} className={marks ? diagnosisClass(marks.words[i] ?? null) : undefined}>
+                {word}
+              </span>
             ))}
           </p>
           {done && <SentenceReward meaning={prompt.meaning} source={prompt.source} original={prompt.original} />}
@@ -402,6 +433,30 @@ function PromptView({ question, done }: { question: Question; done: boolean }) {
       )
     }
   }
+}
+
+/** Juste / faux après une saisie fausse. La couleur n'est pas seule : un faux est aussi souligné (barré en Reload). */
+function diagnosisClass(ok: boolean | null): string | undefined {
+  if (ok === null) return undefined
+  return ok
+    ? 'k-diag k-diag--ok text-correct-ink'
+    : 'k-diag k-diag--bad text-error-ink underline decoration-error decoration-wavy decoration-2 underline-offset-[0.22em]'
+}
+
+/** Texte découpé en morceaux de même état (kana justes, kana faux). */
+function MarkedText({ text, marks }: { text: string; marks: readonly (boolean | null)[] }) {
+  const runs: { text: string; ok: boolean | null }[] = []
+  ;[...text].forEach((ch, i) => {
+    const ok = marks[i] ?? null
+    const last = runs.at(-1)
+    if (last && last.ok === ok) last.text += ch
+    else runs.push({ text: ch, ok })
+  })
+  return runs.map((r, i) => (
+    <span key={i} className={diagnosisClass(r.ok)}>
+      {r.text}
+    </span>
+  ))
 }
 
 function Meaning({ kanji, meaning }: { kanji?: string; meaning: string }) {
@@ -573,11 +628,13 @@ interface InputAnswerProps {
   onNext: () => void
   /** Clavier intégré affiché : le clavier du système ne doit pas s'ouvrir. */
   appKeyboard: boolean
+  /** Où se trompe la dernière réponse fausse, une fois demandé (ou la réponse fixée). */
+  diagnosis: ReadingDiagnosis | null
 }
 
 const ANSWER_ID = 'quiz-answer'
 
-function InputAnswer({ question, session, onSubmit, onNext, appKeyboard }: InputAnswerProps) {
+function InputAnswer({ question, session, onSubmit, onNext, appKeyboard, diagnosis }: InputAnswerProps) {
   const [value, setValue] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -620,6 +677,19 @@ function InputAnswer({ question, session, onSubmit, onNext, appKeyboard }: Input
           className="short:[&_input]:min-h-12"
           {...field}
         />
+      )}
+      {diagnosis && question.stage !== 4 && (
+        <p className="k-diagline mt-2 flex items-start gap-2 text-[15px] leading-[22px] break-words animate-rise">
+          <SignalBadge signal="wrong" className="mt-0.5" />
+          <span className="min-w-0">
+            <span className="sr-only">Votre réponse, mots faux soulignés : </span>
+            {diagnosis.typed.map((seg, i) => (
+              <span key={i} className={diagnosisClass(seg.ok)}>
+                {seg.text}
+              </span>
+            ))}
+          </span>
+        </p>
       )}
     </form>
   )
