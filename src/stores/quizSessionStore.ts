@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { KanaGroup, Script } from '@/data/kana'
+import type { KanaGroup, PathScript } from '@/data/kana'
 import { loadProfileAnswers, recordAnswers } from '@/db/answers'
 import { loadAnswersForScript, loadUnlockedGroups, saveUnlockedGroups } from '@/db/autoState'
 import {
@@ -26,7 +26,7 @@ import { haptic, type HapticKind } from '@/lib/haptic'
 import { activeProfileId } from '@/stores/profileStore'
 
 export interface AutoParams {
-  script: Script
+  script: PathScript
   /** Kana choisis par l'utilisateur ; absent = parcours guidé de `script`. */
   kanaIds?: string[]
   stages: StageId[]

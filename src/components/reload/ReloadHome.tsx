@@ -5,7 +5,7 @@ import { ProfileSheet } from '@/components/ProfileSheet'
 import { SegmentText } from '@/components/SegmentText'
 import { ReloadGuide } from '@/components/reload/ReloadGuide'
 import { ReloadMenu, type ReloadMenuItem } from '@/components/reload/ReloadMenu'
-import { getKana, type Script } from '@/data/kana'
+import { getKana, type PathScript } from '@/data/kana'
 import type { SessionCta } from '@/features/home/home'
 import type { HomeData } from '@/features/home/useHome'
 import { useMediaQuery } from '@/lib/useMediaQuery'
@@ -14,8 +14,8 @@ import { useProfileStore } from '@/stores/profileStore'
 
 interface ReloadHomeProps {
   home: HomeData
-  script: Script
-  onScriptChange: (script: Script) => void
+  script: PathScript
+  onScriptChange: (script: PathScript) => void
   cta: SessionCta
   freeLine: string
   reminder: string | null
@@ -24,9 +24,10 @@ interface ReloadHomeProps {
   onDismissReminder: () => void
 }
 
-const SCRIPTS: readonly { value: Script; label: string }[] = [
+const SCRIPTS: readonly { value: PathScript; label: string }[] = [
   { value: 'hiragana', label: 'HIRAGANA' },
   { value: 'katakana', label: 'KATAKANA' },
+  { value: 'mixed', label: 'MIXTE' },
 ]
 
 interface Entry {

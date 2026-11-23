@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo } from 'react'
-import type { KanaGroup, Script } from '@/data/kana'
+import type { KanaGroup, PathScript } from '@/data/kana'
 import { loadProfileAnswers } from '@/db/answers'
 import { buildProgress, type Progress } from '@/engine/scheduler'
 import { useHome } from '@/features/home/useHome'
@@ -17,7 +17,7 @@ export interface LearnHub {
 }
 
 /** Données des cartes de S'entraîner pour le profil actif ; `undefined` pendant le chargement. */
-export function useLearnHub(script: Script): LearnHub | undefined {
+export function useLearnHub(script: PathScript): LearnHub | undefined {
   const profileId = useProfileStore((s) => s.profileId)
   const home = useHome(script, AUTO_STAGES)
   const answers = useLiveQuery(() => loadProfileAnswers(profileId), [profileId])

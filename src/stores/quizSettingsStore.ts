@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Script } from '@/data/kana'
+import type { PathScript, Script } from '@/data/kana'
 import type { SentenceFilter } from '@/features/quiz/questions'
 import { migrateStage } from '@/features/quiz/stages'
 import type { DrawingCheck, StageId } from '@/features/quiz/types'
@@ -13,7 +13,7 @@ export type PickerTab = Script | 'lists'
 
 interface QuizSettingsState {
   /** Écriture du parcours (Session du jour : chaque écriture a sa propre progression). */
-  autoScript: Script
+  autoScript: PathScript
   /** Session libre : exercice choisi. */
   stage: StageId
   /** Écriture des phrases des stages 8 et 9 (session libre). */
@@ -32,7 +32,7 @@ interface QuizSettingsState {
   /** Onglet du sélecteur de kana de la session libre. */
   pickerScript: PickerTab
 
-  setAutoScript: (script: Script) => void
+  setAutoScript: (script: PathScript) => void
   setStage: (stage: StageId) => void
   setSentenceFilter: (filter: SentenceFilter) => void
   setAnimeSentences: (enabled: boolean) => void

@@ -6,7 +6,7 @@ import { ImportBackupButton } from '@/components/ImportBackupButton'
 import { KanaTile } from '@/components/KanaTile'
 import { ProfileSeal } from '@/components/ProfileSeal'
 import { TextField } from '@/components/TextField'
-import { getKana, groupsOfScript, type Script } from '@/data/kana'
+import { getKana, pathGroups, type PathScript } from '@/data/kana'
 import { renameProfile } from '@/db/profiles'
 import { useActiveProfile } from '@/lib/useProfiles'
 import { useStartDailySession } from '@/lib/useStartDailySession'
@@ -16,7 +16,7 @@ import { useSettingsStore } from '@/stores/settingsStore'
 
 const STEPS = 4
 
-const SCRIPTS: { value: Script; char: string; label: string; detail: string }[] = [
+const SCRIPTS: { value: PathScript; char: string; label: string; detail: string }[] = [
   {
     value: 'hiragana',
     char: 'あ',
@@ -24,6 +24,7 @@ const SCRIPTS: { value: Script; char: string; label: string; detail: string }[] 
     detail: 'L’écriture de base, celle des mots japonais. Recommandé pour débuter.',
   },
   { value: 'katakana', char: 'ア', label: 'Katakana', detail: 'Pour les mots venus d’ailleurs et les noms étrangers.' },
+  { value: 'mixed', char: 'あア', label: 'Les deux', detail: 'Chaque ligne en hiragana, puis la même en katakana.' },
 ]
 
 /** Accueil du premier lancement : bienvenue, écriture de départ, principe du parcours, profil. */
@@ -52,7 +53,7 @@ export function OnboardingPage() {
     navigate('/home', { replace: true })
   }
 
-  const firstLine = groupsOfScript(script)
+  const firstLine = pathGroups(script)
     .filter((g) => g.kind === 'gojuon')
     .slice(0, 5)
   const first = firstLine[0]
@@ -97,7 +98,11 @@ export function OnboardingPage() {
                     selected ? 'border-2 border-accent' : 'border-[1.5px] border-control'
                   }`}
                 >
-                  <span className="w-10 shrink-0 text-center font-jp text-[36px] leading-none">{s.char}</span>
+                  <span
+                    className={`w-10 shrink-0 text-center font-jp leading-none ${s.char.length > 1 ? 'text-[20px] tracking-[-0.05em]' : 'text-[36px]'}`}
+                  >
+                    {s.char}
+                  </span>
                   <span className="min-w-0 flex-1">
                     <b className="block font-semibold">{s.label}</b>
                     <small className="block text-[13px] leading-[18px] text-ink-muted">{s.detail}</small>

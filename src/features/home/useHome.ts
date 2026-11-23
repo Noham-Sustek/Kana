@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo } from 'react'
-import type { Script } from '@/data/kana'
+import type { PathScript } from '@/data/kana'
 import { loadProfileAnswers } from '@/db/answers'
 import { loadAnswersForScript, loadUnlockedGroups } from '@/db/autoState'
 import { pathView, streakView, type PathView, type StreakView } from '@/features/home/home'
@@ -22,7 +22,7 @@ export interface HomeData {
 }
 
 /** Données de l'Accueil pour le profil actif (en direct) ; `undefined` pendant le chargement. */
-export function useHome(script: Script, stages: StageId[]): HomeData | undefined {
+export function useHome(script: PathScript, stages: StageId[]): HomeData | undefined {
   const profileId = useProfileStore((s) => s.profileId)
   const data = useLiveQuery(
     async () => ({

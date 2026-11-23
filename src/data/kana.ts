@@ -1,5 +1,8 @@
 export type Script = 'hiragana' | 'katakana'
 
+/** Parcours guidé : une écriture, ou les deux mêlées ligne par ligne. */
+export type PathScript = Script | 'mixed'
+
 export type GroupKind = 'gojuon' | 'dakuten' | 'handakuten' | 'yoon' | 'extended'
 
 export interface Kana {
@@ -194,6 +197,20 @@ export function kanaOfScript(script: Script): Kana[] {
 
 export function groupsOfScript(script: Script): KanaGroup[] {
   return KANA_GROUPS.filter((g) => g.script === script)
+}
+
+/** Lignes d'un parcours, dans l'ordre d'introduction. Mixte : あ, ア, か, カ… (chaque ligne de
+ *  hiragana suivie de la même en katakana), puis les katakana étendus. */
+export function pathGroups(path: PathScript): KanaGroup[] {
+  if (path !== 'mixed') return groupsOfScript(path)
+  const hira = groupsOfScript('hiragana')
+  const kata = groupsOfScript('katakana')
+  const groups: KanaGroup[] = []
+  for (let i = 0; i < Math.max(hira.length, kata.length); i++) {
+    if (hira[i]) groups.push(hira[i]!)
+    if (kata[i]) groups.push(kata[i]!)
+  }
+  return groups
 }
 
 /** Le même son dans l'autre écriture (か ↔ カ), s'il existe. */

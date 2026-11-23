@@ -7,7 +7,7 @@ import { SegmentText } from '@/components/SegmentText'
 import { SegmentedControl } from '@/components/SegmentedControl'
 import { WeekStrip } from '@/components/WeekStrip'
 import { ReloadHome } from '@/components/reload/ReloadHome'
-import { KANA_GROUPS, getKana, type Script } from '@/data/kana'
+import { KANA_GROUPS, getKana, type PathScript } from '@/data/kana'
 import { backupReminder, sessionCta, type PathTile } from '@/features/home/home'
 import { useHome } from '@/features/home/useHome'
 import { freeSessionLine } from '@/features/learn/learn'
@@ -173,9 +173,10 @@ export function HomePage() {
 }
 
 /** Surtitre de section, avec à droite un compteur ou un lien. */
-const PATH_OPTIONS: readonly { value: Script; label: string }[] = [
+const PATH_OPTIONS: readonly { value: PathScript; label: string }[] = [
   { value: 'hiragana', label: 'Hiragana' },
   { value: 'katakana', label: 'Katakana' },
+  { value: 'mixed', label: 'Mixte' },
 ]
 
 function Overline({ children, aside }: { children: ReactNode; aside?: ReactNode }) {

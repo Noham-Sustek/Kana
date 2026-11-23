@@ -68,7 +68,7 @@ const isCustomGroup = (r: Rec) =>
   isInt(r.id) && isInt(r.profileId) && isStr(r.name) && Array.isArray(r.kanaIds) && r.kanaIds.every(isStr) && isNum(r.createdAt)
 
 const isAutoState = (r: Rec) =>
-  isInt(r.profileId) && (r.script === 'hiragana' || r.script === 'katakana') && isInt(r.unlockedGroups)
+  isInt(r.profileId) && (r.script === 'hiragana' || r.script === 'katakana' || r.script === 'mixed') && isInt(r.unlockedGroups)
 
 const isWritingResult = (r: Rec) =>
   isInt(r.id) &&

@@ -6,7 +6,9 @@ import {
   getGroup,
   getKana,
   groupGlyph,
+  groupsOfScript,
   kanaOfScript,
+  pathGroups,
   toKatakana,
   type GroupKind,
   type Script,
@@ -153,5 +155,19 @@ describe('groupGlyph', () => {
     expect(groupGlyph(getGroup('hiragana-wa')!)).toBe('わ・ん')
     expect(groupGlyph(getGroup('katakana-wa')!)).toBe('ワ・ン')
     expect(groupGlyph(getGroup('hiragana-ka')!)).toBe('か')
+  })
+})
+
+describe('pathGroups', () => {
+  it('une écriture : ses lignes, dans l’ordre', () => {
+    expect(pathGroups('hiragana')).toEqual(groupsOfScript('hiragana'))
+    expect(pathGroups('katakana')).toEqual(groupsOfScript('katakana'))
+  })
+
+  it('mixte : chaque ligne de hiragana suivie de la même en katakana, puis les katakana étendus', () => {
+    const mixed = pathGroups('mixed')
+    expect(mixed.slice(0, 4).map((g) => g.id)).toEqual(['hiragana-a', 'katakana-a', 'hiragana-ka', 'katakana-ka'])
+    expect(mixed).toHaveLength(groupsOfScript('hiragana').length + groupsOfScript('katakana').length)
+    expect(mixed.at(-1)!.kind).toBe('extended')
   })
 })

@@ -1,5 +1,5 @@
 import { Dexie, type EntityTable, type Table } from 'dexie'
-import type { Script } from '@/data/kana'
+import type { PathScript, Script } from '@/data/kana'
 import type { StageId } from '@/features/quiz/types'
 import { renumberStageV1, renumberStageV2 } from '@/features/quiz/stages'
 
@@ -29,10 +29,10 @@ export interface CustomGroup {
   createdAt: number
 }
 
-/** Mode auto : nombre de groupes débloqués par profil et par écriture (ne décroît jamais). */
+/** Mode auto : nombre de groupes débloqués par profil et par parcours (ne décroît jamais). */
 export interface AutoState {
   profileId: number
-  script: Script
+  script: PathScript
   unlockedGroups: number
 }
 
@@ -68,7 +68,7 @@ export const DEFAULT_PROFILE_NAME = 'Moi'
 export const db = new Dexie('kana') as Dexie & {
   answers: EntityTable<AnswerRecord, 'id'>
   customGroups: EntityTable<CustomGroup, 'id'>
-  autoStates: Table<AutoState, [number, Script]>
+  autoStates: Table<AutoState, [number, PathScript]>
   profiles: EntityTable<Profile, 'id'>
   writingResults: EntityTable<WritingResult, 'id'>
 }

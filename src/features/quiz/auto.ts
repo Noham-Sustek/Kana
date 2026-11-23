@@ -1,4 +1,4 @@
-import { getKana, groupsOfScript, type Kana, type KanaGroup, type Script } from '@/data/kana'
+import { getKana, pathGroups, type Kana, type KanaGroup, type PathScript } from '@/data/kana'
 import {
   activeKanaIds,
   applyAnswers,
@@ -33,7 +33,7 @@ export const AUTO_STAGES: StageId[] = [1, 2, 3, 4, 5, 6, 7, 8]
 const RECENT_SIZE = 3
 
 export interface AutoContext {
-  script: Script
+  script: PathScript
   /** Groupes de l'écriture, dans l'ordre d'introduction (vide pour une sélection). */
   path: KanaGroup[]
   /** Kana choisis par l'utilisateur : remplace le parcours (pas de déblocage). */
@@ -45,12 +45,12 @@ export interface AutoContext {
 }
 
 export function createAutoContext(
-  script: Script,
+  script: PathScript,
   stages: StageId[],
   history: readonly AnswerEvent[],
   storedUnlocked: number,
 ): AutoContext {
-  const path = groupsOfScript(script)
+  const path = pathGroups(script)
   const progress = buildProgress(history)
   return {
     script,
