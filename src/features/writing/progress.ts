@@ -1,5 +1,6 @@
 import { groupsOfScript, type GroupKind, type KanaGroup, type Script } from '@/data/kana'
 import type { AnswerRecord, WritingResult } from '@/db/db'
+import type { StrokeFault } from '@/features/writing/strokeMatch'
 
 /** Lentille Écriture : 0 = jamais tracé, 1 = calque réussi, 2 = de mémoire réussi. */
 export type WritingLevelReached = 0 | 1 | 2
@@ -59,7 +60,22 @@ export function strokeNote(mistakes: number): string {
   return `Juste après ${mistakes + 1} essais`
 }
 
-/** Réussite d'un tracé : sans modèle affiché, et sans indice de mémoire. */
-export function isWritingSuccess(level: 2 | 3, r: { revealed: boolean; hinted: boolean }): boolean {
-  return !r.revealed && (level === 2 || !r.hinted)
+/** Faute d'un trait, en clair (vérification à la fin du kana). */
+export const FAULT_LABELS: Record<StrokeFault, string> = {
+  order: 'Pas dans l’ordre',
+  direction: 'Sens inversé',
+  position: 'Bonne forme, mal placé',
+  shape: 'Forme à reprendre',
+  missing: 'Manquant',
+}
+
+/**
+ * Réussite d'un tracé : sans modèle affiché, sans indice de mémoire, et sans trait
+ * faux quand la vérification se fait à la fin (`faults`).
+ */
+export function isWritingSuccess(
+  level: 2 | 3,
+  r: { revealed: boolean; hinted: boolean; faults?: readonly (StrokeFault | null)[] },
+): boolean {
+  return !r.revealed && (level === 2 || !r.hinted) && !r.faults?.some((f) => f !== null)
 }

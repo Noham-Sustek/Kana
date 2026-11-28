@@ -5,6 +5,7 @@ import { WritingComparison } from '@/components/WritingComparison'
 import { WritingPad, type WritingResult } from '@/components/WritingPad'
 import { drawingStrokesOf, isSmallKana } from '@/data/strokes'
 import type { DrawQuestion } from '@/features/quiz/types'
+import { useSettingsStore } from '@/stores/settingsStore'
 
 /** Pause sur le caractère terminé (trait validé en vert) avant le suivant. */
 const NEXT_CHAR_DELAY_MS = 350
@@ -32,6 +33,7 @@ export function QuizDrawing({ question, settled, onDone, selfCheck, onDrawn }: Q
   const [pendingNext, setPendingNext] = useState(false)
   const index = results.length
   const model = chars.map((c) => drawingStrokesOf(c) ?? [])
+  const check = useSettingsStore((s) => s.strokeCheck)
 
   useEffect(() => {
     if (!pendingNext) return
@@ -55,7 +57,11 @@ export function QuizDrawing({ question, settled, onDone, selfCheck, onDrawn }: Q
     return (
       <div style={{ animation: 'fade-in 0.2s' }}>
         {chars.length === 1 ? (
-          <WritingComparison drawn={drawn[0] ?? []} model={model[0]!} />
+          <WritingComparison
+            drawn={drawn[0] ?? []}
+            model={model[0]!}
+            faulty={results[0]?.faults?.flatMap((f, i) => (f ? [i] : []))}
+          />
         ) : (
           <WordComparison chars={chars} drawn={drawn} model={model} />
         )}
@@ -92,6 +98,7 @@ export function QuizDrawing({ question, settled, onDone, selfCheck, onDrawn }: Q
           strokes={drawingStrokesOf(current) ?? []}
           mode="free"
           validate={!selfCheck}
+          check={check}
           showCompare={false}
           onComplete={onCharDone}
         />

@@ -9,6 +9,8 @@ export type UiStyle = 'reload' | 'papier' | 'wii'
 export type KeyboardMode = 'app' | 'system'
 /** Disposition du clavier intégré ; `auto` = d'après la langue du système. */
 export type KeyboardLayoutSetting = 'auto' | 'azerty' | 'qwerty' | 'qwertz'
+/** Tracé de mémoire et dessin du quiz : vérifié à chaque trait, ou une fois tous les traits posés. */
+export type StrokeCheck = 'stroke' | 'char'
 
 interface SettingsState {
   theme: Theme
@@ -19,6 +21,7 @@ interface SettingsState {
   sounds: boolean
   keyboard: KeyboardMode
   keyboardLayout: KeyboardLayoutSetting
+  strokeCheck: StrokeCheck
   /** Dernier export de la sauvegarde (rappel sur l'Accueil). */
   lastBackupAt: number | null
   /** Rappel de sauvegarde masqué à cette date. */
@@ -31,6 +34,7 @@ interface SettingsState {
   setSounds: (sounds: boolean) => void
   setKeyboard: (keyboard: KeyboardMode) => void
   setKeyboardLayout: (keyboardLayout: KeyboardLayoutSetting) => void
+  setStrokeCheck: (strokeCheck: StrokeCheck) => void
   markBackedUp: (at: number) => void
   dismissBackupReminder: (at: number) => void
   setOnboarded: () => void
@@ -48,6 +52,7 @@ export const useSettingsStore = create<SettingsState>()(
       sounds: true,
       keyboard: 'app',
       keyboardLayout: 'auto',
+      strokeCheck: 'char',
       lastBackupAt: null,
       backupReminderDismissedAt: null,
       onboarded: false,
@@ -57,6 +62,7 @@ export const useSettingsStore = create<SettingsState>()(
       setSounds: (sounds) => set({ sounds }),
       setKeyboard: (keyboard) => set({ keyboard }),
       setKeyboardLayout: (keyboardLayout) => set({ keyboardLayout }),
+      setStrokeCheck: (strokeCheck) => set({ strokeCheck }),
       markBackedUp: (at) => set({ lastBackupAt: at }),
       dismissBackupReminder: (at) => set({ backupReminderDismissedAt: at }),
       setOnboarded: () => set({ onboarded: true }),

@@ -15,6 +15,7 @@ import { detectedLayout } from '@/lib/useAppKeyboard'
 import {
   useSettingsStore,
   type KeyboardLayoutSetting,
+  type StrokeCheck,
   type KeyboardMode,
   type Theme,
   type UiStyle,
@@ -29,6 +30,11 @@ const UI_OPTIONS: { value: UiStyle; label: string }[] = [
 const KEYBOARD_OPTIONS: { value: KeyboardMode; label: string }[] = [
   { value: 'app', label: 'Intégré' },
   { value: 'system', label: 'Du téléphone' },
+]
+
+const STROKE_CHECK_OPTIONS: { value: StrokeCheck; label: string }[] = [
+  { value: 'char', label: 'À la fin du kana' },
+  { value: 'stroke', label: 'À chaque trait' },
 ]
 
 const THEME_OPTIONS: { value: Theme; label: string }[] = [
@@ -52,6 +58,8 @@ export function SettingsPage() {
   const keyboard = useSettingsStore((s) => s.keyboard)
   const setKeyboard = useSettingsStore((s) => s.setKeyboard)
   const keyboardLayout = useSettingsStore((s) => s.keyboardLayout)
+  const strokeCheck = useSettingsStore((s) => s.strokeCheck)
+  const setStrokeCheck = useSettingsStore((s) => s.setStrokeCheck)
   const setKeyboardLayout = useSettingsStore((s) => s.setKeyboardLayout)
   const install = useInstallPrompt()
   const layoutOptions: { value: KeyboardLayoutSetting; label: string }[] = [
@@ -109,7 +117,15 @@ export function SettingsPage() {
           </p>
         </div>
       )}
-          </>
+      <div className="mt-4">
+        <SegmentedControl label="Vérification du tracé" options={STROKE_CHECK_OPTIONS} value={strokeCheck} onChange={setStrokeCheck} />
+        <p className="mt-2 text-[13px] leading-[18px] text-ink-muted">
+          {strokeCheck === 'char'
+            ? 'De mémoire et au quiz, le kana est vérifié une fois tous ses traits posés : un trait raté, remarqué tout de suite, s’annule sans compter.'
+            : 'De mémoire et au quiz, chaque trait est vérifié dès qu’on lève le doigt.'}
+        </p>
+      </div>
+    </>
   )
   const backupContent = (
     <>
@@ -136,7 +152,7 @@ export function SettingsPage() {
       <ReloadSettings
         sections={[
           { id: 'appearance', word: 'APPARENCE', title: 'Apparence', detail: 'Style, thème, vibrations, sons.', content: appearance },
-          { id: 'input', word: 'SAISIE', title: 'Saisie', detail: 'Clavier pour le romaji et disposition.', content: input },
+          { id: 'input', word: 'SAISIE', title: 'Saisie', detail: 'Clavier pour le romaji, vérification du tracé.', content: input },
           { id: 'profiles', word: 'PROFILS', title: 'Profils', detail: 'Qui apprend sur cet appareil.', content: <ProfileSettings /> },
           { id: 'backup', word: 'SAUVEGARDE', title: 'Sauvegarde', detail: 'Exporter ou importer toute la progression.', content: backupContent },
           { id: 'app', word: 'À PROPOS', title: 'Application', detail: 'Installation, crédits, fonctionnement hors ligne.', content: application },

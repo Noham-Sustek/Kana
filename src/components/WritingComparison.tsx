@@ -11,15 +11,18 @@ interface WritingComparisonProps {
   model: Point[][]
   /** Tracé réussi : contour vert autour de « Votre tracé ». */
   ok?: boolean
+  /** Rangs des traits faux (vérification à la fin) : marqués des deux côtés. */
+  faulty?: readonly number[]
 }
 
 /** Tracé de l'utilisateur et modèle côte à côte, dans le même repère. */
-export function WritingComparison({ drawn, model, ok = false }: WritingComparisonProps) {
+export function WritingComparison({ drawn, model, ok = false, faulty = [] }: WritingComparisonProps) {
+  const bad = (i: number) => faulty.includes(i)
   return (
     <div className="grid grid-cols-2 gap-3">
       <Panel label="Votre tracé" frame={ok ? 'border-2 border-correct' : undefined}>
         {drawn.map((points, i) => (
-          <polyline key={i} points={toSvgPoints(points)} className="stroke-ink" />
+          <polyline key={i} points={toSvgPoints(points)} className={bad(i) ? 'stroke-error' : 'stroke-ink'} />
         ))}
       </Panel>
       <Panel
@@ -37,7 +40,7 @@ export function WritingComparison({ drawn, model, ok = false }: WritingCompariso
         })}
       >
         {model.map((points, i) => (
-          <polyline key={i} points={toSvgPoints(points)} className="stroke-ink" />
+          <polyline key={i} points={toSvgPoints(points)} className={bad(i) ? 'stroke-accent' : 'stroke-ink'} />
         ))}
       </Panel>
     </div>

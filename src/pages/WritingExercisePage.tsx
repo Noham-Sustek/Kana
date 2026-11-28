@@ -13,9 +13,10 @@ import { getGroup, getKana, groupGlyph, kanaOfScript, type Kana } from '@/data/k
 import { isWritable, strokesOf } from '@/data/strokes'
 import { recordWritingResult } from '@/db/writing'
 import type { Point } from '@/features/writing/geometry'
-import { isWritingSuccess, strokeNote } from '@/features/writing/progress'
+import { FAULT_LABELS, isWritingSuccess, strokeNote } from '@/features/writing/progress'
 import { haptic } from '@/lib/haptic'
 import { useUiStyle } from '@/lib/useUiStyle'
+import { useSettingsStore } from '@/stores/settingsStore'
 import { activeProfileId } from '@/stores/profileStore'
 import { useWritingSettingsStore, type WritingLevel } from '@/stores/writingSettingsStore'
 
@@ -189,6 +190,7 @@ interface PracticeStepProps {
 function PracticeStep({ kana, strokes, level, next, onDone, onRetry, onNextLevel, onNextKana }: PracticeStepProps) {
   const [result, setResult] = useState<WritingResult | null>(null)
   const [attempt, setAttempt] = useState(0)
+  const strokeCheck = useSettingsStore((s) => s.strokeCheck)
   const success = result ? isWritingSuccess(level, result) : false
 
   const complete = (r: WritingResult) => {
@@ -217,9 +219,21 @@ function PracticeStep({ kana, strokes, level, next, onDone, onRetry, onNextLevel
     <>
       <div className={`mt-4 ${PAD_WIDTH}`}>
         {level === 3 && result ? (
-          <WritingComparison drawn={result.drawn} model={strokes} ok={success} />
+          <WritingComparison
+            drawn={result.drawn}
+            model={strokes}
+            ok={success}
+            faulty={result.faults?.flatMap((f, i) => (f ? [i] : []))}
+          />
         ) : (
-          <WritingPad key={attempt} strokes={strokes} mode={level === 2 ? 'trace' : 'free'} onComplete={complete} />
+          <WritingPad
+            key={attempt}
+            strokes={strokes}
+            mode={level === 2 ? 'trace' : 'free'}
+            // Calque : trait par trait (il se fixe sur le modèle) ; de mémoire : selon le réglage.
+            check={level === 2 ? 'stroke' : strokeCheck}
+            onComplete={complete}
+          />
         )}
       </div>
 
@@ -227,22 +241,31 @@ function PracticeStep({ kana, strokes, level, next, onDone, onRetry, onNextLevel
         <p className="mt-3 text-center text-[13px] leading-[18px] text-ink-muted">
           {level === 2
             ? 'Suivez le modèle. Un trait juste se fixe ; après deux essais, l’indice montre le départ.'
-            : 'Sans modèle. Vos traits restent tels que tracés.'}
+            : strokeCheck === 'char'
+              ? 'Sans modèle. Le kana est vérifié une fois tous ses traits posés : Annuler corrige un trait sans compter d’erreur.'
+              : 'Sans modèle. Vos traits restent tels que tracés.'}
         </p>
       )}
 
       {result && level === 3 && (
         <ul className="mt-3 border-t border-hairline">
           {strokes.map((_, i) => {
-            const done = i < result.done
+            const fault = result.faults?.[i]
+            const done = result.faults ? fault === null : i < result.done
+            const signal = done ? 'correct' : fault ? 'wrong' : 'revealed'
+            const note = result.faults
+              ? fault
+                ? FAULT_LABELS[fault]
+                : 'Juste'
+              : done
+                ? strokeNote(result.strokeMistakes[i] ?? 0)
+                : 'Pas encore tracé'
             return (
               <li key={i} className="flex min-h-12 items-center gap-3 border-b border-hairline py-1.5">
-                <SignalBadge signal={done ? 'correct' : 'revealed'} size="sm" />
+                <SignalBadge signal={signal} size="sm" />
                 <span>
                   <b className="block text-[14.5px] font-semibold">Trait {i + 1}</b>
-                  <small className="block text-[13px] leading-[18px] text-ink-muted">
-                    {done ? strokeNote(result.strokeMistakes[i] ?? 0) : 'Pas encore tracé'}
-                  </small>
+                  <small className="block text-[13px] leading-[18px] text-ink-muted">{note}</small>
                 </span>
               </li>
             )
@@ -286,7 +309,9 @@ function PracticeStep({ kana, strokes, level, next, onDone, onRetry, onNextLevel
 function resultTitle(level: 2 | 3, result: WritingResult, success: boolean): string {
   if (level === 2) return result.mistakes === 0 ? 'Calque réussi, sans erreur' : 'Calque réussi'
   if (success) return 'De mémoire : réussi'
-  return result.revealed ? 'Modèle affiché' : 'Réussi avec un indice'
+  if (result.revealed) return 'Modèle affiché'
+  if (result.faults?.some((f) => f !== null)) return 'Pas encore'
+  return 'Réussi avec un indice'
 }
 
 function resultDetail(level: 2 | 3, result: WritingResult, success: boolean): string {
@@ -296,7 +321,9 @@ function resultDetail(level: 2 | 3, result: WritingResult, success: boolean): st
       : `${result.mistakes} trait${result.mistakes > 1 ? 's' : ''} à reprendre en route. Essayez maintenant de mémoire.`
   }
   if (success) return 'La case est pleine dans la grille.'
-  return result.revealed ? 'Comparez, puis refaites-le de mémoire.' : 'Refaites-le sans indice pour remplir la case.'
+  if (result.revealed) return 'Comparez, puis refaites-le de mémoire.'
+  if (result.faults?.some((f) => f !== null)) return 'Comparez les traits marqués avec le modèle, puis refaites-le.'
+  return 'Refaites-le sans indice pour remplir la case.'
 }
 
 function Dock({ children }: { children: ReactNode }) {

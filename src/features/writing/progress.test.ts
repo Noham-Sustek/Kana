@@ -33,6 +33,9 @@ describe('écriture', () => {
     expect(isWritingSuccess(3, { revealed: false, hinted: true })).toBe(false)
     expect(isWritingSuccess(3, { revealed: true, hinted: false })).toBe(false)
     expect(isWritingSuccess(3, { revealed: false, hinted: false })).toBe(true)
+    // Vérification à la fin : un trait faux = pas réussi.
+    expect(isWritingSuccess(3, { revealed: false, hinted: false, faults: [null, 'direction'] })).toBe(false)
+    expect(isWritingSuccess(3, { revealed: false, hinted: false, faults: [null, null] })).toBe(true)
   })
 
   it('prochaine ligne à tracer et durée estimée', () => {

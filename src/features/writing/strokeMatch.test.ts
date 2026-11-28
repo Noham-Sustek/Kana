@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { KANA } from '@/data/kana'
 import { isWritable, strokesOf } from '@/data/strokes'
 import type { Point } from '@/features/writing/geometry'
-import { evaluateStroke, prepareStroke } from '@/features/writing/strokeMatch'
+import { dtwMean, evaluateCharacter, evaluateStroke, prepareStroke } from '@/features/writing/strokeMatch'
 import { applyVerdict, createWritingState, isComplete, shouldShowHint, totalMistakes } from '@/features/writing/session'
 
 const A = strokesOf('あ')!
@@ -80,9 +80,56 @@ describe('evaluateStroke', () => {
     expect(failures).toEqual([])
   })
 
+  it('mode libre : un kana écrit petit dans un coin est juste trait par trait (calage sur les traits posés)', () => {
+    const small = A.map((s) => s.map(([x, y]): Point => [8 + x * 0.55, 6 + y * 0.55]))
+    small.forEach((stroke, i) => {
+      expect(evaluateStroke(stroke, preparedA, i, 'free', small.slice(0, i))).toEqual({ ok: true })
+    })
+  })
+
+  it('accepte une longue courbe un peu déformée en calque (boucle de ね)', () => {
+    const NE = strokesOf('ね')!
+    const prepared = NE.map(prepareStroke)
+    const last = NE.length - 1
+    const bent = NE[last]!.map(([x, y], i, all): Point => [x + 4 * Math.sin((Math.PI * i) / all.length), y + 3])
+    expect(evaluateStroke(bent, prepared, last, 'trace')).toEqual({ ok: true })
+  })
+
   it('ne vérifie pas le sens des points du dakuten', () => {
     const last = DA.length - 1
     expect(evaluateStroke([...DA[last]!].reverse(), preparedDA, last, 'trace')).toEqual({ ok: true })
+  })
+})
+
+describe('dtwMean', () => {
+  it('vaut 0 pour deux tracés identiques et tolère une vitesse irrégulière', () => {
+    const line: Point[] = Array.from({ length: 32 }, (_, i) => [i, 0])
+    const uneven: Point[] = Array.from({ length: 32 }, (_, i) => [31 * (i / 31) ** 1.6, 0])
+    expect(dtwMean(line, line)).toBe(0)
+    expect(dtwMean(uneven, line)).toBeLessThan(1.5)
+  })
+})
+
+describe('evaluateCharacter (vérification à la fin)', () => {
+  const small = A.map((s) => s.map(([x, y]): Point => [30 + x * 0.6, 35 + y * 0.6]))
+
+  it('caractère juste, même petit et décalé', () => {
+    expect(evaluateCharacter(small, preparedA, 'free')).toEqual([{ ok: true }, { ok: true }, { ok: true }])
+  })
+
+  it('désigne le trait faux sans fausser les autres', () => {
+    const wrong = [small[0]!, [...small[1]!].reverse(), small[2]!]
+    const verdicts = evaluateCharacter(wrong, preparedA, 'free')
+    expect(verdicts[0]).toEqual({ ok: true })
+    expect(verdicts[1]).toMatchObject({ ok: false, fault: 'direction' })
+    expect(verdicts[2]).toEqual({ ok: true })
+  })
+
+  it('trait manquant, trait en trop, ordre inversé', () => {
+    expect(evaluateCharacter(small.slice(0, 2), preparedA, 'free')[2]).toEqual({ ok: false, fault: 'missing' })
+    expect(evaluateCharacter([...small, small[2]!], preparedA, 'free').at(-1)).toMatchObject({ ok: false })
+    const swapped = evaluateCharacter([small[2]!, small[1]!, small[0]!], preparedA, 'free')
+    expect(swapped[0]).toMatchObject({ ok: false, fault: 'order', matchedIndex: 2 })
   })
 })
 
